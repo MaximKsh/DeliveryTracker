@@ -3,3 +3,5 @@ obj/*
 *appsettings.json
 *appsettings.Development.json
 .vscode/*
+Migrations/*
+.idea/*
