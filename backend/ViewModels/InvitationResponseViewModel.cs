@@ -21,5 +21,9 @@ namespace DeliveryTracker.ViewModels
         /// </summary>
         public DateTime ExpirationDate { get; set; }
 
+        /// <summary>
+        /// Название группы в которую приглашают.
+        /// </summary>
+        public string GroupName { get; set; }
     }
 }

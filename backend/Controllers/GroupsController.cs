@@ -71,6 +71,7 @@ namespace DeliveryTracker.Controllers
                         UserName = user.UserName,
                         DisplayableName = user.DisplayableName,
                         Group = group.DisplayableName,
+                        Role = this.rolesCache.Creator.Name,
                     });
                 }
                 catch (Exception e)
@@ -86,6 +87,7 @@ namespace DeliveryTracker.Controllers
         public async Task<IActionResult> InviteManager()
         {
             var currentUser = await this.userManager.FindByNameAsync(this.User.Identity.Name);
+            this.dbContext.Entry(currentUser).Reference(p => p.Group).Load(); 
             var invitation = await this.accountService.CreateInvitation(
                 currentUser.GroupId, 
                 this.rolesCache.Manager.Id);
@@ -94,6 +96,7 @@ namespace DeliveryTracker.Controllers
                 InvitationCode = invitation.InvitationCode,
                 Role = this.rolesCache.Manager.Name,
                 ExpirationDate = invitation.ExpirationDate,
+                GroupName = currentUser.Group.DisplayableName,
             });
         }
         
@@ -102,6 +105,7 @@ namespace DeliveryTracker.Controllers
         public async Task<IActionResult> InvitePerformer()
         {
             var currentUser = await this.userManager.FindByNameAsync(this.User.Identity.Name);
+            this.dbContext.Entry(currentUser).Reference(p => p.Group).Load(); 
             var invitation = await this.accountService.CreateInvitation(
                 currentUser.GroupId, 
                 this.rolesCache.Performer.Id);
@@ -110,6 +114,7 @@ namespace DeliveryTracker.Controllers
                 InvitationCode = invitation.InvitationCode,
                 Role = this.rolesCache.Performer.Name,
                 ExpirationDate = invitation.ExpirationDate,
+                GroupName = currentUser.Group.DisplayableName,
             });
         }
         
@@ -125,26 +130,27 @@ namespace DeliveryTracker.Controllers
             {
                 try
                 {
-                    var newUser = await this.accountService.AcceptInvitation(
-                        acceptInvitation.InvitationCode,
-                        acceptInvitation.DisplayableName,
-                        acceptInvitation.Password);
-                    if (newUser != null)
+                    if (this.accountService.TryGetInvitaiton(acceptInvitation.InvitationCode, out var invitation))
                     {
-                        await this.dbContext.SaveChangesAsync();
-                        transaction.Commit();
-                        return this.Ok(new RegisterResponseViewModel
+                        var newUser = await this.accountService.AcceptInvitation(
+                            invitation,
+                            acceptInvitation.DisplayableName,
+                            acceptInvitation.Password);
+                        if (newUser != null)
                         {
-                            UserName = newUser.UserName,
-                            DisplayableName = newUser.DisplayableName,
-                            Group = newUser.Group.DisplayableName,
-                        });
+                            await this.dbContext.SaveChangesAsync();
+                            transaction.Commit();
+                            return this.Ok(new RegisterResponseViewModel
+                            {
+                                UserName = newUser.UserName,
+                                DisplayableName = newUser.DisplayableName,
+                                Group = newUser.Group.DisplayableName,
+                                Role = invitation.Role.Name,
+                            });
+                        }
                     }
-                    else
-                    {
-                        transaction.Rollback();
-                        return this.BadRequest(new InvalidInvitationCodeViewModel());
-                    }
+                    transaction.Rollback();
+                    return this.BadRequest(new InvalidInvitationCodeViewModel());
                 }
                 catch (Exception e)
                 {

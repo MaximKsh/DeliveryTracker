@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -17,27 +18,27 @@ namespace DeliveryTracker.Services
     public class AccountService
     {
         #region constants
-        
+
         private const int InvitationExpirationPeriodInDays = 3;
 
         private const int InvitationCodeLength = 10;
 
-        private static readonly char[] InvitationCodeAlphabet = 
+        private static readonly char[] InvitationCodeAlphabet =
             "23456789qwertyupasdfghkzxbnmQWERTYUPASDFGHKZXVBNM".ToCharArray();
 
         private static readonly Random Random = new Random();
 
         #endregion
-        
+
         #region fields
-        
+
         private readonly UserManager<UserModel> userManager;
         private readonly DeliveryTrackerDbContext dbContext;
 
-        #endregion 
-        
+        #endregion
+
         #region constuctor
-        
+
         public AccountService(
             UserManager<UserModel> userManager,
             DeliveryTrackerDbContext dbContext)
@@ -45,11 +46,11 @@ namespace DeliveryTracker.Services
             this.userManager = userManager;
             this.dbContext = dbContext;
         }
-        
+
         #endregion
 
         #region public
-        
+
         /// <summary>
         /// Регистрация нового пользователя. 
         /// Username сгенерирован автоматически.
@@ -74,7 +75,7 @@ namespace DeliveryTracker.Services
             };
             return await this.RegisterInternal(newUser, password, roleName);
         }
-        
+
         /// <summary>
         /// Генерация нового пользователя с указанным username
         /// </summary>
@@ -100,7 +101,7 @@ namespace DeliveryTracker.Services
             };
             return await this.RegisterInternal(newUser, password, roleName);
         }
-        
+
         /// <summary>
         /// Регистрация нового пользователя. 
         /// Username сгенерирован автоматически.
@@ -175,7 +176,7 @@ namespace DeliveryTracker.Services
             {
                 return null;
             }
-            
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimsIdentity.DefaultNameClaimType, user.UserName),
@@ -186,7 +187,7 @@ namespace DeliveryTracker.Services
                 "Token",
                 ClaimsIdentity.DefaultNameClaimType,
                 ClaimsIdentity.DefaultRoleClaimType);
- 
+
             var now = DateTime.UtcNow;
             // создаем JWT-токен
             var jwt = new JwtSecurityToken(
@@ -195,7 +196,8 @@ namespace DeliveryTracker.Services
                 notBefore: now,
                 claims: identity.Claims,
                 expires: now.AddMinutes(AuthHelper.Lifetime),
-                signingCredentials: new SigningCredentials(AuthHelper.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+                signingCredentials: new SigningCredentials(AuthHelper.GetSymmetricSecurityKey(),
+                    SecurityAlgorithms.HmacSha256));
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
             return new LoginResponseViewModel
@@ -230,6 +232,22 @@ namespace DeliveryTracker.Services
         }
 
         /// <summary>
+        /// Получить объект приглашения по коду. 
+        /// </summary>
+        /// <param name="invitationCode"></param>
+        /// <param name="invitation"></param>
+        /// <returns></returns>
+        public bool TryGetInvitaiton(string invitationCode, out InvitationModel invitation)
+        {
+            invitation =  this.dbContext
+                .Invitations
+                .Include(p => p.Role)
+                .Include(p => p.Group)
+                .FirstOrDefault(p => p.InvitationCode == invitationCode);
+            return invitation != null;
+        }
+    
+        /// <summary>
         /// Принять приглашение.
         /// </summary>
         /// <param name="invitationCode"></param>
@@ -241,11 +259,25 @@ namespace DeliveryTracker.Services
             string username, 
             string password)
         {
-            var invitation = await this.dbContext
-                .Invitations
-                .Include(p => p.Role)
-                .Include(p => p.Group)
-                .FirstOrDefaultAsync(p => p.InvitationCode == invitationCode);
+            if (this.TryGetInvitaiton(invitationCode, out var invitation))
+            {
+                return await this.AcceptInvitation(invitation, username, password);
+            }
+            return null;
+        }
+        
+        /// <summary>
+        /// Принять приглашение.
+        /// </summary>
+        /// <param name="invitation"></param>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public async Task<UserModel> AcceptInvitation(
+            InvitationModel invitation,
+            string username, 
+            string password)
+        {
             if (invitation == null)
             {
                 return null;
@@ -254,7 +286,7 @@ namespace DeliveryTracker.Services
             var group = invitation.Group;
             this.dbContext.Invitations.Remove(invitation);
             var newUser = await this.Register(
-                invitationCode,
+                invitation.InvitationCode,
                 username,
                 password,
                 roleName,
