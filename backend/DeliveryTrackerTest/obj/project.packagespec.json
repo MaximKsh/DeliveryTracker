@@ -1,0 +1,53 @@
+﻿{
+  "version": "1.0.0",
+  "restore": {
+    "projectUniqueName": "/home/maxim/KV_Team/DeliveryTracker/backend/DeliveryTrackerTest/DeliveryTrackerTest.csproj",
+    "projectName": "DeliveryTrackerTest",
+    "projectPath": "/home/maxim/KV_Team/DeliveryTracker/backend/DeliveryTrackerTest/DeliveryTrackerTest.csproj",
+    "outputPath": "/home/maxim/KV_Team/DeliveryTracker/backend/DeliveryTrackerTest/obj/",
+    "projectStyle": "PackageReference",
+    "originalTargetFrameworks": [
+      "netcoreapp2.0"
+    ],
+    "frameworks": {
+      "netcoreapp2.0": {
+        "projectReferences": {
+          "/home/maxim/KV_Team/DeliveryTracker/backend/DeliveryTracker/DeliveryTracker.csproj": {
+            "projectPath": "/home/maxim/KV_Team/DeliveryTracker/backend/DeliveryTracker/DeliveryTracker.csproj"
+          }
+        }
+      }
+    }
+  },
+  "frameworks": {
+    "netcoreapp2.0": {
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "target": "Package",
+          "version": "2.0.0"
+        },
+        "Microsoft.AspNetCore.All": {
+          "target": "Package",
+          "version": "2.0.0"
+        },
+        "Microsoft.NET.Test.Sdk": {
+          "target": "Package",
+          "version": "15.3.0-preview-20170628-02"
+        },
+        "xunit": {
+          "target": "Package",
+          "version": "2.2.0"
+        },
+        "xunit.runner.visualstudio": {
+          "target": "Package",
+          "version": "2.2.0"
+        }
+      },
+      "imports": [
+        "net461"
+      ],
+      "assetTargetFallback": true,
+      "warn": true
+    }
+  }
+}
