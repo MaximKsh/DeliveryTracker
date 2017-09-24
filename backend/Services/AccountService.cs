@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using DeliveryTracker.Auth;
 using DeliveryTracker.Db;
 using DeliveryTracker.Models;
 using DeliveryTracker.ViewModels;
@@ -189,11 +190,11 @@ namespace DeliveryTracker.Services
             var now = DateTime.UtcNow;
             // создаем JWT-токен
             var jwt = new JwtSecurityToken(
-                issuer: AuthHelper.ISSUER,
-                audience: AuthHelper.AUDIENCE,
+                issuer: AuthHelper.Issuer,
+                audience: AuthHelper.Audience,
                 notBefore: now,
                 claims: identity.Claims,
-                expires: now.AddMinutes(AuthHelper.LIFETIME),
+                expires: now.AddMinutes(AuthHelper.Lifetime),
                 signingCredentials: new SigningCredentials(AuthHelper.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
