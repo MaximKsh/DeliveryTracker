@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using DeliveryTracker.Auth;
 using DeliveryTracker.Db;
 using DeliveryTracker.Models;
+using DeliveryTracker.Roles;
 using DeliveryTracker.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -51,6 +52,42 @@ namespace DeliveryTracker.Services
 
         #region public
 
+        /// <summary>
+        /// Загрузить пользователя по имени.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns></returns>
+        public async Task<UserModel> FindUser(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                return null;
+            }
+            var currentUser = await this.userManager.FindByNameAsync(username);
+            if (currentUser == null)
+            {
+                return null;
+            }
+            this.dbContext.Entry(currentUser).Reference(p => p.Group).Load();
+            return currentUser;
+        }
+
+        /// <summary>
+        /// Получить роль пользователя.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public async Task<string> FindRole(UserModel user)
+        {
+            if (user == null)
+            {
+                return null;
+            }
+            
+            return (await this.userManager.GetRolesAsync(user))
+                .FirstOrDefault(p => p == RoleInfo.Creator || p == RoleInfo.Manager || p == RoleInfo.Performer);
+        }
+        
         /// <summary>
         /// Регистрация нового пользователя. 
         /// Username сгенерирован автоматически.
@@ -311,7 +348,7 @@ namespace DeliveryTracker.Services
                     .ToArray());
         
         
-        public async Task<UserModel> RegisterInternal(
+        private async Task<UserModel> RegisterInternal(
             UserModel newUser,
             string password,
             string roleName)

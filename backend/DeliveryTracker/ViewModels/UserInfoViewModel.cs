@@ -3,7 +3,7 @@
 namespace DeliveryTracker.ViewModels
 {
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-    public class RegisterResponseViewModel
+    public class UserInfoViewModel
     {
         /// <summary>
         /// Уникальное имя пользователя(код приглашения).

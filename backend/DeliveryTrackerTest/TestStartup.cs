@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -28,7 +29,13 @@ namespace DeliveryTracker
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<DeliveryTrackerDbContext>(options =>
-                options.UseInMemoryDatabase("TestDB"));
+            {
+                options.UseInMemoryDatabase("DeliveryTrackerTestDB");
+                options.ConfigureWarnings(warningOpts =>
+                {
+                    warningOpts.Ignore(InMemoryEventId.TransactionIgnoredWarning);
+                });
+            });
 
  
             services.AddIdentity<UserModel, RoleModel>()

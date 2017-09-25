@@ -66,7 +66,7 @@ namespace DeliveryTracker.Controllers
                     this.groupService.SetCreator(group, user);
                     await this.dbContext.SaveChangesAsync();
                     transaction.Commit();
-                    return this.Ok(new RegisterResponseViewModel
+                    return this.Ok(new UserInfoViewModel
                     {
                         UserName = user.UserName,
                         DisplayableName = user.DisplayableName,
@@ -140,7 +140,7 @@ namespace DeliveryTracker.Controllers
                         {
                             await this.dbContext.SaveChangesAsync();
                             transaction.Commit();
-                            return this.Ok(new RegisterResponseViewModel
+                            return this.Ok(new UserInfoViewModel
                             {
                                 UserName = newUser.UserName,
                                 DisplayableName = newUser.DisplayableName,
