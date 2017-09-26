@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -167,6 +169,36 @@ namespace DeliveryTrackerTest.Controllers
                 createGroupResponseBody.Role,
                 createGroupResponseBody.Group);
             
+        }
+
+        protected static async Task<List<string>> MassCreateUsers(
+            HttpClient client,
+            string token,
+            string role,
+            string password,
+            int count)
+        {
+            var users = Enumerable
+                .Range(0, count)
+                .Select(p => p)
+                .Select(async _ =>
+                {
+                    var (invitationCode, _, _, _) = 
+                        await Invite(client, role, token);
+            
+                    var (userName1, _ ,_ ,_) = 
+                        await AcceptInvitation(client, invitationCode, $"MassCreatedUser_{count}", password);
+
+                    return userName1;
+                })
+                .ToList();
+            
+            var strs = new List<string>();
+            foreach (var username in users)
+            {
+                strs.Add(await username);
+            }
+            return strs;
         }
 
     }

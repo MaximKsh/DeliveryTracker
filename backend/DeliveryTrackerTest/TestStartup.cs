@@ -6,6 +6,7 @@ using DeliveryTracker.Models;
 using DeliveryTracker.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -20,23 +21,31 @@ namespace DeliveryTracker
     {
         private readonly IConfiguration configuration;
         
-        public TestStartup(IConfiguration configuration)
+        public TestStartup(IHostingEnvironment env)
         {
-            this.configuration = configuration;
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+            this.configuration = builder.Build();
         }
         
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<DeliveryTrackerDbContext>(options =>
+            /*services.AddDbContext<DeliveryTrackerDbContext>(options =>
             {
                 options.UseInMemoryDatabase("DeliveryTrackerTestDB");
                 options.ConfigureWarnings(warningOpts =>
                 {
                     warningOpts.Ignore(InMemoryEventId.TransactionIgnoredWarning);
                 });
-            });
+            });*/
 
+            
+            var connectionString = this.configuration.GetConnectionString("DefaultConnection");
+            services.AddDbContext<DeliveryTrackerDbContext>(
+                options => options.UseNpgsql(connectionString));
  
             services.AddIdentity<UserModel, RoleModel>()
                 .AddEntityFrameworkStores<DeliveryTrackerDbContext>()
