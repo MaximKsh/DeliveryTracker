@@ -32,6 +32,16 @@ namespace DeliveryTracker.Models
         public virtual TaskStateModel State { get; set; }
 
         /// <summary>
+        /// ID группы, в рамках которой существует таск.
+        /// </summary>
+        public Guid GroupId { get; set; }
+
+        /// <summary>
+        /// Группа, в рамках которой существует таск. 
+        /// </summary>
+        public virtual GroupModel Group { get; set; }
+
+        /// <summary>
         /// ID отправителя задания.
         /// </summary>
         public Guid SenderId { get; set; }
@@ -54,7 +64,6 @@ namespace DeliveryTracker.Models
         /// <summary>
         /// Дата создания.
         /// </summary>
-        /// <returns></returns>
         public DateTime CreationDate { get; set; }
 
         /// <summary>

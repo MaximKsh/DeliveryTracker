@@ -21,14 +21,8 @@ namespace DeliveryTracker.Models
         public string Alias { get; set; }
 
         /// <summary>
-        /// Отображаемое значение.
-        /// </summary>
-        public string Caption { get; set; }
-
-        /// <summary>
         /// Список заданий в состоянии.
         /// </summary>
         public virtual ICollection<TaskModel> Tasks { get; set; }
-
     }
 }

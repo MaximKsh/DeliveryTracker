@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Net;
+using System.Threading.Tasks;
 using DeliveryTracker.Auth;
 using DeliveryTracker.Db;
+using DeliveryTracker.Helpers;
 using DeliveryTracker.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -9,9 +12,15 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using DeliveryTracker.Caching;
+using DeliveryTracker.Roles;
 using DeliveryTracker.Services;
+using DeliveryTracker.TaskStates;
+using DeliveryTracker.Validation;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace DeliveryTracker
 {
@@ -41,6 +50,20 @@ namespace DeliveryTracker
                 .AddUserStore<UserStore<UserModel, RoleModel, DeliveryTrackerDbContext, Guid>>()
                 .AddRoleStore<RoleStore<RoleModel, DeliveryTrackerDbContext, Guid>>();
 
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.Events.OnRedirectToLogin = ctx =>
+                {
+                    ctx.Response.StatusCode = 401;
+                    return Task.CompletedTask;
+                };
+                options.Events.OnRedirectToAccessDenied = ctx =>
+                {
+                    ctx.Response.StatusCode = 403;
+                    return Task.CompletedTask;
+                };
+            });
+            
             services.AddAuthorization(options =>
             {
                 options.DefaultPolicy = AuthPolicies.DefaultPolicy;
@@ -79,11 +102,25 @@ namespace DeliveryTracker
 
             services
                 .AddDeliveryTrackerServices()
-                .AddDeliveryTrackerCaching();
+                .AddDeliveryTrackerRoles()
+                .AddDeliveryTrackerTaskStates();
         }
 
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            app.UseExceptionHandler(conf =>
+            {
+                conf.Run(async context =>
+                {
+                    // Логирование исключения уже производится в ExceptionHandler-е
+                    
+                    context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
+                    context.Response.ContentType = "application/json";
+                    var responseString = JsonConvert
+                        .SerializeObject(ErrorFactory.ServerError().ToErrorListViewModel());
+                    await context.Response.WriteAsync(responseString).ConfigureAwait(false);
+                });
+            });
             app.UseAuthentication();
             app.UseMvc();
         }

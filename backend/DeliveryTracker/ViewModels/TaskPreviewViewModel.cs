@@ -5,6 +5,11 @@ namespace DeliveryTracker.ViewModels
     public class TaskPreviewViewModel
     {
         /// <summary>
+        /// ID задания.
+        /// </summary>
+        public Guid Id { get; set; }
+        
+        /// <summary>
         /// Состояние задания.
         /// </summary>
         public string TaskState { get; set; }

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace DeliveryTrackerTest.Controllers
 {
-    public class GroupControllers: BaseControllerTest
+    public class GroupControllerTest: BaseControllerTest
     {
         [Fact]
         public async Task IsServerAvailable()
@@ -115,7 +115,7 @@ namespace DeliveryTrackerTest.Controllers
         {
             var client = this.Server.CreateClient();
             var (userName1, displayableNameAccept ,roleAccept ,groupNameAccept) = 
-                await AcceptInvitation(client, "abcdefgsd", "Петров П.П.", "123qQ!", HttpStatusCode.BadRequest);
+                await AcceptInvitation(client, "abcdefgsd", "Петров П.П.", "123qQ!", HttpStatusCode.NotFound);
             Assert.Null(userName1);
             Assert.Null(displayableNameAccept);
             Assert.Null(roleAccept);
@@ -131,6 +131,29 @@ namespace DeliveryTrackerTest.Controllers
             Assert.Null(invitationCode);
             Assert.Null(roleInvite);
             Assert.Null(groupName1);
+        }
+        
+        [Fact]
+        public async Task AcceptInvitationTwice()
+        {
+            var client = this.Server.CreateClient();
+            
+            var (userName, displayableName, roleCreateGroup, groupName) = await CreateGroup(client, "Иванов И.И.", "123qQ!", "Группа1");
+            var (_, token, _) = await GetToken(client, userName, "123qQ!", roleCreateGroup);
+            
+            var (invitationCode, roleInvite, expirationDate, groupName1) = await Invite(client, RoleInfo.Performer, token);
+            Assert.NotNull(invitationCode);
+            Assert.Equal(RoleInfo.Performer, roleInvite);
+            Assert.Equal("Группа1", groupName1);
+            
+            var (userName1, displayableNameAccept ,roleAccept ,groupNameAccept) = 
+                await AcceptInvitation(client, invitationCode, "Петров П.П.", "123qQ!");
+            Assert.Equal(invitationCode, userName1);
+            Assert.Equal("Петров П.П.", displayableNameAccept);
+            Assert.Equal(RoleInfo.Performer, roleAccept);
+            Assert.Equal("Группа1", groupNameAccept);
+            
+            await AcceptInvitation(client, invitationCode, "Сидоров П.П.", "123rR!", HttpStatusCode.NotFound);
         }
         
         [Fact]

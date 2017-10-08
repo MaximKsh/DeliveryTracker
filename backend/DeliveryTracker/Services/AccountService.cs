@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -9,6 +8,7 @@ using DeliveryTracker.Auth;
 using DeliveryTracker.Db;
 using DeliveryTracker.Models;
 using DeliveryTracker.Roles;
+using DeliveryTracker.Validation;
 using DeliveryTracker.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +34,7 @@ namespace DeliveryTracker.Services
         #region fields
 
         private readonly UserManager<UserModel> userManager;
+        
         private readonly DeliveryTrackerDbContext dbContext;
 
         #endregion
@@ -56,20 +57,28 @@ namespace DeliveryTracker.Services
         /// Загрузить пользователя по имени.
         /// </summary>
         /// <param name="username"></param>
+        /// <param name="withGroup"></param>
         /// <returns></returns>
-        public async Task<UserModel> FindUser(string username)
+        public async Task<ServiceResult<UserModel>> FindUser(string username, bool withGroup = true)
         {
             if (string.IsNullOrWhiteSpace(username))
             {
-                return null;
+                return new ServiceResult<UserModel>(
+                    null,
+                    ErrorFactory.UserNotFound(username));
             }
             var currentUser = await this.userManager.FindByNameAsync(username);
             if (currentUser == null)
             {
-                return null;
+                return new ServiceResult<UserModel>(
+                    null,
+                    ErrorFactory.UserNotFound(username));
             }
-            this.dbContext.Entry(currentUser).Reference(p => p.Group).Load();
-            return currentUser;
+            if (withGroup)
+            {
+                this.dbContext.Entry(currentUser).Reference(p => p.Group).Load();
+            }
+            return new ServiceResult<UserModel>(currentUser);
         }
 
         /// <summary>
@@ -77,70 +86,23 @@ namespace DeliveryTracker.Services
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task<string> FindRole(UserModel user)
+        public async Task<ServiceResult<string>> GetUserRole(UserModel user)
         {
             if (user == null)
             {
-                return null;
+                throw new ArgumentNullException();
             }
-            
-            return (await this.userManager.GetRolesAsync(user))
+
+            var role = (await this.userManager.GetRolesAsync(user))
                 .FirstOrDefault(p => p == RoleInfo.Creator || p == RoleInfo.Manager || p == RoleInfo.Performer);
-        }
-        
-        /// <summary>
-        /// Регистрация нового пользователя. 
-        /// Username сгенерирован автоматически.
-        /// </summary>
-        /// <param name="displayableName"></param>
-        /// <param name="password"></param>
-        /// <param name="roleName"></param>
-        /// <param name="group"></param>
-        /// <returns></returns>
-        /// <exception cref="AccountServiceException"></exception>
-        public async Task<UserModel> Register(
-            string displayableName,
-            string password,
-            string roleName,
-            GroupModel group)
-        {
-            var newUser = new UserModel
-            {
-                UserName = GenerateInvitationCode(),
-                DisplayableName = displayableName,
-                Group = group,
-            };
-            return await this.RegisterInternal(newUser, password, roleName);
+            
+            return role != null 
+                ? new ServiceResult<string>(role) 
+                : new ServiceResult<string>(null, ErrorFactory.UserWithoutRole(user.UserName));
         }
 
         /// <summary>
-        /// Генерация нового пользователя с указанным username
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="displayableName"></param>
-        /// <param name="password"></param>
-        /// <param name="roleName"></param>
-        /// <param name="group"></param>
-        /// <returns></returns>
-        /// <exception cref="AccountServiceException"></exception>
-        public async Task<UserModel> Register(
-            string username,
-            string displayableName,
-            string password,
-            string roleName,
-            GroupModel group)
-        {
-            var newUser = new UserModel
-            {
-                UserName = username,
-                DisplayableName = displayableName,
-                Group = group,
-            };
-            return await this.RegisterInternal(newUser, password, roleName);
-        }
-
-        /// <summary>
-        /// Регистрация нового пользователя. 
+        /// Регистрация нового пользователя. Необходимо выполнять в транзакции.
         /// Username сгенерирован автоматически.
         /// </summary>
         /// <param name="displayableName"></param>
@@ -148,8 +110,7 @@ namespace DeliveryTracker.Services
         /// <param name="roleName"></param>
         /// <param name="groupId"></param>
         /// <returns></returns>
-        /// <exception cref="AccountServiceException"></exception>
-        public async Task<UserModel> Register(
+        public async Task<ServiceResult<UserModel>> Register(
             string displayableName,
             string password,
             string roleName,
@@ -165,7 +126,7 @@ namespace DeliveryTracker.Services
         }
 
         /// <summary>
-        /// Генерация нового пользователя с указанным username
+        /// Создание нового пользователя с указанным username. Необходимо выполнять в транзакции.
         /// </summary>
         /// <param name="username"></param>
         /// <param name="displayableName"></param>
@@ -173,8 +134,7 @@ namespace DeliveryTracker.Services
         /// <param name="roleName"></param>
         /// <param name="groupId"></param>
         /// <returns></returns>
-        /// <exception cref="AccountServiceException"></exception>
-        public async Task<UserModel> Register(
+        public async Task<ServiceResult<UserModel>> Register(
             string username,
             string displayableName,
             string password,
@@ -197,21 +157,34 @@ namespace DeliveryTracker.Services
         /// <param name="password"></param>
         /// <param name="expectingRole"></param>
         /// <returns></returns>
-        public async Task<LoginResponseViewModel> Login(
+        public async Task<ServiceResult<TokenViewModel>> Login(
             string username,
             string password,
             string expectingRole)
         {
-            var user = await this.userManager.FindByNameAsync(username);
-            if (!await this.userManager.CheckPasswordAsync(user, password))
+            var userResult = await this.FindUser(username);
+            if (!userResult.Success
+                || userResult.Result == null
+                || !await this.userManager.CheckPasswordAsync(userResult.Result, password))
             {
-                return null;
+                return new ServiceResult<TokenViewModel>(
+                    null,
+                    ErrorFactory.UserNotFound(username));
             }
-            var userRoles = await this.userManager.GetRolesAsync(user);
-            var role = userRoles.FirstOrDefault(p => p == expectingRole);
-            if (role == null)
+            var user = userResult.Result;
+            var roleResult = await this.GetUserRole(user);
+            if (!roleResult.Success)
             {
-                return null;
+                return new ServiceResult<TokenViewModel>(
+                    null,
+                    ErrorFactory.UserNotInRole(user.UserName, expectingRole));
+            }
+            var role = roleResult.Result;
+            if (role != expectingRole)
+            {
+                return new ServiceResult<TokenViewModel>(
+                    null,
+                    ErrorFactory.UserNotInRole(user.UserName, expectingRole));
             }
 
             var claims = new List<Claim>
@@ -233,16 +206,23 @@ namespace DeliveryTracker.Services
                 notBefore: now,
                 claims: identity.Claims,
                 expires: now.AddMinutes(AuthHelper.Lifetime),
-                signingCredentials: new SigningCredentials(AuthHelper.GetSymmetricSecurityKey(),
+                signingCredentials: new SigningCredentials(
+                    AuthHelper.GetSymmetricSecurityKey(),
                     SecurityAlgorithms.HmacSha256));
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
-            return new LoginResponseViewModel
+            return new ServiceResult<TokenViewModel>(new TokenViewModel
             {
-                DisplayableName = user.DisplayableName,
+                User = new UserInfoViewModel
+                {
+                    DisplayableName = user.DisplayableName,
+                    Group = user.Group.DisplayableName,
+                    Role = role,
+                    Position = null,
+                    UserName = user.UserName,
+                },
                 Token = encodedJwt,
-                Role = role,
-            };
+            });
         }
 
         /// <summary>
@@ -251,7 +231,7 @@ namespace DeliveryTracker.Services
         /// <param name="groupId"></param>
         /// <param name="roleId"></param>
         /// <returns></returns>
-        public async Task<InvitationModel> CreateInvitation(Guid groupId, Guid roleId)
+        public ServiceResult<InvitationModel> CreateInvitation(Guid groupId, Guid roleId)
         {
             var invitation = new InvitationModel
             {
@@ -262,10 +242,9 @@ namespace DeliveryTracker.Services
                 GroupId = groupId,
             };
 
-            await this.dbContext.Invitations.AddAsync(invitation);
-            await this.dbContext.SaveChangesAsync();
+            this.dbContext.Invitations.Add(invitation);
 
-            return invitation;
+            return new ServiceResult<InvitationModel>(invitation);
         }
 
         /// <summary>
@@ -285,13 +264,13 @@ namespace DeliveryTracker.Services
         }
     
         /// <summary>
-        /// Принять приглашение.
+        /// Принять приглашение. Необходимо выполнять в транзакции.
         /// </summary>
         /// <param name="invitationCode"></param>
         /// <param name="username"></param>
         /// <param name="password"></param>
         /// <returns>true - если приглашение существовало, false - в противном случае</returns>
-        public async Task<UserModel> AcceptInvitation(
+        public async Task<ServiceResult<UserModel>> AcceptInvitation(
             string invitationCode,
             string username, 
             string password)
@@ -300,24 +279,32 @@ namespace DeliveryTracker.Services
             {
                 return await this.AcceptInvitation(invitation, username, password);
             }
-            return null;
+            return new ServiceResult<UserModel>(
+                null,
+                ErrorFactory.InvitationDoesNotExist(invitationCode));
         }
         
         /// <summary>
-        /// Принять приглашение.
+        /// Принять приглашение. Необходимо выполнять в транзакции.
         /// </summary>
         /// <param name="invitation"></param>
         /// <param name="username"></param>
         /// <param name="password"></param>
         /// <returns></returns>
-        public async Task<UserModel> AcceptInvitation(
+        public async Task<ServiceResult<UserModel>> AcceptInvitation(
             InvitationModel invitation,
             string username, 
             string password)
         {
             if (invitation == null)
             {
-                return null;
+                throw new ArgumentNullException();
+            }
+            if (invitation.ExpirationDate < DateTime.UtcNow)
+            {
+                return new ServiceResult<UserModel>(
+                    null,
+                    ErrorFactory.InvitaitonExpired(invitation.InvitationCode));
             }
             var roleName = invitation.Role.Name;
             var group = invitation.Group;
@@ -327,7 +314,7 @@ namespace DeliveryTracker.Services
                 username,
                 password,
                 roleName,
-                group);
+                group.Id);
             return newUser;
         }
         
@@ -348,7 +335,7 @@ namespace DeliveryTracker.Services
                     .ToArray());
         
         
-        private async Task<UserModel> RegisterInternal(
+        private async Task<ServiceResult<UserModel>> RegisterInternal(
             UserModel newUser,
             string password,
             string roleName)
@@ -356,22 +343,26 @@ namespace DeliveryTracker.Services
             var result = await this.userManager.CreateAsync(newUser);
             if (!result.Succeeded)
             {
-                throw new AccountServiceException(result.Errors);
+                return new ServiceResult<UserModel>(
+                    null,
+                    result.Errors.Select(ErrorFactory.IdentityError));
             }
             result = await this.userManager.AddPasswordAsync(newUser, password);
             if (!result.Succeeded)
             {
-                throw new AccountServiceException(result.Errors);
+                return new ServiceResult<UserModel>(
+                    null,
+                    result.Errors.Select(ErrorFactory.IdentityError));
             }
             result = await this.userManager.AddToRoleAsync(newUser, roleName);
             if (!result.Succeeded)
             {
-                throw new AccountServiceException(result.Errors);
+                return new ServiceResult<UserModel>(
+                    null,
+                    result.Errors.Select(ErrorFactory.IdentityError));
             }
-            return newUser;
+            return new ServiceResult<UserModel>(newUser);
         }
-        
-        
         
         #endregion
        

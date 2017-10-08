@@ -1,16 +1,17 @@
 ﻿using System;
+using System.Threading.Tasks;
 using DeliveryTracker.Auth;
-using DeliveryTracker.Caching;
 using DeliveryTracker.Db;
 using DeliveryTracker.Models;
+using DeliveryTracker.Roles;
 using DeliveryTracker.Services;
+using DeliveryTracker.TaskStates;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -47,12 +48,27 @@ namespace DeliveryTracker
             services.AddDbContext<DeliveryTrackerDbContext>(
                 options => options.UseNpgsql(connectionString));
  
+            
             services.AddIdentity<UserModel, RoleModel>()
                 .AddEntityFrameworkStores<DeliveryTrackerDbContext>()
                 .AddDefaultTokenProviders()
                 .AddUserStore<UserStore<UserModel, RoleModel, DeliveryTrackerDbContext, Guid>>()
                 .AddRoleStore<RoleStore<RoleModel, DeliveryTrackerDbContext, Guid>>();
 
+            services.ConfigureApplicationCookie(options =>
+            {
+                options.Events.OnRedirectToLogin = ctx =>
+                {
+                    ctx.Response.StatusCode = 401;
+                    return Task.CompletedTask;
+                };
+                options.Events.OnRedirectToAccessDenied = ctx =>
+                {
+                    ctx.Response.StatusCode = 403;
+                    return Task.CompletedTask;
+                };
+            });
+            
             services.AddAuthorization(options =>
             {
                 options.DefaultPolicy = AuthPolicies.DefaultPolicy;
@@ -91,7 +107,8 @@ namespace DeliveryTracker
 
             services
                 .AddDeliveryTrackerServices()
-                .AddDeliveryTrackerCaching();
+                .AddDeliveryTrackerRoles()
+                .AddDeliveryTrackerTaskStates();
         }
 
         public void Configure(IApplicationBuilder app)

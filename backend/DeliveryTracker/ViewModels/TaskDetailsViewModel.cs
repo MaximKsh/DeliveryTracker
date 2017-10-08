@@ -5,6 +5,11 @@ namespace DeliveryTracker.ViewModels
     public class TaskDetailsViewModel
     {
         /// <summary>
+        /// ID задания.
+        /// </summary>
+        public Guid Id { get; set; }
+        
+        /// <summary>
         /// Состояние задания.
         /// </summary>
         public string TaskState { get; set; }
@@ -42,7 +47,6 @@ namespace DeliveryTracker.ViewModels
         /// <summary>
         /// Дата создания.
         /// </summary>
-        /// <returns></returns>
         public DateTime CreationDate { get; set; }
 
         /// <summary>

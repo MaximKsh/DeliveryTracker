@@ -8,8 +8,13 @@ namespace DeliveryTracker.Services
     {
         public static IServiceCollection AddDeliveryTrackerServices(this IServiceCollection services)
         {
-            services.AddScoped<AccountService>();
-            services.AddScoped<GroupService>();
+            services
+                .AddScoped<AccountService>()
+                .AddScoped<GroupService>()
+                .AddScoped<PerformerService>()
+                .AddScoped<TaskService>()
+
+                ;
             return services;
         }
     }

@@ -51,6 +51,8 @@ namespace DeliveryTracker.Db
                 b.Property(u => u.Id)
                     .HasDefaultValueSql("uuid_generate_v4()");
 
+                // longitude и latitude инициализируются автоматически.
+                
                 b.Property(u => u.DisplayableName)
                     .HasColumnType("citext collate \"ucs_basic\"")
                     .IsRequired();
@@ -59,6 +61,15 @@ namespace DeliveryTracker.Db
                     .WithMany(g => g.Users)
                     .HasForeignKey(u => u.GroupId)
                     .IsRequired();
+                
+                b.Property(p => p.LastTimePositionUpdated)
+                    .HasColumnType("timestamp")
+                    .HasDefaultValueSql("now() at time zone 'utc'")
+                    .IsRequired();
+
+                b.HasIndex(p => p.GroupId);
+                b.HasIndex(p => p.LastTimePositionUpdated);
+                b.HasIndex(p => new {p.Longitude, p.Latitude});
             });
 
             modelBuilder.Entity<RoleModel>(b =>
@@ -91,6 +102,9 @@ namespace DeliveryTracker.Db
                     .WithMany(r => r.Invitations)
                     .HasForeignKey(p => p.GroupId)
                     .IsRequired();
+                
+                b.HasIndex(p => p.RoleId);
+                b.HasIndex(p => p.GroupId);
             });
         }
 
@@ -104,10 +118,6 @@ namespace DeliveryTracker.Db
                     .HasColumnType("varchar(255)");
                 b.HasIndex(p => p.Alias)
                     .IsUnique();
-
-                b.Property(p => p.Caption)
-                    .HasColumnType("citext collate \"ucs_basic\"")
-                    .IsRequired();
             });
         }
 
@@ -124,6 +134,8 @@ namespace DeliveryTracker.Db
                 b.HasOne(p => p.Creator)
                     .WithOne(p => p.CreatedGroup)
                     .HasForeignKey<GroupModel>(p => p.CreatorId);
+                
+                b.HasIndex(p => p.CreatorId);
             });
         }
 
@@ -168,6 +180,12 @@ namespace DeliveryTracker.Db
 
                 b.Property(p => p.CompletionDate)
                     .HasColumnType("timestamp");
+                
+                b.HasIndex(p => p.StateId);
+                b.HasIndex(p => p.SenderId);
+                b.HasIndex(p => p.PerformerId);
+                b.HasIndex(p => p.GroupId);
+                b.HasIndex(p => p.CreationDate);
             });
         }
 

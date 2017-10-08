@@ -5,13 +5,13 @@ using Xunit;
 
 namespace DeliveryTrackerTest.Controllers
 {
-    public class SessionController: BaseControllerTest
+    public class SessionControllerTest: BaseControllerTest
     {
         [Fact]
         public async Task IsServerAvailable()
         {
             var client = this.Server.CreateClient();
-            var response = await client.GetAsync("/");
+            var response = await client.GetAsync(PingUrl());
             response.EnsureSuccessStatusCode();
         }
 

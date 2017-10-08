@@ -14,6 +14,21 @@ namespace DeliveryTracker.Models
         public string DisplayableName { get; set; }
         
         /// <summary>
+        /// Долгота.
+        /// </summary>
+        public double? Longitude { get; set; }
+        
+        /// <summary>
+        /// Широта.
+        /// </summary>
+        public double? Latitude { get; set; }
+        
+        /// <summary>
+        /// Последняя дата обновления положения.
+        /// </summary>
+        public DateTime LastTimePositionUpdated { get; set; }
+        
+        /// <summary>
         /// ID группы пользователя.
         /// </summary>
         public Guid GroupId { get; set; }

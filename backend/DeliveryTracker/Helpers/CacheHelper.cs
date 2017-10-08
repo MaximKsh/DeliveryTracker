@@ -1,4 +1,4 @@
-﻿namespace DeliveryTracker.Caching
+﻿namespace DeliveryTracker.Helpers
 {
     public static class CacheHelper
     {

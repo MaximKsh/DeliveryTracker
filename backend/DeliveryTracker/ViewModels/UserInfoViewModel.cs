@@ -24,5 +24,10 @@ namespace DeliveryTracker.ViewModels
         /// Роль пользователя.
         /// </summary>
         public string Role { get; set; }
+        
+        /// <summary>
+        /// Текущая позиция. Актуально только для исполнителя.
+        /// </summary>
+        public GeopositionViewModel Position { get; set; }
     }
 }

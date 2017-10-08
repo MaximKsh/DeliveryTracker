@@ -20,6 +20,23 @@ namespace DeliveryTrackerTest.Controllers
     {
         protected readonly TestServer Server = new TestServer(new WebHostBuilder()
             .UseStartup<TestStartup>());
+
+        protected const string ContentType ="application/json";
+        
+        protected static string PingUrl() =>
+            "/";
+
+        protected static string SessionUrl(string command) =>
+            $"/api/session/{command}";
+        
+        protected static string GroupUrl(string command) =>
+            $"/api/group/{command}";
+        
+        protected static string ManagerUrl(string command) =>
+            $"/api/manager/{command}";
+        
+        protected static string PerformerUrl(string command) =>
+            $"/api/performer/{command}";
         
         protected static async Task<(string, string, string, string)> CreateGroup(
             HttpClient client,
@@ -28,7 +45,7 @@ namespace DeliveryTrackerTest.Controllers
             string groupName,
             HttpStatusCode expectStatusCode = HttpStatusCode.OK)
         {
-            var createGroupRequest = new CreateGroupRequestViewModel
+            var createGroupRequest = new CreateGroupViewModel
             {
                 CreatorDisplayableName = creatorName,
                 CreatorPassword = creatorPassword,
@@ -36,8 +53,8 @@ namespace DeliveryTrackerTest.Controllers
             };
             var createGroupContent = JsonConvert.SerializeObject(createGroupRequest);
             var createGroupResponse = await client.PostAsync(
-                "/groups/create", 
-                new StringContent(createGroupContent, Encoding.UTF8, "application/json"));
+                GroupUrl("create"), 
+                new StringContent(createGroupContent, Encoding.UTF8, ContentType));
             Assert.Equal(expectStatusCode, createGroupResponse.StatusCode);
             if (!createGroupResponse.IsSuccessStatusCode)
             {
@@ -62,7 +79,7 @@ namespace DeliveryTrackerTest.Controllers
             string role,
             HttpStatusCode expectStatusCode = HttpStatusCode.OK)
         {
-            var loginRequest = new LoginRequestViewModel
+            var loginRequest = new CredentialsViewModel
             {
                 UserName = username,
                 Password = password,
@@ -70,17 +87,17 @@ namespace DeliveryTrackerTest.Controllers
             };
             var loginContent = JsonConvert.SerializeObject(loginRequest);
             var loginResponse = await client.PostAsync(
-                "/session/login", 
-                new StringContent(loginContent, Encoding.UTF8, "application/json"));
+                SessionUrl("login"), 
+                new StringContent(loginContent, Encoding.UTF8, ContentType));
             Assert.Equal(expectStatusCode, loginResponse.StatusCode);
             if (!loginResponse.IsSuccessStatusCode)
             {
                 return (null, null, null);
             }
-            var loginResponseBody =  
-                JsonConvert.DeserializeObject<LoginResponseViewModel>(await loginResponse.Content.ReadAsStringAsync());
+            var tokenResponse =  
+                JsonConvert.DeserializeObject<TokenViewModel>(await loginResponse.Content.ReadAsStringAsync());
 
-            return (loginResponseBody.DisplayableName, loginResponseBody.Token, loginResponseBody.Role);
+            return (tokenResponse.User.DisplayableName, tokenResponse.Token, tokenResponse.User.Role);
         }
 
         protected static async Task<(string, string, DateTime?, string)> Invite(
@@ -92,11 +109,11 @@ namespace DeliveryTrackerTest.Controllers
             string url;
             if (role == RoleInfo.Manager)
             {
-                url = "/groups/invite_manager";
+                url = GroupUrl("invite_manager");
             }
             else if (role == RoleInfo.Performer)
             {
-                url = "/groups/invite_performer";
+                url = GroupUrl("invite_performer");
             }
             else
             {
@@ -111,7 +128,7 @@ namespace DeliveryTrackerTest.Controllers
                 return (null, null, null, null);
             }
             var responseBody =  
-                JsonConvert.DeserializeObject<InvitationResponseViewModel>(await response.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<InvitationViewModel>(await response.Content.ReadAsStringAsync());
 
             return (
                 responseBody.InvitationCode,
@@ -127,7 +144,7 @@ namespace DeliveryTrackerTest.Controllers
             string password,
             HttpStatusCode expectStatusCode = HttpStatusCode.OK)
         {
-            var acceptInvitaitonRequest = new AcceptInvitationRequestViewModel
+            var acceptInvitaitonRequest = new AcceptInvitationViewModel
             {
                 DisplayableName = displayableName,
                 InvitationCode = invitationCode,
@@ -136,8 +153,8 @@ namespace DeliveryTrackerTest.Controllers
             
             var content = JsonConvert.SerializeObject(acceptInvitaitonRequest);
             var response = await client.PostAsync(
-                "/groups/accept_invitation", 
-                new StringContent(content, Encoding.UTF8, "application/json"));
+                GroupUrl("accept_invitation"), 
+                new StringContent(content, Encoding.UTF8, ContentType));
             Assert.Equal(expectStatusCode, response.StatusCode);
             if (!response.IsSuccessStatusCode)
             {
@@ -155,7 +172,7 @@ namespace DeliveryTrackerTest.Controllers
         protected static async Task<(string, string, string, string)> CheckSession(HttpClient client,string token)
         {
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var response = await client.GetAsync("/session/check");
+            var response = await client.GetAsync(SessionUrl("check"));
             if (!response.IsSuccessStatusCode)
             {
                 return (null, null, null, null);
@@ -187,7 +204,7 @@ namespace DeliveryTrackerTest.Controllers
                         await Invite(client, role, token);
             
                     var (userName1, _ ,_ ,_) = 
-                        await AcceptInvitation(client, invitationCode, $"MassCreatedUser_{count}", password);
+                        await AcceptInvitation(client, invitationCode, $"MassCreatedUser_{Guid.NewGuid():N}", password);
 
                     return userName1;
                 })
@@ -200,6 +217,6 @@ namespace DeliveryTrackerTest.Controllers
             }
             return strs;
         }
-
+        
     }
 }

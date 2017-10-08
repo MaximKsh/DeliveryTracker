@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq;
+using DeliveryTracker.Helpers;
 using DeliveryTracker.Models;
-using DeliveryTracker.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
-namespace DeliveryTracker.Caching
+namespace DeliveryTracker.Roles
 {
-    public class RolesCache
+    public class RoleCache
     {
         #region constants
 
@@ -16,15 +16,15 @@ namespace DeliveryTracker.Caching
         
         private const string CreatorName = RoleInfo.Creator;
         private static readonly string CreatorRoleCacheKey = 
-            string.Format(CacheHelper.CacheKeyFormat, typeof(RolesCache).FullName, CreatorName);
+            string.Format(CacheHelper.CacheKeyFormat, typeof(RoleCache).FullName, CreatorName);
 
         private const string ManagerName = RoleInfo.Manager;
         private static readonly string ManagerRoleCacheKey = 
-            string.Format(CacheHelper.CacheKeyFormat, typeof(RolesCache).FullName, ManagerName);
+            string.Format(CacheHelper.CacheKeyFormat, typeof(RoleCache).FullName, ManagerName);
 
         private const string PerformerName = RoleInfo.Performer;
         private static readonly string PerformerRoleCacheKey = 
-            string.Format(CacheHelper.CacheKeyFormat, typeof(RolesCache).FullName, PerformerName);
+            string.Format(CacheHelper.CacheKeyFormat, typeof(RoleCache).FullName, PerformerName);
 
         #endregion
 
@@ -32,17 +32,17 @@ namespace DeliveryTracker.Caching
 
         private readonly RoleManager<RoleModel> roleManager;
 
-        private readonly ILogger<RolesCache> logger;
+        private readonly ILogger<RoleCache> logger;
 
         private readonly IMemoryCache memoryCache;
-
+        
         #endregion
 
         #region constuctor
 
-        public RolesCache(
+        public RoleCache(
             RoleManager<RoleModel> roleManager, 
-            ILogger<RolesCache> logger,
+            ILogger<RoleCache> logger,
             IMemoryCache memoryCache)
         {
             this.roleManager = roleManager;
