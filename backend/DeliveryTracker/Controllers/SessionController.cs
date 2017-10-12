@@ -71,6 +71,9 @@ namespace DeliveryTracker.Controllers
                 return this.Unauthorized();
             }
             var role = roleResult.Result;
+            var position = user.Latitude.HasValue && user.Longitude.HasValue
+                ? new GeopositionViewModel {Latitude = user.Latitude.Value, Longitude = user.Longitude.Value}
+                : null;
             
             return this.Ok(new UserInfoViewModel
             {
@@ -78,6 +81,7 @@ namespace DeliveryTracker.Controllers
                 Group = user.Group.DisplayableName,
                 Role = role,
                 UserName = user.UserName,
+                Position = position, 
             });
         }
         
