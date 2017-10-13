@@ -62,47 +62,37 @@ namespace DeliveryTracker.Controllers
                 return this.BadRequest(this.ModelState.ToErrorListViewModel());
             }
 
-            try
+            var result = await this.taskService.AddTask(
+                this.User.Identity.Name,
+                addTaskViewModel.Caption,
+                addTaskViewModel.Content, 
+                addTaskViewModel.PerformerUserName, 
+                addTaskViewModel.DeadlineDate);
+            if (!result.Success)
             {
-                var result = await this.taskService.AddTask(
-                    this.User.Identity.Name,
-                    addTaskViewModel.Caption,
-                    addTaskViewModel.Content, 
-                    addTaskViewModel.PerformerUserName, 
-                    addTaskViewModel.DeadlineDate);
-                if (!result.Success)
+                var error = result.Errors.First();
+                if (error.Code == ErrorCode.UserNotFound)
                 {
-                    var error = result.Errors.First();
-                    if (error.Code == ErrorCode.UserNotFound )
-                    {
-                        return this.NotFound(error.ToErrorListViewModel());
-                    }
-                    if (error.Code == ErrorCode.UserNotInRole
-                        || error.Code == ErrorCode.UserWithoutRole
-                        || error.Code == ErrorCode.PerformerInAnotherGroup)
-                    {
-                        return this.StatusCode(403, error.ToErrorListViewModel());
-                    }
-                    return this.BadRequest(error.ToErrorListViewModel());
+                    return this.NotFound(error.ToErrorListViewModel());
                 }
+                if (error.Code == ErrorCode.UserNotInRole
+                    || error.Code == ErrorCode.UserWithoutRole
+                    || error.Code == ErrorCode.PerformerInAnotherGroup)
+                {
+                    return this.StatusCode(403, error.ToErrorListViewModel());
+                }
+                return this.BadRequest(error.ToErrorListViewModel());
+            }
                 
-                await this.dbContext.SaveChangesAsync();
-                return this.StatusCode(
-                    201,
-                    new TaskInfoViewModel
-                    {
-                        Id = result.Result.Id,
-                        Caption = result.Result.Caption,
-                        TaskState = this.taskStateCache.GetById(result.Result.StateId).Alias,
-                    });
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError(
-                    e, 
-                    $"Cancel by manager exception (user = '{this.User?.Identity?.Name ?? string.Empty}').");
-                return this.StatusCode(500, ErrorFactory.ServerError().ToErrorItemViewModel());
-            }
+            await this.dbContext.SaveChangesAsync();
+            return this.StatusCode(
+                201,
+                new TaskInfoViewModel
+                {
+                    Id = result.Result.Id,
+                    Caption = result.Result.Caption,
+                    TaskState = this.taskStateCache.GetById(result.Result.StateId).Alias,
+                });
         }
         
         [HttpPost("cancel_task")]
@@ -214,7 +204,7 @@ namespace DeliveryTracker.Controllers
                 {
                     return this.NotFound(error.ToErrorListViewModel());
                 }
-                if (error.Code == ErrorCode.UserNotInRole)
+                if (error.Code == ErrorCode.UserWithoutRole)
                 {
                     return this.StatusCode(403, error.ToErrorListViewModel());
                 }
@@ -265,6 +255,11 @@ namespace DeliveryTracker.Controllers
                     || error.Code == ErrorCode.TaskNotFound)
                 {
                     return this.NotFound(error.ToErrorListViewModel());
+                }
+                if (error.Code == ErrorCode.TaskIsForbidden
+                    || error.Code == ErrorCode.UserWithoutRole)
+                {
+                    return this.StatusCode(403, error.ToErrorListViewModel());
                 }
                 return this.BadRequest(error.ToErrorListViewModel());
             }

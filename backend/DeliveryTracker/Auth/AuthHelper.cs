@@ -27,7 +27,7 @@ namespace DeliveryTracker.Auth
         /// <summary>
         /// Время жизни токена в минутах
         /// </summary>
-        internal const int Lifetime = 1; 
+        internal const int Lifetime = 100; 
         
         internal static SymmetricSecurityKey GetSymmetricSecurityKey() =>
             new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Key));

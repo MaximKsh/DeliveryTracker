@@ -304,6 +304,10 @@ namespace DeliveryTracker.Controllers
                 {
                     return this.NotFound(error.ToErrorListViewModel());
                 }
+                if (error.Code == ErrorCode.UserWithoutRole)
+                {
+                    return this.StatusCode(403, error.ToErrorListViewModel());
+                }
                 return this.BadRequest(error.ToErrorListViewModel());
             }
             var task = taskResult.Result;

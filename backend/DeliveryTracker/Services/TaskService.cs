@@ -551,18 +551,27 @@ namespace DeliveryTracker.Services
             UserModel user,
             Guid taskId)
         {
-            var task = await this.dbContext.Tasks
-                .Include(p => p.Sender)
-                .Include(p => p.Performer)
-                .FirstOrDefaultAsync(p => p.Id == taskId && p.GroupId == user.GroupId);
-
-            if (task == null)
+         
+            var roleResult = await this.accountService.GetUserRole(user);
+            if (!roleResult.Success)
             {
                 return new ServiceResult<TaskModel>(
                     null,
-                    ErrorFactory.TaskNotFound(taskId));
+                    ErrorFactory.UserWithoutRole(user.UserName));
             }
-            return new ServiceResult<TaskModel>(task);
+            var role = roleResult.Result;
+            if (role == this.roleCache.Manager.Name)
+            {
+                return await this.GetTaskForManager(user, taskId);
+            }
+            if (role == this.roleCache.Performer.Name)
+            {
+                return await this.GetTaskForPerformer(user, taskId);
+            }
+            return new ServiceResult<TaskModel>(
+                null,
+                ErrorFactory.UserWithoutRole(user.UserName));
+            
         }
         
         #endregion
@@ -617,6 +626,58 @@ namespace DeliveryTracker.Services
                 .OrderBy(p => p.CreationDate);
             
             return new ServiceResult<List<TaskModel>>(await tasks.ToListAsync());
+        }
+
+
+        private async Task<ServiceResult<TaskModel>> GetTaskForManager(
+            UserModel user,
+            Guid taskId)
+        {
+            var task = await this.dbContext.Tasks
+                .Include(p => p.Sender)
+                .Include(p => p.Performer)
+                .FirstOrDefaultAsync(p => p.Id == taskId && p.GroupId == user.GroupId);
+
+            if (task == null)
+            {
+                return new ServiceResult<TaskModel>(
+                    null,
+                    ErrorFactory.TaskNotFound(taskId));
+            }
+            if (task.SenderId != user.Id)
+            {
+                return new ServiceResult<TaskModel>(
+                    null,
+                    ErrorFactory.TaskIsForbidden());
+            }
+            
+            return new ServiceResult<TaskModel>(task);
+        }
+        
+        private async Task<ServiceResult<TaskModel>> GetTaskForPerformer(
+            UserModel user,
+            Guid taskId)
+        {
+            var task = await this.dbContext.Tasks
+                .Include(p => p.Sender)
+                .Include(p => p.Performer)
+                .FirstOrDefaultAsync(p => p.Id == taskId && p.GroupId == user.GroupId);
+
+            if (task == null)
+            {
+                return new ServiceResult<TaskModel>(
+                    null,
+                    ErrorFactory.TaskNotFound(taskId));
+            }
+            if (task.PerformerId.HasValue 
+                && task.PerformerId != user.Id)
+            {
+                return new ServiceResult<TaskModel>(
+                    null,
+                    ErrorFactory.TaskIsForbidden());
+            }
+            
+            return new ServiceResult<TaskModel>(task);
         }
         
         #endregion
