@@ -29,7 +29,7 @@ namespace DeliveryTracker.ViewModels
         /// <summary>
         /// Название группы в которую приглашают.
         /// </summary>
-        [Required(ErrorMessage = LocalizationString.Error.GroupNameIsRequired)]
-        public string GroupName { get; set; }
+        [Required(ErrorMessage = LocalizationString.Error.InstanceNameIsRequired)]
+        public string InstanceName { get; set; }
     }
 }

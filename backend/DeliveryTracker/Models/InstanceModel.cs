@@ -5,38 +5,38 @@ using System.Diagnostics.CodeAnalysis;
 namespace DeliveryTracker.Models
 {
     /// <summary>
-    /// Группа, объединяющая управляющих и исполнителей.
+    /// Инстанс, объединяющая управляющих и исполнителей.
     /// </summary>
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-    public class GroupModel
+    public class InstanceModel
     {
         /// <summary>
-        /// ID группы.
+        /// ID инстанса.
         /// </summary>
         public Guid Id { get; set; }
 
         /// <summary>
-        /// Отображаемое имя группы.
+        /// Отображаемое имя инстанса.
         /// </summary>
         public string DisplayableName { get; set; }
 
         /// <summary>
-        /// Идентификатор создателя группы
+        /// Идентификатор создателя инстанса
         /// </summary>
         public Guid? CreatorId { get; set; }
         
         /// <summary>
-        /// Создать группы.
+        /// Создать инстанса.
         /// </summary>
         public virtual UserModel Creator { get; set; }
 
         /// <summary>
-        /// Пользователи группы.
+        /// Пользователи инстанса.
         /// </summary>
         public virtual ICollection<UserModel> Users { get; set; }
         
         /// <summary>
-        /// Приглашения в группу.
+        /// Приглашения в инстанса.
         /// </summary>
         public virtual ICollection<InvitationModel> Invitations { get; set; }
     }

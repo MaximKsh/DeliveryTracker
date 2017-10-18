@@ -77,7 +77,7 @@ namespace DeliveryTracker.Controllers
                 }
                 if (error.Code == ErrorCode.UserNotInRole
                     || error.Code == ErrorCode.UserWithoutRole
-                    || error.Code == ErrorCode.PerformerInAnotherGroup)
+                    || error.Code == ErrorCode.PerformerInAnotherInstance)
                 {
                     return this.StatusCode(403, error.ToErrorListViewModel());
                 }

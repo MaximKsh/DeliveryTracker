@@ -32,9 +32,9 @@
             
             public const string InvitationExpired = Pref + "InvitationExpired";
             
-            public const string GroupAlreadyHasCreator = Pref + "GroupAlreadyHasCreator";
+            public const string InstanceAlreadyHasCreator = Pref + "InstanceAlreadyHasCreator";
             
-            public const string PerformerInAnotherGroup = Pref + "PerformerInAnotherGroup";
+            public const string PerformerInAnotherInstance = Pref + "PerformerInAnotherInstance";
             
             public const string TaskNotFound = Pref + "TaskNotFound";
             
@@ -61,7 +61,7 @@
             
             public const string ContentIsRequired = "ContentIsRequired";
             
-            public const string GroupNameIsRequired = "GroupNameIsRequired";
+            public const string InstanceNameIsRequired = "InstanceNameIsRequired";
             
             public const string CreatorDisplayableNameIsRequired = "CreatorDisplayableNameIsRequired";
             

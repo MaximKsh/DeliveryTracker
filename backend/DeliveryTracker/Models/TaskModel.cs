@@ -32,14 +32,14 @@ namespace DeliveryTracker.Models
         public virtual TaskStateModel State { get; set; }
 
         /// <summary>
-        /// ID группы, в рамках которой существует таск.
+        /// ID инстанса, в рамках которой существует таск.
         /// </summary>
-        public Guid GroupId { get; set; }
+        public Guid InstanceId { get; set; }
 
         /// <summary>
-        /// Группа, в рамках которой существует таск. 
+        /// Инстанс, в рамках которой существует таск. 
         /// </summary>
-        public virtual GroupModel Group { get; set; }
+        public virtual InstanceModel Instance { get; set; }
 
         /// <summary>
         /// ID отправителя задания.

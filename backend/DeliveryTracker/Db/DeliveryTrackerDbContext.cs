@@ -12,7 +12,7 @@ namespace DeliveryTracker.Db
 
         #region dbsets
 
-        public DbSet<GroupModel> Groups { get; set; }
+        public DbSet<InstanceModel> Groups { get; set; }
 
         public DbSet<InvitationModel> Invitations { get; set; }
 
@@ -57,9 +57,9 @@ namespace DeliveryTracker.Db
                     .HasColumnType("citext collate \"ucs_basic\"")
                     .IsRequired();
                 
-                b.HasOne(u => u.Group)
+                b.HasOne(u => u.Instance)
                     .WithMany(g => g.Users)
-                    .HasForeignKey(u => u.GroupId)
+                    .HasForeignKey(u => u.InstanceId)
                     .IsRequired();
                 
                 b.Property(p => p.LastTimePositionUpdated)
@@ -67,7 +67,7 @@ namespace DeliveryTracker.Db
                     .HasDefaultValueSql("now() at time zone 'utc'")
                     .IsRequired();
 
-                b.HasIndex(p => p.GroupId);
+                b.HasIndex(p => p.InstanceId);
                 b.HasIndex(p => p.LastTimePositionUpdated);
                 b.HasIndex(p => new {p.Longitude, p.Latitude});
             });
@@ -98,13 +98,13 @@ namespace DeliveryTracker.Db
                     .HasForeignKey(p => p.RoleId)
                     .IsRequired();
                 
-                b.HasOne(p => p.Group)
+                b.HasOne(p => p.Instance)
                     .WithMany(r => r.Invitations)
-                    .HasForeignKey(p => p.GroupId)
+                    .HasForeignKey(p => p.InstanceId)
                     .IsRequired();
                 
                 b.HasIndex(p => p.RoleId);
-                b.HasIndex(p => p.GroupId);
+                b.HasIndex(p => p.InstanceId);
             });
         }
 
@@ -123,7 +123,7 @@ namespace DeliveryTracker.Db
 
         private static void ConfigureGroupModel(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<GroupModel>(b =>
+            modelBuilder.Entity<InstanceModel>(b =>
             {
                 b.HasKey(p => p.Id);
 
@@ -132,8 +132,8 @@ namespace DeliveryTracker.Db
                     .IsRequired();
 
                 b.HasOne(p => p.Creator)
-                    .WithOne(p => p.CreatedGroup)
-                    .HasForeignKey<GroupModel>(p => p.CreatorId);
+                    .WithOne(p => p.CreatedInstance)
+                    .HasForeignKey<InstanceModel>(p => p.CreatorId);
                 
                 b.HasIndex(p => p.CreatorId);
             });
@@ -184,7 +184,7 @@ namespace DeliveryTracker.Db
                 b.HasIndex(p => p.StateId);
                 b.HasIndex(p => p.SenderId);
                 b.HasIndex(p => p.PerformerId);
-                b.HasIndex(p => p.GroupId);
+                b.HasIndex(p => p.InstanceId);
                 b.HasIndex(p => p.CreationDate);
             });
         }

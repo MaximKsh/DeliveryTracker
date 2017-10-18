@@ -8,13 +8,13 @@ namespace DeliveryTracker.ViewModels
     /// View-Model запроса на создание группы.
     /// </summary>
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-    public class CreateGroupViewModel
+    public class CreateInstanceViewModel
     {
         /// <summary>
         /// Имя группы.
         /// </summary>
-        [Required(ErrorMessage = LocalizationString.Error.GroupNameIsRequired)]
-        public string GroupName { get; set; }
+        [Required(ErrorMessage = LocalizationString.Error.InstanceNameIsRequired)]
+        public string InstanceName { get; set; }
         
         /// <summary>
         /// Имя создателя группы.

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace DeliveryTrackerTest.Controllers
 {
-    public class GroupControllerTest: BaseControllerTest
+    public class InstaceControllerTest: BaseControllerTest
     {
         [Fact]
         public async Task IsServerAvailable()
@@ -21,7 +21,7 @@ namespace DeliveryTrackerTest.Controllers
             var client = this.Server.CreateClient();
             
             var (userName, displayableName, role, groupName) = 
-                await CreateGroup(client, "Иванов И.И.", "123qQ!", "Группа1");
+                await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
 
             Assert.NotNull(userName);
             Assert.Equal("Иванов И.И.", displayableName);
@@ -34,7 +34,7 @@ namespace DeliveryTrackerTest.Controllers
         {
             var client = this.Server.CreateClient();
             
-            await CreateGroup(client, "Иванов И.И.", "123", "Группа1", HttpStatusCode.BadRequest);
+            await CreateInstance(client, "Иванов И.И.", "123", "Группа1", HttpStatusCode.BadRequest);
         }
         
         [Fact]
@@ -42,7 +42,7 @@ namespace DeliveryTrackerTest.Controllers
         {
             var client = this.Server.CreateClient();
             
-            await CreateGroup(client, "", "", "", HttpStatusCode.BadRequest);
+            await CreateInstance(client, "", "", "", HttpStatusCode.BadRequest);
         }
         
         [Fact]
@@ -51,7 +51,7 @@ namespace DeliveryTrackerTest.Controllers
             var client = this.Server.CreateClient();
             
             var (userName, displayableName, role, groupName) = 
-                await CreateGroup(client, "Иванов И.И.", "123qQ!", "Группа1");
+                await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
 
             Assert.NotNull(userName);
             Assert.Equal("Иванов И.И.", displayableName);
@@ -59,7 +59,7 @@ namespace DeliveryTrackerTest.Controllers
             Assert.Equal("Группа1", groupName);
             
             var (userName2, displayableName2, role2, groupName2) = 
-               await CreateGroup(client, "Иванов И.И.", "123qQ!", "Группа1");
+               await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
 
             Assert.NotNull(userName2);
             Assert.Equal("Иванов И.И.", displayableName2);
@@ -72,7 +72,7 @@ namespace DeliveryTrackerTest.Controllers
         {
             var client = this.Server.CreateClient();
             
-            var (userName, displayableName, roleCreateGroup, groupName) = await CreateGroup(client, "Иванов И.И.", "123qQ!", "Группа1");
+            var (userName, displayableName, roleCreateGroup, groupName) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
             var (_, token, _) = await GetToken(client, userName, "123qQ!", roleCreateGroup);
             
             var (invitationCode, roleInvite, expirationDate, groupName1) = await Invite(client, RoleInfo.Manager, token);
@@ -94,7 +94,7 @@ namespace DeliveryTrackerTest.Controllers
         {
             var client = this.Server.CreateClient();
             
-            var (userName, displayableName, roleCreateGroup, groupName) = await CreateGroup(client, "Иванов И.И.", "123qQ!", "Группа1");
+            var (userName, displayableName, roleCreateGroup, groupName) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
             var (_, token, _) = await GetToken(client, userName, "123qQ!", roleCreateGroup);
             
             var (invitationCode, roleInvite, expirationDate, groupName1) = await Invite(client, RoleInfo.Performer, token);
@@ -138,7 +138,7 @@ namespace DeliveryTrackerTest.Controllers
         {
             var client = this.Server.CreateClient();
             
-            var (userName, displayableName, roleCreateGroup, groupName) = await CreateGroup(client, "Иванов И.И.", "123qQ!", "Группа1");
+            var (userName, displayableName, roleCreateGroup, groupName) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
             var (_, token, _) = await GetToken(client, userName, "123qQ!", roleCreateGroup);
             
             var (invitationCode, roleInvite, expirationDate, groupName1) = await Invite(client, RoleInfo.Performer, token);
@@ -162,7 +162,7 @@ namespace DeliveryTrackerTest.Controllers
             var client = this.Server.CreateClient();
             
             var (userName, displayableName, roleCreateGroup, groupName) = 
-                await CreateGroup(client, "Иванов И.И.", "123qQ!", "Группа1");
+                await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
             var (_, token, _) = await GetToken(client, userName, "123qQ!", roleCreateGroup);
             
             var (invitationCode, roleInvite, expirationDate, groupName1) = 
@@ -187,7 +187,7 @@ namespace DeliveryTrackerTest.Controllers
             var client = this.Server.CreateClient();
             
             var (userName, displayableName, roleCreateGroup, groupName) = 
-                await CreateGroup(client, "Иванов И.И.", "123qQ!", "Группа1");
+                await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
             var (_, token, _) = await GetToken(client, userName, "123qQ!", roleCreateGroup);
             
             var (invitationCode, roleInvite, expirationDate, groupName1) = 

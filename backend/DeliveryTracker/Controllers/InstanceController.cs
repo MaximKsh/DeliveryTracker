@@ -14,8 +14,8 @@ using Microsoft.Extensions.Logging;
 
 namespace DeliveryTracker.Controllers
 {
-    [Route("api/group")]
-    public sealed class GroupController: Controller
+    [Route("api/instance")]
+    public sealed class InstanceController: Controller
     {
         #region fields
         
@@ -25,25 +25,25 @@ namespace DeliveryTracker.Controllers
         
         private readonly RoleCache roleCache;
         
-        private readonly GroupService groupService;
+        private readonly InstanceService instanceService;
         
-        private readonly ILogger<GroupController> logger;
+        private readonly ILogger<InstanceController> logger;
         
         #endregion
         
         #region constructor
         
-        public GroupController(
+        public InstanceController(
             DeliveryTrackerDbContext dbContext, 
             AccountService accountService,
             RoleCache roleCache,
-            GroupService groupService, 
-            ILogger<GroupController> logger)
+            InstanceService instanceService, 
+            ILogger<InstanceController> logger)
         {
             this.dbContext = dbContext;
             this.accountService = accountService;
             this.roleCache = roleCache;
-            this.groupService = groupService;
+            this.instanceService = instanceService;
             this.logger = logger;
         }
 
@@ -52,7 +52,7 @@ namespace DeliveryTracker.Controllers
         #region actions
         
         [HttpPost("create")]
-        public async Task<IActionResult> Create([FromBody] CreateGroupViewModel groupViewModel)
+        public async Task<IActionResult> Create([FromBody] CreateInstanceViewModel instanceViewModel)
         {
             if (!this.ModelState.IsValid)
             {
@@ -64,19 +64,19 @@ namespace DeliveryTracker.Controllers
             {
                 try
                 {
-                    var groupResult = this.groupService.CreateGroup(groupViewModel.GroupName);
-                    if (!groupResult.Success)
+                    var instanceResult = this.instanceService.CreateInstance(instanceViewModel.InstanceName);
+                    if (!instanceResult.Success)
                     {
                         transaction.Rollback();
-                        return this.BadRequest(groupResult.Errors.ToErrorListViewModel());
+                        return this.BadRequest(instanceResult.Errors.ToErrorListViewModel());
                     }
-                    var group = groupResult.Result;
+                    var instance = instanceResult.Result;
                     
                     var userResult = await this.accountService.Register(
-                        groupViewModel.CreatorDisplayableName,
-                        groupViewModel.CreatorPassword,
+                        instanceViewModel.CreatorDisplayableName,
+                        instanceViewModel.CreatorPassword,
                         this.roleCache.Creator.Name,
-                        group.Id);
+                        instance.Id);
                     if (!userResult.Success)
                     {
                         transaction.Rollback();
@@ -84,7 +84,7 @@ namespace DeliveryTracker.Controllers
                     }
                     var user = userResult.Result;
                     
-                    var setCreatorResult = this.groupService.SetCreator(group, user.Id);
+                    var setCreatorResult = this.instanceService.SetCreator(instance, user.Id);
                     if (!setCreatorResult.Success)
                     {
                         transaction.Rollback();
@@ -98,7 +98,7 @@ namespace DeliveryTracker.Controllers
                     {
                         UserName = user.UserName,
                         DisplayableName = user.DisplayableName,
-                        Group = group.DisplayableName,
+                        Instance = instance.DisplayableName,
                         Role = this.roleCache.Creator.Name,
                     });
                 }
@@ -122,7 +122,7 @@ namespace DeliveryTracker.Controllers
             var currentUser = currentUserResult.Result;
                 
             var invitationResult = this.accountService.CreateInvitation(
-                currentUser.GroupId,
+                currentUser.InstanceId,
                 this.roleCache.Manager.Id);
             if (!invitationResult.Success)
             {
@@ -136,7 +136,7 @@ namespace DeliveryTracker.Controllers
                 InvitationCode = invitation.InvitationCode,
                 Role = this.roleCache.Manager.Name,
                 ExpirationDate = invitation.ExpirationDate,
-                GroupName = currentUser.Group.DisplayableName,
+                InstanceName = currentUser.Instance.DisplayableName,
             });
         }
         
@@ -152,7 +152,7 @@ namespace DeliveryTracker.Controllers
             var currentUser = currentUserResult.Result;
                 
             var invitationResult = this.accountService.CreateInvitation(
-                currentUser.GroupId,
+                currentUser.InstanceId,
                 this.roleCache.Performer.Id);
             if (!invitationResult.Success)
             {
@@ -165,7 +165,7 @@ namespace DeliveryTracker.Controllers
                 InvitationCode = invitation.InvitationCode,
                 Role = this.roleCache.Performer.Name,
                 ExpirationDate = invitation.ExpirationDate,
-                GroupName = currentUser.Group.DisplayableName,
+                InstanceName = currentUser.Instance.DisplayableName,
             });
         }
         
@@ -205,7 +205,7 @@ namespace DeliveryTracker.Controllers
                     {
                         UserName = newUser.UserName,
                         DisplayableName = newUser.DisplayableName,
-                        Group = newUser.Group.DisplayableName,
+                        Instance = newUser.Instance.DisplayableName,
                         Role = invitation.Role.Name,
                     });
                 }

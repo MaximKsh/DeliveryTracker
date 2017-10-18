@@ -18,7 +18,7 @@ namespace DeliveryTracker.ViewModels
         /// <summary>
         /// Группа пользователя.
         /// </summary>
-        public string Group { get; set; }
+        public string Instance { get; set; }
         
         /// <summary>
         /// Роль пользователя.

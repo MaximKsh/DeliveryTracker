@@ -10,7 +10,7 @@ namespace DeliveryTracker.Services
         {
             services
                 .AddScoped<AccountService>()
-                .AddScoped<GroupService>()
+                .AddScoped<InstanceService>()
                 .AddScoped<PerformerService>()
                 .AddScoped<TaskService>()
 

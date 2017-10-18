@@ -29,8 +29,8 @@ namespace DeliveryTrackerTest.Controllers
         protected static string SessionUrl(string command) =>
             $"/api/session/{command}";
         
-        protected static string GroupUrl(string command) =>
-            $"/api/group/{command}";
+        protected static string InstanceUrl(string command) =>
+            $"/api/instance/{command}";
         
         protected static string ManagerUrl(string command) =>
             $"/api/manager/{command}";
@@ -38,22 +38,22 @@ namespace DeliveryTrackerTest.Controllers
         protected static string PerformerUrl(string command) =>
             $"/api/performer/{command}";
         
-        protected static async Task<(string, string, string, string)> CreateGroup(
+        protected static async Task<(string, string, string, string)> CreateInstance(
             HttpClient client,
             string creatorName,
             string creatorPassword,
             string groupName,
             HttpStatusCode expectStatusCode = HttpStatusCode.OK)
         {
-            var createGroupRequest = new CreateGroupViewModel
+            var createGroupRequest = new CreateInstanceViewModel
             {
                 CreatorDisplayableName = creatorName,
                 CreatorPassword = creatorPassword,
-                GroupName = groupName,
+                InstanceName = groupName,
             };
             var createGroupContent = JsonConvert.SerializeObject(createGroupRequest);
             var createGroupResponse = await client.PostAsync(
-                GroupUrl("create"), 
+                InstanceUrl("create"), 
                 new StringContent(createGroupContent, Encoding.UTF8, ContentType));
             Assert.Equal(expectStatusCode, createGroupResponse.StatusCode);
             if (!createGroupResponse.IsSuccessStatusCode)
@@ -69,7 +69,7 @@ namespace DeliveryTrackerTest.Controllers
                 createGroupResponseBody.UserName,
                 createGroupResponseBody.DisplayableName,
                 createGroupResponseBody.Role,
-                createGroupResponseBody.Group);
+                createGroupResponseBody.Instance);
         }
 
         protected static async Task<(string, string, string)> GetToken(
@@ -109,11 +109,11 @@ namespace DeliveryTrackerTest.Controllers
             string url;
             if (role == RoleInfo.Manager)
             {
-                url = GroupUrl("invite_manager");
+                url = InstanceUrl("invite_manager");
             }
             else if (role == RoleInfo.Performer)
             {
-                url = GroupUrl("invite_performer");
+                url = InstanceUrl("invite_performer");
             }
             else
             {
@@ -134,7 +134,7 @@ namespace DeliveryTrackerTest.Controllers
                 responseBody.InvitationCode,
                 responseBody.Role,
                 responseBody.ExpirationDate,
-                responseBody.GroupName);
+                responseBody.InstanceName);
         }
 
         protected static async Task<(string, string, string, string)> AcceptInvitation(
@@ -153,7 +153,7 @@ namespace DeliveryTrackerTest.Controllers
             
             var content = JsonConvert.SerializeObject(acceptInvitaitonRequest);
             var response = await client.PostAsync(
-                GroupUrl("accept_invitation"), 
+                InstanceUrl("accept_invitation"), 
                 new StringContent(content, Encoding.UTF8, ContentType));
             Assert.Equal(expectStatusCode, response.StatusCode);
             if (!response.IsSuccessStatusCode)
@@ -166,7 +166,7 @@ namespace DeliveryTrackerTest.Controllers
                 createGroupResponseBody.UserName,
                 createGroupResponseBody.DisplayableName,
                 createGroupResponseBody.Role,
-                createGroupResponseBody.Group);
+                createGroupResponseBody.Instance);
         }
         
         protected static async Task<(string, string, string, string)> CheckSession(HttpClient client,string token)
@@ -184,7 +184,7 @@ namespace DeliveryTrackerTest.Controllers
                 createGroupResponseBody.UserName,
                 createGroupResponseBody.DisplayableName,
                 createGroupResponseBody.Role,
-                createGroupResponseBody.Group);
+                createGroupResponseBody.Instance);
             
         }
 

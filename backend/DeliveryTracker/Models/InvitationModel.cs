@@ -35,13 +35,13 @@ namespace DeliveryTracker.Models
         public virtual RoleModel Role { get; set; }
         
         /// <summary>
-        /// Идентификатор группы, в которую приглашают.
+        /// Идентификатор инстанса, в которую приглашают.
         /// </summary>
-        public Guid GroupId { get; set; }
+        public Guid InstanceId { get; set; }
         
         /// <summary>
-        /// Группа, в которую приглашают.
+        /// Инстанс, в которую приглашают.
         /// </summary>
-        public virtual GroupModel Group { get; set; }
+        public virtual InstanceModel Instance { get; set; }
     }
 }

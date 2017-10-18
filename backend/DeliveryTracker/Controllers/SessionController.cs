@@ -78,7 +78,7 @@ namespace DeliveryTracker.Controllers
             return this.Ok(new UserInfoViewModel
             {
                 DisplayableName = user.DisplayableName,
-                Group = user.Group.DisplayableName,
+                Instance = user.Instance.DisplayableName,
                 Role = role,
                 UserName = user.UserName,
                 Position = position, 

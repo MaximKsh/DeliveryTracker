@@ -117,12 +117,12 @@ namespace DeliveryTracker.Services
             
             if (performer != null)
             {
-                // Менеджер и исполнитель должны быть в одной группе
-                if (sender.GroupId != performer.GroupId)
+                // Менеджер и исполнитель должны быть в одном инстансе
+                if (sender.InstanceId != performer.InstanceId)
                 {
                     return new ServiceResult<TaskModel>(
                         null,
-                        ErrorFactory.PerformerInAnotherGroup());
+                        ErrorFactory.PerformerInAnotherInstance());
                 }
                 // Проверяем что переданный исполнитель действительно исполнитель
                 var performerRoleResult = await this.accountService.GetUserRole(performer);
@@ -147,7 +147,7 @@ namespace DeliveryTracker.Services
             {
                 Id = Guid.NewGuid(),
                 StateId = newStateId,
-                GroupId = sender.GroupId,
+                InstanceId = sender.InstanceId,
                 Caption = caption,
                 Content = content,
                 SenderId = sender.Id,
@@ -223,7 +223,7 @@ namespace DeliveryTracker.Services
                         this.taskStateCache.NewUndistributedState,
                         this.taskStateCache.NewState));
             }
-            if (task.GroupId != performer.GroupId)
+            if (task.InstanceId != performer.InstanceId)
             {
                 return new ServiceResult<TaskModel>(
                     null,
@@ -585,7 +585,7 @@ namespace DeliveryTracker.Services
             int limit)
         {
             IQueryable<TaskModel> tasks = this.dbContext.Tasks
-                .Where(p => p.GroupId == user.GroupId && p.SenderId == user.Id)
+                .Where(p => p.InstanceId == user.InstanceId && p.SenderId == user.Id)
                 .Skip(offset)
                 .Take(limit)
                 .Include(p => p.Sender)
@@ -601,7 +601,7 @@ namespace DeliveryTracker.Services
             int limit)
         {
             IQueryable<TaskModel> tasks = this.dbContext.Tasks
-                .Where(p => p.GroupId == user.GroupId && p.PerformerId == user.Id)
+                .Where(p => p.InstanceId == user.InstanceId && p.PerformerId == user.Id)
                 .Skip(offset)
                 .Take(limit)
                 .Include(p => p.Sender)
@@ -617,7 +617,7 @@ namespace DeliveryTracker.Services
             int limit)
         {
             IQueryable<TaskModel> tasks = this.dbContext.Tasks
-                .Where(p => p.GroupId == user.GroupId
+                .Where(p => p.InstanceId == user.InstanceId
                             && p.StateId == this.taskStateCache.NewUndistributedState.Id)
                 .Skip(offset)
                 .Take(limit)
@@ -636,7 +636,7 @@ namespace DeliveryTracker.Services
             var task = await this.dbContext.Tasks
                 .Include(p => p.Sender)
                 .Include(p => p.Performer)
-                .FirstOrDefaultAsync(p => p.Id == taskId && p.GroupId == user.GroupId);
+                .FirstOrDefaultAsync(p => p.Id == taskId && p.InstanceId == user.InstanceId);
 
             if (task == null)
             {
@@ -661,7 +661,7 @@ namespace DeliveryTracker.Services
             var task = await this.dbContext.Tasks
                 .Include(p => p.Sender)
                 .Include(p => p.Performer)
-                .FirstOrDefaultAsync(p => p.Id == taskId && p.GroupId == user.GroupId);
+                .FirstOrDefaultAsync(p => p.Id == taskId && p.InstanceId == user.InstanceId);
 
             if (task == null)
             {

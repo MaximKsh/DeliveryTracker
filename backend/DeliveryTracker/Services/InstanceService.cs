@@ -6,7 +6,7 @@ using DeliveryTracker.Validation;
 namespace DeliveryTracker.Services
 {
     // ReSharper disable once ClassNeverInstantiated.Global
-    public class GroupService
+    public class InstanceService
     {
         #region fields
         
@@ -18,7 +18,7 @@ namespace DeliveryTracker.Services
         
         #region constructor
         
-        public GroupService(
+        public InstanceService(
             DeliveryTrackerDbContext dbContext,
             AccountService accountService)
         {
@@ -35,35 +35,35 @@ namespace DeliveryTracker.Services
         /// </summary>
         /// <param name="name">Имя новой группы</param>
         /// <returns></returns>
-        public ServiceResult<GroupModel> CreateGroup(string name )
+        public ServiceResult<InstanceModel> CreateInstance(string name )
         {
-            var group = new GroupModel
+            var group = new InstanceModel
             {
                 Id = Guid.NewGuid(),
                 DisplayableName = name,
             };
             var creatingResult = this.dbContext.Groups.Add(group);
             
-            return new ServiceResult<GroupModel>(creatingResult.Entity);
+            return new ServiceResult<InstanceModel>(creatingResult.Entity);
         }
 
         /// <summary>
         /// Установить создателя группы.
         /// </summary>
-        /// <param name="group"></param>
+        /// <param name="instance"></param>
         /// <param name="creatorId"></param>
-        public ServiceResult<GroupModel> SetCreator(GroupModel group, Guid creatorId)
+        public ServiceResult<InstanceModel> SetCreator(InstanceModel instance, Guid creatorId)
         {
-            if (group.CreatorId.HasValue)
+            if (instance.CreatorId.HasValue)
             {
-                return new ServiceResult<GroupModel>(
-                    group,
-                    ErrorFactory.GroupAlreadyHasCreator(group.DisplayableName));
+                return new ServiceResult<InstanceModel>(
+                    instance,
+                    ErrorFactory.InstanceAlreadyHasCreator(instance.DisplayableName));
             }
             
-            group.CreatorId = creatorId;
-            var entityEntry = this.dbContext.Groups.Update(group);
-            return new ServiceResult<GroupModel>(entityEntry.Entity);
+            instance.CreatorId = creatorId;
+            var entityEntry = this.dbContext.Groups.Update(instance);
+            return new ServiceResult<InstanceModel>(entityEntry.Entity);
         }
         
         #endregion

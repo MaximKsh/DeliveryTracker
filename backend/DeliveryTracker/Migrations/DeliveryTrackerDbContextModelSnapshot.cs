@@ -22,7 +22,7 @@ namespace DeliveryTracker.Migrations
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
                 .HasAnnotation("ProductVersion", "2.0.0-rtm-26452");
 
-            modelBuilder.Entity("DeliveryTracker.Models.GroupModel", b =>
+            modelBuilder.Entity("DeliveryTracker.Models.InstanceModel", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
@@ -49,7 +49,7 @@ namespace DeliveryTracker.Migrations
                     b.Property<DateTime>("ExpirationDate")
                         .HasColumnType("timestamp");
 
-                    b.Property<Guid>("GroupId");
+                    b.Property<Guid>("InstanceId");
 
                     b.Property<string>("InvitationCode")
                         .HasColumnType("varchar(16)");
@@ -58,7 +58,7 @@ namespace DeliveryTracker.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GroupId");
+                    b.HasIndex("InstanceId");
 
                     b.HasIndex("InvitationCode")
                         .IsUnique();
@@ -116,10 +116,10 @@ namespace DeliveryTracker.Migrations
                     b.Property<DateTime?>("Deadline")
                         .HasColumnType("timestamp");
 
-                    b.Property<Guid>("GroupId");
-
                     b.Property<DateTime?>("InWorkDate")
                         .HasColumnType("timestamp");
+
+                    b.Property<Guid>("InstanceId");
 
                     b.Property<Guid?>("PerformerId");
 
@@ -131,7 +131,7 @@ namespace DeliveryTracker.Migrations
 
                     b.HasIndex("CreationDate");
 
-                    b.HasIndex("GroupId");
+                    b.HasIndex("InstanceId");
 
                     b.HasIndex("PerformerId");
 
@@ -178,7 +178,7 @@ namespace DeliveryTracker.Migrations
 
                     b.Property<bool>("EmailConfirmed");
 
-                    b.Property<Guid>("GroupId");
+                    b.Property<Guid>("InstanceId");
 
                     b.Property<DateTime>("LastTimePositionUpdated")
                         .ValueGeneratedOnAdd()
@@ -214,7 +214,7 @@ namespace DeliveryTracker.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("GroupId");
+                    b.HasIndex("InstanceId");
 
                     b.HasIndex("LastTimePositionUpdated");
 
@@ -311,18 +311,18 @@ namespace DeliveryTracker.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
-            modelBuilder.Entity("DeliveryTracker.Models.GroupModel", b =>
+            modelBuilder.Entity("DeliveryTracker.Models.InstanceModel", b =>
                 {
                     b.HasOne("DeliveryTracker.Models.UserModel", "Creator")
-                        .WithOne("CreatedGroup")
-                        .HasForeignKey("DeliveryTracker.Models.GroupModel", "CreatorId");
+                        .WithOne("CreatedInstance")
+                        .HasForeignKey("DeliveryTracker.Models.InstanceModel", "CreatorId");
                 });
 
             modelBuilder.Entity("DeliveryTracker.Models.InvitationModel", b =>
                 {
-                    b.HasOne("DeliveryTracker.Models.GroupModel", "Group")
+                    b.HasOne("DeliveryTracker.Models.InstanceModel", "Instance")
                         .WithMany("Invitations")
-                        .HasForeignKey("GroupId")
+                        .HasForeignKey("InstanceId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("DeliveryTracker.Models.RoleModel", "Role")
@@ -333,9 +333,9 @@ namespace DeliveryTracker.Migrations
 
             modelBuilder.Entity("DeliveryTracker.Models.TaskModel", b =>
                 {
-                    b.HasOne("DeliveryTracker.Models.GroupModel", "Group")
+                    b.HasOne("DeliveryTracker.Models.InstanceModel", "Instance")
                         .WithMany()
-                        .HasForeignKey("GroupId")
+                        .HasForeignKey("InstanceId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("DeliveryTracker.Models.UserModel", "Performer")
@@ -355,9 +355,9 @@ namespace DeliveryTracker.Migrations
 
             modelBuilder.Entity("DeliveryTracker.Models.UserModel", b =>
                 {
-                    b.HasOne("DeliveryTracker.Models.GroupModel", "Group")
+                    b.HasOne("DeliveryTracker.Models.InstanceModel", "Instance")
                         .WithMany("Users")
-                        .HasForeignKey("GroupId")
+                        .HasForeignKey("InstanceId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

@@ -96,7 +96,7 @@ namespace DeliveryTracker.Services
         }
 
         /// <summary>
-        /// Получить доступных исполнителей в группе для менеджера.
+        /// Получить доступных исполнителей для менеджера.
         /// </summary>
         /// <param name="username"></param>
         /// <param name="offset"></param>
@@ -119,7 +119,7 @@ namespace DeliveryTracker.Services
         }
 
         /// <summary>
-        /// Получить доступных исполнителей в группе для менеджера.
+        /// Получить доступных исполнителей для менеджера.
         /// </summary>
         /// <param name="user"></param>
         /// <param name="offset"></param>
@@ -146,7 +146,7 @@ namespace DeliveryTracker.Services
             }
             
             IQueryable<UserModel> users = this.dbContext.Users
-                .Where(p => p.GroupId == user.GroupId && p.Longitude != null && p.Latitude != null)
+                .Where(p => p.InstanceId == user.InstanceId && p.Longitude != null && p.Latitude != null)
                 .Skip(offset)
                 .Take(limit);
             

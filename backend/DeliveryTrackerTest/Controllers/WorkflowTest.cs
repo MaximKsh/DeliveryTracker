@@ -33,9 +33,9 @@ namespace DeliveryTrackerTest.Controllers
         {
             var client = this.Server.CreateClient();
             
-            var (userName, _, roleCreateGroup, _) = 
-                await CreateGroup(client, "Иванов И.И.", "123qQ!", "Группа1");
-            var (_, token, _) = await GetToken(client, userName, "123qQ!", roleCreateGroup);
+            var (userName, _, roleCreateInstance, _) = 
+                await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
+            var (_, token, _) = await GetToken(client, userName, "123qQ!", roleCreateInstance);
             var performersUsernames = await MassCreateUsers(client, token, RoleInfo.Performer, "123qQ!", 10);
             var manager = (await MassCreateUsers(client, token, RoleInfo.Manager, "123qQ!", 1)).First();
             var (_, managerToken, _) = await GetToken(client, manager, "123qQ!", RoleInfo.Manager);
@@ -164,9 +164,9 @@ namespace DeliveryTrackerTest.Controllers
             var clientPerformer1 = this.Server.CreateClient();
             var clientPerformer2 = this.Server.CreateClient();
             
-            var (userName, _, roleCreateGroup, _) = 
-                await CreateGroup(clientManager1, "Иванов И.И.", "123qQ!", "Группа1");
-            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateGroup);
+            var (userName, _, roleCreateInstance, _) = 
+                await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
+            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateInstance);
             var performers = await MassCreateUsers(clientManager1, token, RoleInfo.Performer, "123qQ!", 2);
             var managers = (await MassCreateUsers(clientManager1, token, RoleInfo.Manager, "123qQ!", 2));
             
@@ -251,9 +251,9 @@ namespace DeliveryTrackerTest.Controllers
             var clientPerformer1 = this.Server.CreateClient();
             var clientPerformer2 = this.Server.CreateClient();
             
-            var (userName, _, roleCreateGroup, _) = 
-                await CreateGroup(clientManager1, "Иванов И.И.", "123qQ!", "Группа1");
-            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateGroup);
+            var (userName, _, roleCreateInstance, _) = 
+                await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
+            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateInstance);
             var performers = await MassCreateUsers(clientManager1, token, RoleInfo.Performer, "123qQ!", 2);
             var managers = (await MassCreateUsers(clientManager1, token, RoleInfo.Manager, "123qQ!", 2));
             
@@ -336,7 +336,7 @@ namespace DeliveryTrackerTest.Controllers
         /// Проверяем что состояния завершены
         /// </summary>
         [Fact]
-        public async void TestTwoGroups()
+        public async void TestTwoInstances()
         {
             var clientManager1 = this.Server.CreateClient();
             var clientManager2 = this.Server.CreateClient();
@@ -344,15 +344,15 @@ namespace DeliveryTrackerTest.Controllers
             var clientPerformer1 = this.Server.CreateClient();
             var clientPerformer2 = this.Server.CreateClient();
             
-            var (userName1, _, roleCreateGroup1, _) = 
-                await CreateGroup(clientManager1, "Иванов И.И.", "123qQ!", "Группа1");
-            var (_, token1, _) = await GetToken(clientManager1, userName1, "123qQ!", roleCreateGroup1);
+            var (userName1, _, roleCreateInstance1, _) = 
+                await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
+            var (_, token1, _) = await GetToken(clientManager1, userName1, "123qQ!", roleCreateInstance1);
             var performers1 = await MassCreateUsers(clientManager1, token1, RoleInfo.Performer, "123qQ!", 1);
             var managers1 = (await MassCreateUsers(clientManager1, token1, RoleInfo.Manager, "123qQ!", 1));
             
-            var (userName2, _, roleCreateGroup2, _) = 
-                await CreateGroup(clientManager1, "Иванов И.И.", "123qQ!", "Группа1");
-            var (_, token, _) = await GetToken(clientManager1, userName2, "123qQ!", roleCreateGroup2);
+            var (userName2, _, roleCreateInstance2, _) = 
+                await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
+            var (_, token, _) = await GetToken(clientManager1, userName2, "123qQ!", roleCreateInstance2);
             var performers2 = await MassCreateUsers(clientManager1, token, RoleInfo.Performer, "123qQ!", 1);
             var managers2 = (await MassCreateUsers(clientManager1, token, RoleInfo.Manager, "123qQ!", 1));
             
@@ -377,9 +377,9 @@ namespace DeliveryTrackerTest.Controllers
             var taskId22 = await AddTask(clientManager2, "TaskCaption22", "TaskContent22", performers2.First());
             
             await AddTask(clientManager1, "1", "1", performers2.First(), 
-                expectedStatus: HttpStatusCode.Forbidden, errorCode:ErrorCode.PerformerInAnotherGroup);
+                expectedStatus: HttpStatusCode.Forbidden, errorCode:ErrorCode.PerformerInAnotherInstance);
             await AddTask(clientManager2, "1", "1", performers1.First(),
-                expectedStatus: HttpStatusCode.Forbidden, errorCode:ErrorCode.PerformerInAnotherGroup);
+                expectedStatus: HttpStatusCode.Forbidden, errorCode:ErrorCode.PerformerInAnotherInstance);
                 
             // Смотрим задания за менеджеров
             var response1 = await clientManager1.GetAsync(ManagerUrl("my_tasks"));
@@ -499,9 +499,9 @@ namespace DeliveryTrackerTest.Controllers
             var clientManager1 = this.Server.CreateClient();
             var clientPerformer1 = this.Server.CreateClient();
             
-            var (userName, _, roleCreateGroup, _) = 
-                await CreateGroup(clientManager1, "Иванов И.И.", "123qQ!", "Группа1");
-            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateGroup);
+            var (userName, _, roleCreateInstance, _) = 
+                await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
+            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateInstance);
             var performers = await MassCreateUsers(clientManager1, token, RoleInfo.Performer, "123qQ!", 1);
             var managers = (await MassCreateUsers(clientManager1, token, RoleInfo.Manager, "123qQ!", 1));
 
@@ -567,9 +567,9 @@ namespace DeliveryTrackerTest.Controllers
             var clientManager1 = this.Server.CreateClient();
             var clientPerformer1 = this.Server.CreateClient();
             
-            var (userName, _, roleCreateGroup, _) = 
-                await CreateGroup(clientManager1, "Иванов И.И.", "123qQ!", "Группа1");
-            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateGroup);
+            var (userName, _, roleCreateInstance, _) = 
+                await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
+            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateInstance);
             var performers = await MassCreateUsers(clientManager1, token, RoleInfo.Performer, "123qQ!", 1);
             var managers = (await MassCreateUsers(clientManager1, token, RoleInfo.Manager, "123qQ!", 1));
 
@@ -623,9 +623,9 @@ namespace DeliveryTrackerTest.Controllers
             var clientManager1 = this.Server.CreateClient();
             var clientPerformer1 = this.Server.CreateClient();
             
-            var (userName, _, roleCreateGroup, _) = 
-                await CreateGroup(clientManager1, "Иванов И.И.", "123qQ!", "Группа1");
-            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateGroup);
+            var (userName, _, roleCreateInstance, _) = 
+                await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
+            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateInstance);
             var performers = await MassCreateUsers(clientManager1, token, RoleInfo.Performer, "123qQ!", 1);
             var managers = (await MassCreateUsers(clientManager1, token, RoleInfo.Manager, "123qQ!", 1));
 

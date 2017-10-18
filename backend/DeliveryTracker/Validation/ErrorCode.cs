@@ -43,14 +43,14 @@
         public const string InvitationExpired = "InvitationExpired";
         
         /// <summary>
-        /// Код ошибки: у группы уже есть создатель.
+        /// Код ошибки: у инстанса уже есть создатель.
         /// </summary>
-        public const string GroupAlreadyHasCreator = "GroupAlreadyHasCreator";
+        public const string InstanceAlreadyHasCreator = "InstanceAlreadyHasCreator";
         
         /// <summary>
-        /// Код ошибки: указанный исполнитель находится в другой группе.
+        /// Код ошибки: указанный исполнитель находится в другом иснтансе.
         /// </summary>
-        public const string PerformerInAnotherGroup = "PerformerInAnotherGroup";  
+        public const string PerformerInAnotherInstance = "PerformerInAnotherInstance";  
         
         /// <summary>
         /// Код ошибки: задание не найдено.

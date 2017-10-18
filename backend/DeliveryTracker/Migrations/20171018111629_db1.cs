@@ -84,7 +84,7 @@ namespace DeliveryTracker.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ExpirationDate = table.Column<DateTime>(type: "timestamp", nullable: false),
-                    GroupId = table.Column<Guid>(type: "uuid", nullable: false),
+                    InstanceId = table.Column<Guid>(type: "uuid", nullable: false),
                     InvitationCode = table.Column<string>(type: "varchar(16)", nullable: true),
                     RoleId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -165,7 +165,7 @@ namespace DeliveryTracker.Migrations
                     DisplayableName = table.Column<string>(type: "citext collate \"ucs_basic\"", nullable: false),
                     Email = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: true),
                     EmailConfirmed = table.Column<bool>(type: "bool", nullable: false),
-                    GroupId = table.Column<Guid>(type: "uuid", nullable: false),
+                    InstanceId = table.Column<Guid>(type: "uuid", nullable: false),
                     LastTimePositionUpdated = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now() at time zone 'utc'"),
                     Latitude = table.Column<double>(type: "float8", nullable: true),
                     LockoutEnabled = table.Column<bool>(type: "bool", nullable: false),
@@ -184,8 +184,8 @@ namespace DeliveryTracker.Migrations
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AspNetUsers_Groups_GroupId",
-                        column: x => x.GroupId,
+                        name: "FK_AspNetUsers_Groups_InstanceId",
+                        column: x => x.InstanceId,
                         principalTable: "Groups",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -201,8 +201,8 @@ namespace DeliveryTracker.Migrations
                     Content = table.Column<string>(type: "citext collate \"ucs_basic\"", nullable: false),
                     CreationDate = table.Column<DateTime>(type: "timestamp", nullable: false, defaultValueSql: "now() at time zone 'utc'"),
                     Deadline = table.Column<DateTime>(type: "timestamp", nullable: true),
-                    GroupId = table.Column<Guid>(type: "uuid", nullable: false),
                     InWorkDate = table.Column<DateTime>(type: "timestamp", nullable: true),
+                    InstanceId = table.Column<Guid>(type: "uuid", nullable: false),
                     PerformerId = table.Column<Guid>(type: "uuid", nullable: true),
                     SenderId = table.Column<Guid>(type: "uuid", nullable: false),
                     StateId = table.Column<Guid>(type: "uuid", nullable: false)
@@ -211,8 +211,8 @@ namespace DeliveryTracker.Migrations
                 {
                     table.PrimaryKey("PK_Tasks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Tasks_Groups_GroupId",
-                        column: x => x.GroupId,
+                        name: "FK_Tasks_Groups_InstanceId",
+                        column: x => x.InstanceId,
                         principalTable: "Groups",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -263,9 +263,9 @@ namespace DeliveryTracker.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AspNetUsers_GroupId",
+                name: "IX_AspNetUsers_InstanceId",
                 table: "AspNetUsers",
-                column: "GroupId");
+                column: "InstanceId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUsers_LastTimePositionUpdated",
@@ -295,9 +295,9 @@ namespace DeliveryTracker.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Invitations_GroupId",
+                name: "IX_Invitations_InstanceId",
                 table: "Invitations",
-                column: "GroupId");
+                column: "InstanceId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Invitations_InvitationCode",
@@ -316,9 +316,9 @@ namespace DeliveryTracker.Migrations
                 column: "CreationDate");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tasks_GroupId",
+                name: "IX_Tasks_InstanceId",
                 table: "Tasks",
-                column: "GroupId");
+                column: "InstanceId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_PerformerId",
@@ -350,9 +350,9 @@ namespace DeliveryTracker.Migrations
                 onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_Invitations_Groups_GroupId",
+                name: "FK_Invitations_Groups_InstanceId",
                 table: "Invitations",
-                column: "GroupId",
+                column: "InstanceId",
                 principalTable: "Groups",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Cascade);

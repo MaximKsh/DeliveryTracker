@@ -117,27 +117,27 @@ namespace DeliveryTracker.Validation
                 });
         
         /// <summary>
-        /// У группы уже существует создатель. Повторно указать создателя нельзя.
+        /// У инстанса уже существует создатель. Повторно указать создателя нельзя.
         /// </summary>
-        /// <param name="groupDisplayableName"></param>
+        /// <param name="instanceDisplayableName"></param>
         /// <returns></returns>
-        public static IError GroupAlreadyHasCreator(string groupDisplayableName) =>
+        public static IError InstanceAlreadyHasCreator(string instanceDisplayableName) =>
             new Error(
-                ErrorCode.GroupAlreadyHasCreator,
-                LocalizationString.Error.GroupAlreadyHasCreator,
+                ErrorCode.InstanceAlreadyHasCreator,
+                LocalizationString.Error.InstanceAlreadyHasCreator,
                 new Dictionary<string, string>
                 {
-                    ["groupDisplayableName"] = groupDisplayableName,
+                    ["instanceDisplayableName"] = instanceDisplayableName,
                 });
         
         /// <summary>
-        /// Указанный исполнитель находится в другой группе.
+        /// Указанный исполнитель находится в другом инстансе.
         /// </summary>
         /// <returns></returns>
-        public static IError PerformerInAnotherGroup() =>
+        public static IError PerformerInAnotherInstance() =>
             new Error(
-                ErrorCode.PerformerInAnotherGroup,
-                LocalizationString.Error.PerformerInAnotherGroup);
+                ErrorCode.PerformerInAnotherInstance,
+                LocalizationString.Error.PerformerInAnotherInstance);
         
         /// <summary>
         /// Задание не найдено.

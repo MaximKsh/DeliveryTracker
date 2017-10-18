@@ -76,7 +76,7 @@ namespace DeliveryTracker.Services
             }
             if (withGroup)
             {
-                this.dbContext.Entry(currentUser).Reference(p => p.Group).Load();
+                this.dbContext.Entry(currentUser).Reference(p => p.Instance).Load();
             }
             return new ServiceResult<UserModel>(currentUser);
         }
@@ -120,7 +120,7 @@ namespace DeliveryTracker.Services
             {
                 UserName = GenerateInvitationCode(),
                 DisplayableName = displayableName,
-                GroupId = groupId,
+                InstanceId = groupId,
             };
             return await this.RegisterInternal(newUser, password, roleName);
         }
@@ -145,7 +145,7 @@ namespace DeliveryTracker.Services
             {
                 UserName = username,
                 DisplayableName = displayableName,
-                GroupId = groupId,
+                InstanceId = groupId,
             };
             return await this.RegisterInternal(newUser, password, roleName);
         }
@@ -216,7 +216,7 @@ namespace DeliveryTracker.Services
                 User = new UserInfoViewModel
                 {
                     DisplayableName = user.DisplayableName,
-                    Group = user.Group.DisplayableName,
+                    Instance = user.Instance.DisplayableName,
                     Role = role,
                     Position = null,
                     UserName = user.UserName,
@@ -239,7 +239,7 @@ namespace DeliveryTracker.Services
                 InvitationCode = GenerateInvitationCode(),
                 ExpirationDate = DateTime.UtcNow.AddDays(InvitationExpirationPeriodInDays),
                 RoleId = roleId,
-                GroupId = groupId,
+                InstanceId = groupId,
             };
 
             this.dbContext.Invitations.Add(invitation);
@@ -258,7 +258,7 @@ namespace DeliveryTracker.Services
             invitation =  this.dbContext
                 .Invitations
                 .Include(p => p.Role)
-                .Include(p => p.Group)
+                .Include(p => p.Instance)
                 .FirstOrDefault(p => p.InvitationCode == invitationCode);
             return invitation != null;
         }
@@ -307,7 +307,7 @@ namespace DeliveryTracker.Services
                     ErrorFactory.InvitaitonExpired(invitation.InvitationCode));
             }
             var roleName = invitation.Role.Name;
-            var group = invitation.Group;
+            var group = invitation.Instance;
             this.dbContext.Invitations.Remove(invitation);
             var newUser = await this.Register(
                 invitation.InvitationCode,

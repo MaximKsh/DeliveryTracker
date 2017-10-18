@@ -31,17 +31,17 @@ namespace DeliveryTracker.Models
         /// <summary>
         /// ID группы пользователя.
         /// </summary>
-        public Guid GroupId { get; set; }
+        public Guid InstanceId { get; set; }
 
         /// <summary>
         /// Группа пользователя.
         /// </summary>
-        public GroupModel Group { get; set;}
+        public InstanceModel Instance { get; set;}
 
         /// <summary>
         /// Группа, созданная пользователем.
         /// </summary>
-        public virtual GroupModel CreatedGroup { get; set; }
+        public virtual InstanceModel CreatedInstance { get; set; }
         
         /// <summary>
         /// Задания, выданные пользователем.
