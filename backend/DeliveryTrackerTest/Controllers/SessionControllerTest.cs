@@ -16,11 +16,11 @@ namespace DeliveryTrackerTest.Controllers
         }
 
         [Fact]
-        public async Task CreateGroupAndLogin()
+        public async Task CreateInstanceAndLogin()
         {
             var client = this.Server.CreateClient();
             
-            var (userName, _, creatorRole, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
+            var (userName, _, creatorRole, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var (displayableName, token, role) = await GetToken(client, userName, "123qQ!", creatorRole);
             Assert.Equal("Иванов И.И.", displayableName);
             Assert.Equal(RoleInfo.Creator, role);
@@ -30,11 +30,11 @@ namespace DeliveryTrackerTest.Controllers
         }
         
         [Fact]
-        public async Task CreateGroupAndInvalidPassword()
+        public async Task CreateInstanceAndInvalidPassword()
         {
             var client = this.Server.CreateClient();
             
-            var (userName, _, role, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
+            var (userName, _, role, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var (_, token, _) = await GetToken(client, userName, "123qQ1", role, HttpStatusCode.Unauthorized);
             Assert.True(string.IsNullOrWhiteSpace(token));
             var (checkedUsername, _, _, _) = await CheckSession(client, token);
@@ -46,7 +46,7 @@ namespace DeliveryTrackerTest.Controllers
         {
             var client = this.Server.CreateClient();
             
-            var (userName, _, creatorRole, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
+            var (userName, _, creatorRole, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var (displayableName, token, role) = await GetToken(client, userName, "123qQ!", creatorRole);
             Assert.Equal("Иванов И.И.", displayableName);
             Assert.Equal(RoleInfo.Creator, role);
@@ -63,7 +63,7 @@ namespace DeliveryTrackerTest.Controllers
         {
             var client = this.Server.CreateClient();
             
-            var (userName, _, creatorRole, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
+            var (userName, _, creatorRole, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var (displayableName, token, role) = await GetToken(client, userName, "123qQ!", creatorRole);
             Assert.Equal("Иванов И.И.", displayableName);
             Assert.Equal(RoleInfo.Creator, role);
@@ -78,7 +78,7 @@ namespace DeliveryTrackerTest.Controllers
         {
             var client = this.Server.CreateClient();
             
-            var (userName, _, role, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
+            var (userName, _, role, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var (_, token, _) = await GetToken(client, userName, "123qQ!", role);
             var (invitationCode,_ ,_ ,_) = await Invite(client, RoleInfo.Performer, token);
             await AcceptInvitation(client, invitationCode, "Петров П.П.", "123qQ!");
@@ -91,7 +91,7 @@ namespace DeliveryTrackerTest.Controllers
         {
             var client = this.Server.CreateClient();
             
-            var (userName, _, role, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
+            var (userName, _, role, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var (_, token, _) = await GetToken(client, userName, "123qQ!", role);
             var (invitationCode,_ ,_ ,_) = await Invite(client, RoleInfo.Performer, token);
             await AcceptInvitation(client, invitationCode, "Петров П.П.", "123qQ!");
@@ -105,7 +105,7 @@ namespace DeliveryTrackerTest.Controllers
         {
             var client = this.Server.CreateClient();
             
-            var (userName, _, role, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Группа1");
+            var (userName, _, role, _) = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var (_, token, _) = await GetToken(client, userName, "123qQ!", role);
             var (checkedUsername, _, _, _) = await CheckSession(client, token.ToLowerInvariant());
             Assert.Null(checkedUsername);

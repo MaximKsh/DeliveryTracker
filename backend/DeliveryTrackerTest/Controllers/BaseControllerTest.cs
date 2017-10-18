@@ -42,34 +42,34 @@ namespace DeliveryTrackerTest.Controllers
             HttpClient client,
             string creatorName,
             string creatorPassword,
-            string groupName,
+            string instanceName,
             HttpStatusCode expectStatusCode = HttpStatusCode.OK)
         {
-            var createGroupRequest = new CreateInstanceViewModel
+            var createInstanceRequest = new CreateInstanceViewModel
             {
                 CreatorDisplayableName = creatorName,
                 CreatorPassword = creatorPassword,
-                InstanceName = groupName,
+                InstanceName = instanceName,
             };
-            var createGroupContent = JsonConvert.SerializeObject(createGroupRequest);
-            var createGroupResponse = await client.PostAsync(
+            var createInstanceContent = JsonConvert.SerializeObject(createInstanceRequest);
+            var createInstanceResponse = await client.PostAsync(
                 InstanceUrl("create"), 
-                new StringContent(createGroupContent, Encoding.UTF8, ContentType));
-            Assert.Equal(expectStatusCode, createGroupResponse.StatusCode);
-            if (!createGroupResponse.IsSuccessStatusCode)
+                new StringContent(createInstanceContent, Encoding.UTF8, ContentType));
+            Assert.Equal(expectStatusCode, createInstanceResponse.StatusCode);
+            if (!createInstanceResponse.IsSuccessStatusCode)
             {
                 return (null, null, null, null);
             }
             
-            var createGroupResponseBody =  
-                JsonConvert.DeserializeObject<UserInfoViewModel>(await createGroupResponse.Content.ReadAsStringAsync());
+            var createInstanceResponseBody =  
+                JsonConvert.DeserializeObject<UserInfoViewModel>(await createInstanceResponse.Content.ReadAsStringAsync());
             
-            Assert.Equal(RoleInfo.Creator, createGroupResponseBody.Role);
+            Assert.Equal(RoleInfo.Creator, createInstanceResponseBody.Role);
             return (
-                createGroupResponseBody.UserName,
-                createGroupResponseBody.DisplayableName,
-                createGroupResponseBody.Role,
-                createGroupResponseBody.Instance);
+                createInstanceResponseBody.UserName,
+                createInstanceResponseBody.DisplayableName,
+                createInstanceResponseBody.Role,
+                createInstanceResponseBody.Instance);
         }
 
         protected static async Task<(string, string, string)> GetToken(
@@ -160,13 +160,13 @@ namespace DeliveryTrackerTest.Controllers
             {
                 return (null, null, null, null);
             }
-            var createGroupResponseBody =  
+            var createInstanceResponseBody =  
                 JsonConvert.DeserializeObject<UserInfoViewModel>(await response.Content.ReadAsStringAsync());
             return (
-                createGroupResponseBody.UserName,
-                createGroupResponseBody.DisplayableName,
-                createGroupResponseBody.Role,
-                createGroupResponseBody.Instance);
+                createInstanceResponseBody.UserName,
+                createInstanceResponseBody.DisplayableName,
+                createInstanceResponseBody.Role,
+                createInstanceResponseBody.Instance);
         }
         
         protected static async Task<(string, string, string, string)> CheckSession(HttpClient client,string token)
@@ -178,13 +178,13 @@ namespace DeliveryTrackerTest.Controllers
                 return (null, null, null, null);
             }
             
-            var createGroupResponseBody =  
+            var createInstanceResponseBody =  
                 JsonConvert.DeserializeObject<UserInfoViewModel>(await response.Content.ReadAsStringAsync());
             return (
-                createGroupResponseBody.UserName,
-                createGroupResponseBody.DisplayableName,
-                createGroupResponseBody.Role,
-                createGroupResponseBody.Instance);
+                createInstanceResponseBody.UserName,
+                createInstanceResponseBody.DisplayableName,
+                createInstanceResponseBody.Role,
+                createInstanceResponseBody.Instance);
             
         }
 
