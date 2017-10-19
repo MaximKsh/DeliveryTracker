@@ -11,21 +11,18 @@ namespace DeliveryTracker.ViewModels
     public class CreateInstanceViewModel
     {
         /// <summary>
-        /// Имя группы.
+        /// Информация о создаваемом инстансе.
         /// </summary>
-        [Required(ErrorMessage = LocalizationString.Error.InstanceNameIsRequired)]
-        public string InstanceName { get; set; }
+        public InstanceViewModel Instance { get; set; }
         
         /// <summary>
-        /// Имя создателя группы.
+        /// Пароль для нового аккаунта создателя группы.
         /// </summary>
-        [Required(ErrorMessage = LocalizationString.Error.CreatorDisplayableNameIsRequired)]
-        public string CreatorDisplayableName { get; set; }
+        public CredentialsViewModel Credentials { get; set; }
         
         /// <summary>
-        /// Пароль на аккаунт создателя группы.
+        /// Информация о создателе группы.
         /// </summary>
-        [Required(ErrorMessage = LocalizationString.Error.CreatorPasswordIsRequired)]
-        public string CreatorPassword { get; set; }
+        public UserViewModel Creator { get; set; }
     }
 }

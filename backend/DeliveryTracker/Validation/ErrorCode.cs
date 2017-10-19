@@ -71,5 +71,15 @@
         /// Код ошибки: нет доступа к заданию.
         /// </summary>
         public const string TaskIsForbidden = "TaskIsForbidden";
+        
+        /// <summary>
+        /// Код ошибки: доступ запрещен.
+        /// </summary>
+        public const string AccessDenied = "AccessDenied";
+
+        /// <summary>
+        /// Код ошибки: пользователь удален.
+        /// </summary>
+        public const string UserDeleted = "UserDeleted";
     }
 }

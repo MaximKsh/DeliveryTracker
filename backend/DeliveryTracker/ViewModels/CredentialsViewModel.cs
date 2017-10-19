@@ -9,25 +9,22 @@ namespace DeliveryTracker.ViewModels
     public class CredentialsViewModel
     {
         /// <summary>
-        /// Имя пользователя (указанное создателем или код приглашения).
+        /// Имя пользователя.
         /// </summary>
-        [Required(ErrorMessage = LocalizationString.Error.UserNameIsRequired)]
-        public string UserName { get; set; }
+        public string Username { get; set; }
         
         /// <summary>
         /// Пароль.
         /// </summary>
-        [Required(ErrorMessage = LocalizationString.Error.PasswordIsRequired)]
         public string Password { get; set; }
         
         /// <summary>
         /// Какая роль ожидается для пользователя.
         /// </summary>
-        [Required(ErrorMessage =  LocalizationString.Error.RoleIsRequired)]
         [RegularExpression(
             "^(" + RoleInfo.Creator + "|"+ RoleInfo.Manager
               + "|" + RoleInfo.Performer  + ")$",
-            ErrorMessage = "Role must be CreatorRole, ManagerRole, PerformerRole")]
+            ErrorMessage = LocalizationString.Error.RoleRange)]
         public string Role { get; set; }
     }
 }

@@ -110,9 +110,7 @@ namespace DeliveryTracker.Services
             var currentUserResult = await this.accountService.FindUser(username);
             if (!currentUserResult.Success)
             {
-                return new ServiceResult<List<UserModel>>(
-                    null,
-                    ErrorFactory.UserNotFound(username));
+                return new ServiceResult<List<UserModel>>(ErrorFactory.UserNotFound(username));
             }
             var user = currentUserResult.Result;
             return await this.GetAvailablePerformers(user, limit, offset);
@@ -121,32 +119,26 @@ namespace DeliveryTracker.Services
         /// <summary>
         /// Получить доступных исполнителей для менеджера.
         /// </summary>
-        /// <param name="user"></param>
+        /// <param name="currentUser"></param>
         /// <param name="offset"></param>
         /// <param name="limit"></param>
         /// <returns></returns>
         public async Task<ServiceResult<List<UserModel>>> GetAvailablePerformers(
-            UserModel user,
+            UserModel currentUser,
             int offset,
             int limit)
         {
-            var roleResult = await this.accountService.GetUserRole(user);
-            if (!roleResult.Success)
+            if (!await this.accountService.IsInRole(currentUser, this.roleCache.Manager))
             {
                 return new ServiceResult<List<UserModel>>(
-                    null,
-                    ErrorFactory.UserNotInRole(user.UserName, this.roleCache.Manager.Name));
-            }
-            var role = roleResult.Result;
-            if (role != this.roleCache.Manager.Name)
-            {
-                return new ServiceResult<List<UserModel>>(
-                    null,
-                    ErrorFactory.UserNotInRole(user.UserName, this.roleCache.Manager.Name));
+                    ErrorFactory.UserNotInRole(currentUser.UserName, this.roleCache.Manager.Name));
             }
             
             IQueryable<UserModel> users = this.dbContext.Users
-                .Where(p => p.InstanceId == user.InstanceId && p.Longitude != null && p.Latitude != null)
+                .Join(this.dbContext.UserRoles, user => user.Id, ru => ru.UserId, (user, ru) => new {user, ru})
+                .Join(this.dbContext.Roles, arg => arg.ru.RoleId, role => role.Id, (arg, role) => new {arg.user, role})
+                .Where(p => p.user.InstanceId == currentUser.InstanceId && p.role.Id == this.roleCache.Performer.Id)
+                .Select(p => p.user)
                 .Skip(offset)
                 .Take(limit);
             

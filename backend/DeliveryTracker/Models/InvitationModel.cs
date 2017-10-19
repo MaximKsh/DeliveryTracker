@@ -23,6 +23,21 @@ namespace DeliveryTracker.Models
         /// Дата истечения кода.
         /// </summary>
         public DateTime ExpirationDate { get; set; }
+        
+        /// <summary>
+        /// Предварительно указанная фамилия.
+        /// </summary>
+        public string Surname { get; set; }
+        
+        /// <summary>
+        /// Предварительно указанное имя.
+        /// </summary>
+        public string Name { get; set; }
+        
+        /// <summary>
+        /// Предварительно указанный телефон.
+        /// </summary>
+        public string PhoneNumber { get; set; }
 
         /// <summary>
         /// Идентификатор роли, для которой предназначено приглашение.

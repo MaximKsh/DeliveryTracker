@@ -58,13 +58,20 @@ namespace DeliveryTracker.Controllers
             {
                 return this.BadRequest(this.ModelState.ToErrorListViewModel());
             }
+            var validateQueryParametersResult = new ParametersValidator()
+                .AddRule("role", instanceViewModel.Creator.Role, p => p == this.roleCache.Creator.Name)
+                .Validate();
+            if (!validateQueryParametersResult.Success)
+            {
+                return this.BadRequest(validateQueryParametersResult.Error);
+            }
             
             // Регистрацию необходмо выполнять в транзакции.
             using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
             {
                 try
                 {
-                    var instanceResult = this.instanceService.CreateInstance(instanceViewModel.InstanceName);
+                    var instanceResult = this.instanceService.CreateInstance(instanceViewModel.Instance);
                     if (!instanceResult.Success)
                     {
                         transaction.Rollback();
@@ -73,9 +80,8 @@ namespace DeliveryTracker.Controllers
                     var instance = instanceResult.Result;
                     
                     var userResult = await this.accountService.Register(
-                        instanceViewModel.CreatorDisplayableName,
-                        instanceViewModel.CreatorPassword,
-                        this.roleCache.Creator.Name,
+                        instanceViewModel.Credentials,
+                        instanceViewModel.Creator,
                         instance.Id);
                     if (!userResult.Success)
                     {
@@ -94,12 +100,17 @@ namespace DeliveryTracker.Controllers
                     await this.dbContext.SaveChangesAsync();
                     transaction.Commit();
                     
-                    return this.Ok(new UserInfoViewModel
+                    return this.Ok(new UserViewModel
                     {
-                        UserName = user.UserName,
-                        DisplayableName = user.DisplayableName,
-                        Instance = instance.DisplayableName,
-                        Role = this.roleCache.Creator.Name,
+                        Username = user.UserName,
+                        Surname = user.Surname,
+                        Name = user.Name,
+                        PhoneNumber = user.PhoneNumber,
+                        Instance = new InstanceViewModel
+                        {
+                            InstanceName = user.Instance.InstanceName,
+                        },
+                        Role = this.roleCache.Creator.Name, 
                     });
                 }
                 catch (Exception)
@@ -109,21 +120,15 @@ namespace DeliveryTracker.Controllers
                 }
             }
         }
-        
+
         [Authorize(Policy = AuthPolicies.Creator)]
-        [HttpGet("invite_manager")]
-        public async Task<IActionResult> InviteManager()
+        [HttpPost("invite_manager")]
+        public async Task<IActionResult> InviteManager([FromBody] UserViewModel preliminaryUserInfo = null)
         {
-            var currentUserResult = await this.accountService.FindUser(this.User.Identity.Name);
-            if (!currentUserResult.Success)
-            {
-                return this.NotFound(currentUserResult.Errors.First());
-            }
-            var currentUser = currentUserResult.Result;
-                
-            var invitationResult = this.accountService.CreateInvitation(
-                currentUser.InstanceId,
-                this.roleCache.Manager.Id);
+            var invitationResult = await this.accountService.CreateInvitation(
+                this.User.Identity.Name,
+                this.roleCache.Manager,
+                preliminaryUserInfo);
             if (!invitationResult.Success)
             {
                 return this.BadRequest(invitationResult.Errors.ToErrorListViewModel());
@@ -134,80 +139,93 @@ namespace DeliveryTracker.Controllers
             return this.Ok(new InvitationViewModel
             {
                 InvitationCode = invitation.InvitationCode,
-                Role = this.roleCache.Manager.Name,
                 ExpirationDate = invitation.ExpirationDate,
-                InstanceName = currentUser.Instance.DisplayableName,
+                PreliminaryUser = new UserViewModel
+                {
+                    Surname = invitation.Surname,
+                    Name = invitation.Name,
+                    PhoneNumber = invitation.PhoneNumber,
+                }
             });
         }
         
         [Authorize(Policy = AuthPolicies.CreatorOrManager)]
-        [HttpGet("invite_performer")]
-        public async Task<IActionResult> InvitePerformer()
-        {
-            var currentUserResult = await this.accountService.FindUser(this.User.Identity.Name);
-            if (!currentUserResult.Success)
-            {
-                return this.NotFound(currentUserResult.Errors.First());
-            }
-            var currentUser = currentUserResult.Result;
-                
-            var invitationResult = this.accountService.CreateInvitation(
-                currentUser.InstanceId,
-                this.roleCache.Performer.Id);
+        [HttpPost("invite_performer")]
+        public async Task<IActionResult> InvitePerformer([FromBody] UserViewModel preliminaryUserInfo = null)
+        { 
+            var invitationResult = await this.accountService.CreateInvitation(
+                this.User.Identity.Name,
+                this.roleCache.Performer,
+                preliminaryUserInfo);
             if (!invitationResult.Success)
             {
                 return this.BadRequest(invitationResult.Errors.ToErrorListViewModel());
             }
             var invitation = invitationResult.Result;
+
             await this.dbContext.SaveChangesAsync();
             return this.Ok(new InvitationViewModel
             {
                 InvitationCode = invitation.InvitationCode,
-                Role = this.roleCache.Performer.Name,
                 ExpirationDate = invitation.ExpirationDate,
-                InstanceName = currentUser.Instance.DisplayableName,
+                PreliminaryUser = new UserViewModel
+                {
+                    Surname = invitation.Surname,
+                    Name = invitation.Name,
+                    PhoneNumber = invitation.PhoneNumber,
+                }
             });
         }
-        
-        [HttpPost("accept_invitation")]
-        public async Task<IActionResult> AcceptInvitation([FromBody] AcceptInvitationViewModel acceptInvitation)
+
+        [Authorize]
+        [HttpGet("performers")]
+        public async Task<IActionResult> GetPerformers(int? limitParam, int? offsetParam)
         {
-            if (!this.ModelState.IsValid)
+            return await this.GetUsers(limitParam, offsetParam, true);
+        }
+        
+        [Authorize]
+        [HttpGet("managers")]
+        public async Task<IActionResult> GetManagers(int? limitParam, int? offsetParam)
+        {
+            return await this.GetUsers(limitParam, offsetParam, false);
+        }
+
+        [Authorize(Policy = AuthPolicies.CreatorOrManager)]
+        [HttpGet("delete_performer")]
+        public async Task<IActionResult> DeletePerformer([FromBody] UserViewModel userInfo)
+        {
+            var validateQueryParametersResult = new ParametersValidator()
+                .AddRule("username", userInfo.Username, p => p != null)
+                .Validate();
+            if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(this.ModelState.ToErrorListViewModel());
+                return this.BadRequest(validateQueryParametersResult.Error);
             }
-            
-            // Транзакция нужна, т.к. юзер менеджер в себе выполняет сохранения 
-            // и их нужно откатывать
+
             using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
             {
                 try
                 {
-                    if (!this.accountService.TryGetInvitaiton(
-                            acceptInvitation.InvitationCode,
-                            out var invitation))
+                    var result = await this.instanceService.DeletePerformer(this.User.Identity.Name, userInfo.Username);
+                    if (!result.Success)
                     {
-                        return this.NotFound(
-                            ErrorFactory.InvitationDoesNotExist(acceptInvitation.InvitationCode));
+                        // Обработаем первую ошибку
+                        var error = result.Errors[0];
+                        transaction.Rollback();
+                        if (error.Code == ErrorCode.UserNotFound)
+                        {
+                            return this.NotFound(error.ToErrorListViewModel());
+                        }
+                        if (error.Code == ErrorCode.AccessDenied)
+                        {
+                            return this.StatusCode(403, error.ToErrorListViewModel());
+                        }
+                        return this.BadRequest(error.ToErrorListViewModel());
                     }
-                    var newUserResult = await this.accountService.AcceptInvitation(
-                            invitation,
-                            acceptInvitation.DisplayableName,
-                            acceptInvitation.Password);
-                    if (!newUserResult.Success)
-                    {
-                        return this.BadRequest(newUserResult.Errors.ToErrorListViewModel());
-                    }
-                    var newUser = newUserResult.Result;
                     await this.dbContext.SaveChangesAsync();
                     transaction.Commit();
-                    return this.Ok(new UserInfoViewModel
-                    {
-                        UserName = newUser.UserName,
-                        DisplayableName = newUser.DisplayableName,
-                        Instance = newUser.Instance.DisplayableName,
-                        Role = invitation.Role.Name,
-                    });
+                    return this.Ok();
                 }
                 catch (Exception)
                 {
@@ -215,6 +233,96 @@ namespace DeliveryTracker.Controllers
                     throw;
                 }
             }
+            
+        }
+        
+        [Authorize(Policy = AuthPolicies.Creator)]
+        [HttpGet("delete_manager")]
+        public async Task<IActionResult> DeleteManager([FromBody] UserViewModel userInfo)
+        {
+            var validateQueryParametersResult = new ParametersValidator()
+                .AddRule("number", userInfo.Username, p => p != null)
+                .Validate();
+            if (!validateQueryParametersResult.Success)
+            {
+                return this.BadRequest(validateQueryParametersResult.Error);
+            }
+            using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    var result = await this.instanceService.DeleteManager(this.User.Identity.Name, userInfo.Username);
+                    if (!result.Success)
+                    {
+                        // Обработаем первую ошибку
+                        var error = result.Errors[0];
+                        transaction.Rollback();
+                        if (error.Code == ErrorCode.UserNotFound)
+                        {
+                            return this.NotFound(error.ToErrorListViewModel());
+                        }
+                        if (error.Code == ErrorCode.AccessDenied)
+                        {
+                            return this.StatusCode(403, error.ToErrorListViewModel());
+                        }
+                        return this.BadRequest(error.ToErrorListViewModel());
+                    }
+                    await this.dbContext.SaveChangesAsync();
+                    transaction.Commit();
+                    return this.Ok();
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
+        }
+        
+        #endregion
+        
+        #region private
+
+        private async Task<IActionResult> GetUsers(int? limitParam, int? offsetParam, bool performers)
+        {
+            var validateQueryParametersResult = new ParametersValidator()
+                .AddRule("limit", limitParam, p => p == null || p <= 0)
+                .AddRule("offset", offsetParam, p => p == null || p < 0)
+                .Validate();
+            if (!validateQueryParametersResult.Success)
+            {
+                return this.BadRequest(validateQueryParametersResult.Error);
+            }
+            var limit = limitParam ?? 100;
+            var offset = offsetParam ?? 0;
+            var result = performers
+                ? await this.instanceService.GetPerformers(this.User.Identity.Name, offset, limit)
+                : await this.instanceService.GetManagers(this.User.Identity.Name, offset, limit);
+            if (!result.Success)
+            {
+                // Обработаем первую ошибку
+                var error = result.Errors.First();
+                if (error.Code == ErrorCode.UserNotFound)
+                {
+                    return this.NotFound(error.ToErrorListViewModel());
+                }
+                if (error.Code == ErrorCode.UserNotInRole)
+                {
+                    return this.StatusCode(403, error.ToErrorListViewModel());
+                }
+                return this.BadRequest(error.ToErrorListViewModel());
+            }
+            var users = result.Result
+                .Select(p =>
+                    new UserViewModel
+                    {
+                        Username = p.UserName,
+                        Surname = p.Surname,
+                        Name = p.Name,
+                        PhoneNumber = p.PhoneNumber,
+                        Role = this.roleCache.Performer.Name
+                    });
+            return this.Ok(users);
         }
         
         #endregion

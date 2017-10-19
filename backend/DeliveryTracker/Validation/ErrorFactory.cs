@@ -92,16 +92,18 @@ namespace DeliveryTracker.Validation
         /// Указанное приглашение не существует.
         /// </summary>
         /// <param name="invitationCode"></param>
+        /// <param name="role"></param>
         /// <returns></returns>
-        public static IError InvitationDoesNotExist(string invitationCode) =>
+        public static IError InvitationDoesNotExist(string invitationCode, string role) =>
             new Error(
                 ErrorCode.InvitationDoesnotExist,
                 LocalizationString.Error.InvitationDoesnotExist,
                 new Dictionary<string, string>
                 {
                     ["invitationCode"] = invitationCode,
+                    ["role"] = role
                 });
-        
+
         /// <summary>
         /// Указанное приглашение просрочено.
         /// </summary>
@@ -113,7 +115,7 @@ namespace DeliveryTracker.Validation
                 LocalizationString.Error.InvitationExpired,
                 new Dictionary<string, string>
                 {
-                    ["invitationCode"] = invitationCode,
+                    ["invitationCode"] = invitationCode
                 });
         
         /// <summary>
@@ -190,5 +192,27 @@ namespace DeliveryTracker.Validation
             new Error(
                 ErrorCode.TaskIsForbidden,
                 LocalizationString.Error.TaskIsForbidden);
+        
+        /// <summary>
+        /// Доступ запрещен.
+        /// </summary>
+        /// <returns></returns>
+        public static IError AccessDenied() =>
+            new Error(
+                ErrorCode.TaskIsForbidden,
+                LocalizationString.Error.AccessDenied);
+        
+        /// <summary>
+        /// Пользователь удален.
+        /// </summary>
+        /// <returns></returns>
+        public static IError UserDeleted(string username) =>
+            new Error(
+                ErrorCode.UserDeleted,
+                LocalizationString.Error.UserDeleted,
+                new Dictionary<string, string>
+                {
+                    ["username"] = username,
+                });
     }
 }

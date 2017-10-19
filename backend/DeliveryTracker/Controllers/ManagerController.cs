@@ -55,19 +55,23 @@ namespace DeliveryTracker.Controllers
 
         
         [HttpPost("add_task")]
-        public async Task<IActionResult> AddTask([FromBody] AddTaskViewModel addTaskViewModel)
+        public async Task<IActionResult> AddTask([FromBody] TaskViewModel addTaskViewModel)
         {
             if (!this.ModelState.IsValid)
             {
                 return this.BadRequest(this.ModelState.ToErrorListViewModel());
             }
-
+            var validateQueryParametersResult = new ParametersValidator()
+                .AddRule("number", addTaskViewModel.Number, p => p != null)
+                .Validate();
+            if (!validateQueryParametersResult.Success)
+            {
+                return this.BadRequest(validateQueryParametersResult.Error);
+            }
+            
             var result = await this.taskService.AddTask(
                 this.User.Identity.Name,
-                addTaskViewModel.Caption,
-                addTaskViewModel.Content, 
-                addTaskViewModel.PerformerUserName, 
-                addTaskViewModel.DeadlineDate);
+                addTaskViewModel);
             if (!result.Success)
             {
                 var error = result.Errors.First();
@@ -87,25 +91,35 @@ namespace DeliveryTracker.Controllers
             await this.dbContext.SaveChangesAsync();
             return this.StatusCode(
                 201,
-                new TaskInfoViewModel
+                new TaskViewModel
                 {
                     Id = result.Result.Id,
-                    Caption = result.Result.Caption,
-                    TaskState = this.taskStateCache.GetById(result.Result.StateId).Alias,
+                    State = this.taskStateCache.GetById(result.Result.StateId).Alias,
                 });
         }
         
         [HttpPost("cancel_task")]
-        public async Task<IActionResult> CancelTask([FromBody] TaskInfoViewModel taskInfo)
+        public async Task<IActionResult> CancelTask([FromBody] TaskViewModel taskInfo)
         {
             if (!this.ModelState.IsValid)
             {
                 return this.BadRequest(this.ModelState.ToErrorListViewModel());
             }
+            
+            var validateQueryParametersResult = new ParametersValidator()
+                .AddRule("id", taskInfo.Id, p => p != null)
+                .Validate();
+            if (!validateQueryParametersResult.Success)
+            {
+                return this.BadRequest(validateQueryParametersResult.Error);
+            }
 
             var taskResult = await this.taskService.CancelTaskByManager(
                 this.User.Identity.Name,
-                taskInfo.Id);
+                // Проверено ParametersValidator
+                // ReSharper disable once PossibleInvalidOperationException
+                taskInfo.Id.Value);
+            
             if (!taskResult.Success)
             {
                 // Обработаем первую ошибку
@@ -125,11 +139,10 @@ namespace DeliveryTracker.Controllers
             var task = taskResult.Result;
 
             await this.dbContext.SaveChangesAsync();
-            return this.Ok(new TaskInfoViewModel
+            return this.Ok(new TaskViewModel
             {
                 Id = task.Id,
-                Caption = task.Caption,
-                TaskState = this.taskStateCache.GetById(task.StateId).Alias,
+                State = this.taskStateCache.GetById(task.StateId).Alias,
             });
         }
         
@@ -166,10 +179,12 @@ namespace DeliveryTracker.Controllers
 
             var users = availablePerformersResult.Result
                 .Select(p =>
-                    new UserInfoViewModel
+                    new UserViewModel
                     {
-                        UserName = p.UserName,
-                        DisplayableName = p.DisplayableName,
+                        Username = p.UserName,
+                        Surname = p.Surname,
+                        Name = p.Name,
+                        PhoneNumber = p.PhoneNumber,
                         Position = new GeopositionViewModel
                         {
                             Latitude = p.Latitude ?? 0.0,
@@ -213,20 +228,108 @@ namespace DeliveryTracker.Controllers
 
             var tasks = myTasksResult.Result
                 .Select(p =>
-                    new TaskPreviewViewModel
+                    new TaskViewModel
                     {
                         Id = p.Id,
-                        TaskState = this.taskStateCache.GetById(p.StateId).Alias,
-                        Caption = p.Caption,
-                        ContentPreview = p.Content.Length > 50 
-                            ? p.Content.Substring(0, 50) 
-                            : p.Content,
-                        SenderUserName = p.Sender.UserName,
-                        SenderDisplayableName = p.Sender.DisplayableName,
-                        PerformerUserName = p.Performer?.UserName,
-                        PerformerDisplayableName = p.Performer?.DisplayableName,
+                        Number = p.Number,
+                        ShippingDesc = p.ShippingDesc,
+                        Details = p.Details,
+                        Address = p.Address,
+                        Author = new UserViewModel
+                        {
+                            Username = p.Author.UserName,
+                            Name = p.Author.Name,
+                            Surname = p.Author.Surname,
+                            PhoneNumber = p.Author.PhoneNumber,
+                        },
+                        Performer = p.Performer != null 
+                            ? new UserViewModel
+                            {
+                                Username = p.Performer.UserName,
+                                Name = p.Performer.Name,
+                                Surname = p.Performer.Surname,
+                                PhoneNumber = p.Performer.PhoneNumber,
+                            }
+                            : null,
+                        TaskDateTimeRange = new DateTimeRangeViewModel
+                        {
+                            From = p.DatetimeFrom,
+                            To = p.DatetimeTo,
+                        },
+                        State = this.taskStateCache.GetById(p.StateId).Alias,
                         CreationDate = p.CreationDate,
-                        Deadline = p.Deadline,
+                        SetPerformerDate = p.SetPerformerDate,
+                        InWorkDate = p.InWorkDate,
+                        CompletionDate = p.CompletionDate,
+                    });
+
+            return this.Ok(tasks);
+        }
+        
+        [HttpGet("tasks")]
+        public async Task<IActionResult> GetTasks(int? limitParam, int? offsetParam)
+        {
+            var validateQueryParametersResult = new ParametersValidator()
+                .AddRule("limit", limitParam, p => p == null || p > 0)
+                .AddRule("offset", offsetParam, p => p == null || p >= 0)
+                .Validate();
+            if (!validateQueryParametersResult.Success)
+            {
+                return this.BadRequest(validateQueryParametersResult.Error);
+            }
+            var limit = limitParam ?? 100;
+            var offset = offsetParam ?? 0;
+            
+            var myTasksResult =
+                await this.taskService.GetMyTasks(this.User.Identity.Name, limit, offset);
+            if (!myTasksResult.Success)
+            {
+                // Обработаем первую ошибку
+                var error = myTasksResult.Errors.First();
+                if (error.Code == ErrorCode.UserNotFound)
+                {
+                    return this.NotFound(error.ToErrorListViewModel());
+                }
+                if (error.Code == ErrorCode.UserWithoutRole)
+                {
+                    return this.StatusCode(403, error.ToErrorListViewModel());
+                }
+                return this.BadRequest(error.ToErrorListViewModel());
+            }
+
+            var tasks = myTasksResult.Result
+                .Select(p =>
+                    new TaskViewModel
+                    {
+                        Id = p.Id,
+                        Number = p.Number,
+                        ShippingDesc = p.ShippingDesc,
+                        Details = p.Details,
+                        Address = p.Address,
+                        Author = new UserViewModel
+                        {
+                            Username = p.Author.UserName,
+                            Name = p.Author.Name,
+                            Surname = p.Author.Surname,
+                            PhoneNumber = p.Author.PhoneNumber,
+                        },
+                        Performer = p.Performer != null 
+                            ? new UserViewModel
+                            {
+                                Username = p.Performer.UserName,
+                                Name = p.Performer.Name,
+                                Surname = p.Performer.Surname,
+                                PhoneNumber = p.Performer.PhoneNumber,
+                            }
+                            : null,
+                        TaskDateTimeRange = new DateTimeRangeViewModel
+                        {
+                            From = p.DatetimeFrom,
+                            To = p.DatetimeTo,
+                        },
+                        State = this.taskStateCache.GetById(p.StateId).Alias,
+                        CreationDate = p.CreationDate,
+                        SetPerformerDate = p.SetPerformerDate,
                         InWorkDate = p.InWorkDate,
                         CompletionDate = p.CompletionDate,
                     });
@@ -265,18 +368,37 @@ namespace DeliveryTracker.Controllers
             }
             var task = taskResult.Result;
 
-            return this.Ok(new TaskDetailsViewModel
+            return this.Ok(new TaskViewModel
             {
                 Id = task.Id,
-                TaskState = this.taskStateCache.GetById(task.StateId).Alias,
-                Caption = task.Caption,
-                Content = task.Content,
-                SenderUserName = task.Sender.UserName,
-                SenderDisplayableName = task.Sender.DisplayableName,
-                PerformerUserName = task.Performer?.UserName,
-                PerformerDisplayableName = task.Performer?.DisplayableName,
+                Number = task.Number,
+                ShippingDesc = task.ShippingDesc,
+                Details = task.Details,
+                Address = task.Address,
+                Author = new UserViewModel
+                {
+                    Username = task.Author.UserName,
+                    Name = task.Author.Name,
+                    Surname = task.Author.Surname,
+                    PhoneNumber = task.Author.PhoneNumber,
+                },
+                Performer = task.Performer != null 
+                    ? new UserViewModel
+                    {
+                        Username = task.Performer.UserName,
+                        Name = task.Performer.Name,
+                        Surname = task.Performer.Surname,
+                        PhoneNumber = task.Performer.PhoneNumber,
+                    }
+                    : null,
+                TaskDateTimeRange = new DateTimeRangeViewModel
+                {
+                    From = task.DatetimeFrom,
+                    To = task.DatetimeTo,
+                },
+                State = this.taskStateCache.GetById(task.StateId).Alias,
                 CreationDate = task.CreationDate,
-                Deadline = task.Deadline,
+                SetPerformerDate = task.SetPerformerDate,
                 InWorkDate = task.InWorkDate,
                 CompletionDate = task.CompletionDate,
             });

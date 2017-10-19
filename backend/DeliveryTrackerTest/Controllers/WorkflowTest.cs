@@ -16,134 +16,63 @@ namespace DeliveryTrackerTest.Controllers
 {
     public class WorkflowTest: BaseControllerTest
     {
+        
         /// <summary>
         /// Создаются 10 исполнителей.
-        /// Смотрим активных - 0
-        /// Ставим положения каждому нечетному
-        /// Смотрим активных - 5
-        /// Ставим положения каждому четному
-        /// Смотрим активных - 10
-        /// Еще раз всем обновляем положение
-        /// Смотрим активных - 10
-        /// Снимаем троих активных
-        /// Смотрим активных - 7
+        /// Смотрим что они возвращаются в списке
         /// </summary>
         [Fact]
-        public async void TestPerformersGeopositions()
+        public async void TestAvailablePerformers()
         {
             var client = this.Server.CreateClient();
             
-            var (userName, _, roleCreateInstance, _) = 
+            var creator = 
                 await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
-            var (_, token, _) = await GetToken(client, userName, "123qQ!", roleCreateInstance);
-            var performersUsernames = await MassCreateUsers(client, token, RoleInfo.Performer, "123qQ!", 10);
-            var manager = (await MassCreateUsers(client, token, RoleInfo.Manager, "123qQ!", 1)).First();
-            var (_, managerToken, _) = await GetToken(client, manager, "123qQ!", RoleInfo.Manager);
+            var token = await GetToken(client, creator.Username, "123qQ!", creator.Role);
+            var performersUsernames = await MassCreateUsers(client, token.Token, RoleInfo.Performer, "123qQ!", 10);
+            var manager = (await MassCreateUsers(client, token.Token, RoleInfo.Manager, "123qQ!", 1)).First();
+            var managerToken = (await GetToken(client, manager, "123qQ!", RoleInfo.Manager)).Token;
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken);
             
             // Смотрим активных
             var response1 = await client.GetAsync(ManagerUrl("available_performers"));
             var performersList1 =  
-                JsonConvert.DeserializeObject<UserInfoViewModel[]>(await response1.Content.ReadAsStringAsync());
-            Assert.Equal(0, performersList1.Length);
+                JsonConvert.DeserializeObject<UserViewModel[]>(await response1.Content.ReadAsStringAsync());
+            Assert.Equal(10, performersList1.Length);
             
             // Ставим каждому нечетному 
             for (var i = 0; i < performersUsernames.Count; i += 2)
             {
                 var perfClient = this.Server.CreateClient();
-                var (_, perfToken, _) = await GetToken(client, performersUsernames[i], "123qQ!", RoleInfo.Performer);
-                perfClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", perfToken);
+                var perfToken = await GetToken(client, performersUsernames[i], "123qQ!", RoleInfo.Performer);
+                perfClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", perfToken.Token);
                 await UpdateRandomPosition(perfClient);
             }
             
             // Смотрим активных
             var response2 = await client.GetAsync(ManagerUrl("available_performers"));
             var performersList2 =  
-                JsonConvert.DeserializeObject<UserInfoViewModel[]>(await response2.Content.ReadAsStringAsync());
-            Assert.Equal(5, performersList2.Length);
-            var expectedPerformersList1 = performersUsernames
-                .Select((p, i) => new {p, i})
-                .Where(p => p.i % 2 == 0)
-                .OrderBy(p => p.p)
-                .Select(p => p.p)
-                .ToList();
-            var actualPerformersList1 = performersList2
-                .OrderBy(p => p.UserName)
-                .Select(p => p.UserName)
-                .ToList();
-            Assert.True(expectedPerformersList1.SequenceEqual(actualPerformersList1));
+                JsonConvert.DeserializeObject<UserViewModel[]>(await response2.Content.ReadAsStringAsync());
+            Assert.Equal(10, performersList2.Length);
             
-            // Ставим каждому четному 
-            for (var i = 1; i < performersUsernames.Count; i += 2)
+            // Ставим каждому нечетному 
+            for (var i = 0; i < performersUsernames.Count; i += 2)
             {
                 var perfClient = this.Server.CreateClient();
-                var (_, perfToken, _) = await GetToken(client, performersUsernames[i], "123qQ!", RoleInfo.Performer);
-                perfClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", perfToken);
-                await UpdateRandomPosition(perfClient);
+                var perfToken = await GetToken(client, performersUsernames[i], "123qQ!", RoleInfo.Performer);
+                perfClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", perfToken.Token);
+                await SetInactive(perfClient);
             }
             
             // Смотрим активных
             var response3 = await client.GetAsync(ManagerUrl("available_performers"));
             var performersList3 =  
-                JsonConvert.DeserializeObject<UserInfoViewModel[]>(await response3.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<UserViewModel[]>(await response3.Content.ReadAsStringAsync());
             Assert.Equal(10, performersList3.Length);
-            var expectedPerformersList2 = performersUsernames
-                .OrderBy(p => p)
-                .ToList();
-            var actualPerformersList2 = performersList3
-                .OrderBy(p => p.UserName)
-                .Select(p => p.UserName)
-                .ToList();
-            Assert.True(expectedPerformersList2.SequenceEqual(actualPerformersList2));
             
-            // Ставим каждому нечетному 
-            foreach (var t in performersUsernames)
-            {
-                var perfClient = this.Server.CreateClient();
-                var (_, perfToken, _) = await GetToken(client, t, "123qQ!", RoleInfo.Performer);
-                perfClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", perfToken);
-                await UpdateRandomPosition(perfClient);
-            }
-            
-            // Смотрим активных
-            var response4 = await client.GetAsync(ManagerUrl("available_performers"));
-            var performersList4 =  
-                JsonConvert.DeserializeObject<UserInfoViewModel[]>(await response4.Content.ReadAsStringAsync());
-            Assert.Equal(10, performersList4.Length);
-            var expectedPerformersList3 = performersUsernames
-                .OrderBy(p => p)
-                .ToList();
-            var actualPerformersList3 = performersList4
-                .OrderBy(p => p.UserName)
-                .Select(p => p.UserName)
-                .ToList();
-            Assert.True(expectedPerformersList3.SequenceEqual(actualPerformersList3));
-            
-            // Ставим каждому нечетному 
-            for (var i = 0; i < 3; i++)
-            {
-                var perfClient = this.Server.CreateClient();
-                var (_, perfToken, _) = await GetToken(client, performersUsernames[i], "123qQ!", RoleInfo.Performer);
-                perfClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", perfToken);
-                await SetInactive(perfClient);
-            }
-            
-            // Смотрим активных
-            var response5 = await client.GetAsync(ManagerUrl("available_performers"));
-            var performersList5 =  
-                JsonConvert.DeserializeObject<UserInfoViewModel[]>(await response5.Content.ReadAsStringAsync());
-            Assert.Equal(7, performersList5.Length);
-            var expectedPerformersList4 = performersUsernames
-                .Skip(3)
-                .OrderBy(p => p)
-                .ToList();
-            var actualPerformersList4 = performersList5
-                .OrderBy(p => p.UserName)
-                .Select(p => p.UserName)
-                .ToList();
-            Assert.True(expectedPerformersList4.SequenceEqual(actualPerformersList4));
         }
 
+        
         /// <summary>
         /// Создаем двух менеджеров
         /// Создаем двух исполнителей
@@ -164,21 +93,21 @@ namespace DeliveryTrackerTest.Controllers
             var clientPerformer1 = this.Server.CreateClient();
             var clientPerformer2 = this.Server.CreateClient();
             
-            var (userName, _, roleCreateInstance, _) = 
+            var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
-            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateInstance);
-            var performers = await MassCreateUsers(clientManager1, token, RoleInfo.Performer, "123qQ!", 2);
-            var managers = (await MassCreateUsers(clientManager1, token, RoleInfo.Manager, "123qQ!", 2));
+            var token = await GetToken(clientManager1, creator.Username, "123qQ!", creator.Role);
+            var performers = await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 2);
+            var managers = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 2));
             
-            var (_, managerToken1, _) = await GetToken(clientManager1, managers.First(), "123qQ!", RoleInfo.Manager);
-            clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1);
-            var (_, managerToken2, _) = await GetToken(clientManager2, managers.Last(), "123qQ!", RoleInfo.Manager);
-            clientManager2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken2);
+            var managerToken1 = await GetToken(clientManager1, managers.First(), "123qQ!", RoleInfo.Manager);
+            clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1.Token);
+            var managerToken2 = await GetToken(clientManager2, managers.Last(), "123qQ!", RoleInfo.Manager);
+            clientManager2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken2.Token);
             
-            var (_, performerToken1, _) = await GetToken(clientPerformer1, performers.First(), "123qQ!", RoleInfo.Performer);
-            clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken1);
-            var (_, performerToken2, _) = await GetToken(clientPerformer2, performers.Last(), "123qQ!", RoleInfo.Performer);
-            clientPerformer2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken2);
+            var performerToken1 = await GetToken(clientPerformer1, performers.First(), "123qQ!", RoleInfo.Performer);
+            clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken1.Token);
+            var performerToken2 = await GetToken(clientPerformer2, performers.Last(), "123qQ!", RoleInfo.Performer);
+            clientPerformer2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken2.Token);
             
             // Поставим исполнителя в работу
             await UpdateRandomPosition(clientPerformer1);
@@ -195,6 +124,9 @@ namespace DeliveryTrackerTest.Controllers
                 TaskStateInfo.NewUndistributedState,
                 TaskStateInfo.NewUndistributedState);
             
+            // Резервируем за первого исполнителя
+            await TryReserve(clientPerformer1, taskId);
+            
             // Берем в работу за первого исполнителя
             await TryTakeIntoWork(clientPerformer1, taskId);
             
@@ -208,11 +140,11 @@ namespace DeliveryTrackerTest.Controllers
             // Смотрим задания за исполнителей по нераспределенным
             var response7 = await clientPerformer1.GetAsync(PerformerUrl("undistributed_tasks"));
             var tasksList7 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response7.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response7.Content.ReadAsStringAsync());
             Assert.Equal(0, tasksList7.Length);
             var response8 = await clientPerformer2.GetAsync(PerformerUrl("undistributed_tasks"));
             var tasksList8 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response8.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response8.Content.ReadAsStringAsync());
             Assert.Equal(0, tasksList8.Length);
             
             // Пытаемся завершить за второго
@@ -251,21 +183,21 @@ namespace DeliveryTrackerTest.Controllers
             var clientPerformer1 = this.Server.CreateClient();
             var clientPerformer2 = this.Server.CreateClient();
             
-            var (userName, _, roleCreateInstance, _) = 
+            var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
-            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateInstance);
-            var performers = await MassCreateUsers(clientManager1, token, RoleInfo.Performer, "123qQ!", 2);
-            var managers = (await MassCreateUsers(clientManager1, token, RoleInfo.Manager, "123qQ!", 2));
+            var token = await GetToken(clientManager1, creator.Username, "123qQ!", creator.Role);
+            var performers = await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 2);
+            var managers = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 2));
             
-            var (_, managerToken1, _) = await GetToken(clientManager1, managers.First(), "123qQ!", RoleInfo.Manager);
-            clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1);
-            var (_, managerToken2, _) = await GetToken(clientManager2, managers.Last(), "123qQ!", RoleInfo.Manager);
-            clientManager2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken2);
+            var managerToken1 = await GetToken(clientManager1, managers.First(), "123qQ!", RoleInfo.Manager);
+            clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1.Token);
+            var managerToken2 = await GetToken(clientManager2, managers.Last(), "123qQ!", RoleInfo.Manager);
+            clientManager2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken2.Token);
             
-            var (_, performerToken1, _) = await GetToken(clientPerformer1, performers.First(), "123qQ!", RoleInfo.Performer);
-            clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken1);
-            var (_, performerToken2, _) = await GetToken(clientPerformer2, performers.Last(), "123qQ!", RoleInfo.Performer);
-            clientPerformer2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken2);
+            var performerToken1 = await GetToken(clientPerformer1, performers.First(), "123qQ!", RoleInfo.Performer);
+            clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken1.Token);
+            var performerToken2 = await GetToken(clientPerformer2, performers.Last(), "123qQ!", RoleInfo.Performer);
+            clientPerformer2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken2.Token);
             
             // Поставим исполнителя в работу
             await UpdateRandomPosition(clientPerformer1);
@@ -344,27 +276,28 @@ namespace DeliveryTrackerTest.Controllers
             var clientPerformer1 = this.Server.CreateClient();
             var clientPerformer2 = this.Server.CreateClient();
             
-            var (userName1, _, roleCreateInstance1, _) = 
+            var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
-            var (_, token1, _) = await GetToken(clientManager1, userName1, "123qQ!", roleCreateInstance1);
-            var performers1 = await MassCreateUsers(clientManager1, token1, RoleInfo.Performer, "123qQ!", 1);
-            var managers1 = (await MassCreateUsers(clientManager1, token1, RoleInfo.Manager, "123qQ!", 1));
+            var token1 = await GetToken(clientManager1, creator.Username, "123qQ!", creator.Role);
+            var performers1 = await MassCreateUsers(clientManager1, token1.Token, RoleInfo.Performer, "123qQ!", 1);
+            var managers1 = (await MassCreateUsers(clientManager1, token1.Token, RoleInfo.Manager, "123qQ!", 1));
             
-            var (userName2, _, roleCreateInstance2, _) = 
-                await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
-            var (_, token, _) = await GetToken(clientManager1, userName2, "123qQ!", roleCreateInstance2);
-            var performers2 = await MassCreateUsers(clientManager1, token, RoleInfo.Performer, "123qQ!", 1);
-            var managers2 = (await MassCreateUsers(clientManager1, token, RoleInfo.Manager, "123qQ!", 1));
+            var creator2 = 
+                await CreateInstance(clientManager2, "Иванов И.И.", "123qQ!", "Instance1");
+            var token2 = await GetToken(clientManager2, creator2.Username, "123qQ!", creator2.Role);
+            var performers2 = await MassCreateUsers(clientManager2, token2.Token, RoleInfo.Performer, "123qQ!", 1);
+            var managers2 = (await MassCreateUsers(clientManager2, token2.Token, RoleInfo.Manager, "123qQ!", 1));
             
-            var (_, managerToken1, _) = await GetToken(clientManager1, managers1.First(), "123qQ!", RoleInfo.Manager);
-            clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1);
-            var (_, managerToken2, _) = await GetToken(clientManager2, managers2.First(), "123qQ!", RoleInfo.Manager);
-            clientManager2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken2);
+            var managerToken1 = await GetToken(clientManager1, managers1.First(), "123qQ!", RoleInfo.Manager);
+            clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1.Token);
+            var managerToken2 = await GetToken(clientManager2, managers2.First(), "123qQ!", RoleInfo.Manager);
+            clientManager2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken2.Token);
             
-            var (_, performerToken1, _) = await GetToken(clientPerformer1, performers1.First(), "123qQ!", RoleInfo.Performer);
-            clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken1);
-            var (_, performerToken2, _) = await GetToken(clientPerformer2, performers2.First(), "123qQ!", RoleInfo.Performer);
-            clientPerformer2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken2);
+            var performerToken1 = await GetToken(clientPerformer1, performers1.First(), "123qQ!", RoleInfo.Performer);
+            clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken1.Token);
+            var performerToken2 = await GetToken(clientPerformer2, performers2.First(), "123qQ!", RoleInfo.Performer);
+            clientPerformer2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken2.Token);
+           
             
             // Поставим исполнителя в работу
             await UpdateRandomPosition(clientPerformer1);
@@ -384,58 +317,41 @@ namespace DeliveryTrackerTest.Controllers
             // Смотрим задания за менеджеров
             var response1 = await clientManager1.GetAsync(ManagerUrl("my_tasks"));
             var tasksList1 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response1.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response1.Content.ReadAsStringAsync());
             Assert.Equal(2, tasksList1.Length);
-            Assert.Equal(TaskStateInfo.NewUndistributedState, tasksList1.First().TaskState);
-            Assert.Equal("TaskCaption11", tasksList1.First().Caption);
-            Assert.Equal("TaskContent11", tasksList1.First().ContentPreview);
-            Assert.Equal(TaskStateInfo.NewState, tasksList1.Last().TaskState);
-            Assert.Equal("TaskCaption12", tasksList1.Last().Caption);
-            Assert.Equal("TaskContent12", tasksList1.Last().ContentPreview);
+            Assert.Equal(TaskStateInfo.NewUndistributedState, tasksList1.First().State);
+            Assert.Equal(TaskStateInfo.NewState, tasksList1.Last().State);
             
             var response2 = await clientManager2.GetAsync(ManagerUrl("my_tasks"));
             var tasksList2 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response2.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response2.Content.ReadAsStringAsync());
             Assert.Equal(2, tasksList2.Length);
-            Assert.Equal(TaskStateInfo.NewUndistributedState, tasksList2.First().TaskState);
-            Assert.Equal("TaskCaption21", tasksList2.First().Caption);
-            Assert.Equal("TaskContent21", tasksList2.First().ContentPreview);
-            Assert.Equal(TaskStateInfo.NewState, tasksList2.Last().TaskState);
-            Assert.Equal("TaskCaption22", tasksList2.Last().Caption);
-            Assert.Equal("TaskContent22", tasksList2.Last().ContentPreview);
+            Assert.Equal(TaskStateInfo.NewUndistributedState, tasksList2.First().State);
+            Assert.Equal(TaskStateInfo.NewState, tasksList2.Last().State);
             
             // Смотрим задания за исполнителей
             var response3 = await clientPerformer1.GetAsync(PerformerUrl("undistributed_tasks"));
             var tasksList3 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response3.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response3.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList3.Length);
-            Assert.Equal(TaskStateInfo.NewUndistributedState, tasksList3.First().TaskState);
-            Assert.Equal("TaskCaption11", tasksList3.First().Caption);
-            Assert.Equal("TaskContent11", tasksList3.First().ContentPreview);
-            
+            Assert.Equal(TaskStateInfo.NewUndistributedState, tasksList3.First().State);
             var response4 = await clientPerformer1.GetAsync(PerformerUrl("my_tasks"));
             var tasksList4 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response4.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response4.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList4.Length);
-            Assert.Equal(TaskStateInfo.NewState, tasksList4.First().TaskState);
-            Assert.Equal("TaskCaption12", tasksList4.First().Caption);
-            Assert.Equal("TaskContent12", tasksList4.First().ContentPreview);
+            Assert.Equal(TaskStateInfo.NewState, tasksList4.First().State);
             
             var response5 = await clientPerformer2.GetAsync(PerformerUrl("undistributed_tasks"));
             var tasksList5 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response5.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response5.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList5.Length);
-            Assert.Equal(TaskStateInfo.NewUndistributedState, tasksList5.First().TaskState);
-            Assert.Equal("TaskCaption21", tasksList5.First().Caption);
-            Assert.Equal("TaskContent21", tasksList5.First().ContentPreview);
+            Assert.Equal(TaskStateInfo.NewUndistributedState, tasksList5.First().State);
             
             var response6 = await clientPerformer2.GetAsync(PerformerUrl("my_tasks"));
             var tasksList6 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response6.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response6.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList6.Length);
-            Assert.Equal(TaskStateInfo.NewState, tasksList6.First().TaskState);
-            Assert.Equal("TaskCaption22", tasksList6.First().Caption);
-            Assert.Equal("TaskContent22", tasksList6.First().ContentPreview);
+            Assert.Equal(TaskStateInfo.NewState, tasksList6.First().State);
             
             
             // Пытаемся взять чужие задания в работу
@@ -452,9 +368,11 @@ namespace DeliveryTrackerTest.Controllers
             await CheckTaskStateByPerformer(clientPerformer2, taskId22, TaskStateInfo.NewState);
             
             // Берем свои задания в работу
+            await TryReserve(clientPerformer1, taskId11);
             await TryTakeIntoWork(clientPerformer1, taskId11);
             await TryTakeIntoWork(clientPerformer1, taskId12);
             
+            await TryReserve(clientPerformer2, taskId21);
             await TryTakeIntoWork(clientPerformer2, taskId21);
             await TryTakeIntoWork(clientPerformer2, taskId22);
             
@@ -499,19 +417,17 @@ namespace DeliveryTrackerTest.Controllers
             var clientManager1 = this.Server.CreateClient();
             var clientPerformer1 = this.Server.CreateClient();
             
-            var (userName, _, roleCreateInstance, _) = 
+            var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
-            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateInstance);
-            var performers = await MassCreateUsers(clientManager1, token, RoleInfo.Performer, "123qQ!", 1);
-            var managers = (await MassCreateUsers(clientManager1, token, RoleInfo.Manager, "123qQ!", 1));
-
-            var performer = performers.First();
+            var token = await GetToken(clientManager1, creator.Username, "123qQ!", creator.Role);
+            var performer = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 1))[0];
+            var manager = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 1))[0];
             
-            var (_, managerToken1, _) = await GetToken(clientManager1, managers.First(), "123qQ!", RoleInfo.Manager);
-            clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1);
+            var managerToken = await GetToken(clientManager1, manager, "123qQ!", RoleInfo.Manager);
+            clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken.Token);
             
-            var (_, performerToken1, _) = await GetToken(clientPerformer1, performers.First(), "123qQ!", RoleInfo.Performer);
-            clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken1);
+            var performerToken = await GetToken(clientPerformer1, performer, "123qQ!", RoleInfo.Performer);
+            clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken.Token);
             
             var taskIUndistributed = await AddTask(clientManager1, "1", "1");
             var taskIdNew = await AddTask(clientManager1, "1", "1", performer);
@@ -567,19 +483,17 @@ namespace DeliveryTrackerTest.Controllers
             var clientManager1 = this.Server.CreateClient();
             var clientPerformer1 = this.Server.CreateClient();
             
-            var (userName, _, roleCreateInstance, _) = 
+            var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
-            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateInstance);
-            var performers = await MassCreateUsers(clientManager1, token, RoleInfo.Performer, "123qQ!", 1);
-            var managers = (await MassCreateUsers(clientManager1, token, RoleInfo.Manager, "123qQ!", 1));
-
-            var performer = performers.First();
+            var token = await GetToken(clientManager1, creator.Username, "123qQ!", creator.Role);
+            var performer = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 1))[0];
+            var manager = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 1))[0];
             
-            var (_, managerToken1, _) = await GetToken(clientManager1, managers.First(), "123qQ!", RoleInfo.Manager);
-            clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1);
+            var managerToken = await GetToken(clientManager1, manager, "123qQ!", RoleInfo.Manager);
+            clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken.Token);
             
-            var (_, performerToken1, _) = await GetToken(clientPerformer1, performers.First(), "123qQ!", RoleInfo.Performer);
-            clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken1);
+            var performerToken = await GetToken(clientPerformer1, performer, "123qQ!", RoleInfo.Performer);
+            clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken.Token);
             
             var taskIUndistributed = await AddTask(clientManager1, "1", "1");
             var taskIdNew = await AddTask(clientManager1, "1", "1", performer);
@@ -623,19 +537,17 @@ namespace DeliveryTrackerTest.Controllers
             var clientManager1 = this.Server.CreateClient();
             var clientPerformer1 = this.Server.CreateClient();
             
-            var (userName, _, roleCreateInstance, _) = 
+            var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
-            var (_, token, _) = await GetToken(clientManager1, userName, "123qQ!", roleCreateInstance);
-            var performers = await MassCreateUsers(clientManager1, token, RoleInfo.Performer, "123qQ!", 1);
-            var managers = (await MassCreateUsers(clientManager1, token, RoleInfo.Manager, "123qQ!", 1));
-
-            var performer = performers.First();
+            var token = await GetToken(clientManager1, creator.Username, "123qQ!", creator.Role);
+            var performer = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 1))[0];
+            var manager = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 1))[0];
             
-            var (_, managerToken1, _) = await GetToken(clientManager1, managers.First(), "123qQ!", RoleInfo.Manager);
-            clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1);
+            var managerToken = await GetToken(clientManager1, manager, "123qQ!", RoleInfo.Manager);
+            clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken.Token);
             
-            var (_, performerToken1, _) = await GetToken(clientPerformer1, performers.First(), "123qQ!", RoleInfo.Performer);
-            clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken1);
+            var performerToken = await GetToken(clientPerformer1, performer, "123qQ!", RoleInfo.Performer);
+            clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken.Token);
             
             var taskIdInWork = await AddTask(clientManager1, "1", "1", performer);
             var taskIdPerformed = await AddTask(clientManager1, "1", "1", performer);
@@ -671,13 +583,13 @@ namespace DeliveryTrackerTest.Controllers
         private static async Task CheckTaskStateByManager(HttpClient client, Guid taskId, string state)
         {
             var task1 = await GetTaskByManager(client, taskId);
-            Assert.Equal(state, task1.TaskState);
+            Assert.Equal(state, task1.State);
         }
         
         private static async Task CheckTaskStateByPerformer(HttpClient client, Guid taskId, string state)
         {
             var task1 = await GetTaskByPerformer(client, taskId);
-            Assert.Equal(state, task1.TaskState);
+            Assert.Equal(state, task1.State);
         }
         
         private static async Task UpdateRandomPosition(HttpClient client)
@@ -703,19 +615,20 @@ namespace DeliveryTrackerTest.Controllers
 
         private static async Task<Guid> AddTask(
             HttpClient client,
-            string caption, 
-            string content,
+            string number, 
+            string shippingList,
             string performer = null,
-            DateTime? deadline = null,
             HttpStatusCode expectedStatus = HttpStatusCode.Created,
             string errorCode = null)
         {
-            var taskViewModel = new AddTaskViewModel
+            var taskViewModel = new TaskViewModel
             {
-                Caption = caption,
-                Content = content,
-                PerformerUserName = performer,
-                DeadlineDate = null,
+                Number = number,
+                ShippingDesc = shippingList,
+                Performer = new UserViewModel
+                {
+                    Username = performer
+                },
             };
             var addTaskResponse = await client.PostAsync(
                 ManagerUrl("add_task"), 
@@ -724,13 +637,12 @@ namespace DeliveryTrackerTest.Controllers
             if (expectedStatus == HttpStatusCode.Created)
             {
                 var task =
-                    JsonConvert.DeserializeObject<TaskInfoViewModel>(await addTaskResponse.Content.ReadAsStringAsync());
-                Assert.Equal(caption, task.Caption);
+                    JsonConvert.DeserializeObject<TaskViewModel>(await addTaskResponse.Content.ReadAsStringAsync());
                 var expectingState = performer != null
                     ? TaskStateInfo.NewState
                     : TaskStateInfo.NewUndistributedState;
-                Assert.Equal(expectingState, task.TaskState);
-                return task.Id;
+                Assert.Equal(expectingState, task.State);
+                return task.Id ?? Guid.Empty;
             }
             else
             {
@@ -741,7 +653,7 @@ namespace DeliveryTrackerTest.Controllers
             }
         }
 
-        private static async Task<TaskDetailsViewModel> GetTaskByManager(
+        private static async Task<TaskViewModel> GetTaskByManager(
             HttpClient client,
             Guid taskId,
             // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
@@ -751,12 +663,12 @@ namespace DeliveryTrackerTest.Controllers
             Assert.Equal(expectedCode, taskResponse.StatusCode);
 
             return expectedCode == HttpStatusCode.OK 
-                ? JsonConvert.DeserializeObject<TaskDetailsViewModel>(await taskResponse.Content.ReadAsStringAsync()) 
+                ? JsonConvert.DeserializeObject<TaskViewModel>(await taskResponse.Content.ReadAsStringAsync()) 
                 : null;
         }
         
         
-        private static async Task<TaskDetailsViewModel> GetTaskByPerformer(
+        private static async Task<TaskViewModel> GetTaskByPerformer(
             HttpClient client,
             Guid taskId,
             // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
@@ -766,8 +678,24 @@ namespace DeliveryTrackerTest.Controllers
             Assert.Equal(expectedCode, taskResponse.StatusCode);
 
             return expectedCode == HttpStatusCode.OK 
-                ? JsonConvert.DeserializeObject<TaskDetailsViewModel>(await taskResponse.Content.ReadAsStringAsync()) 
+                ? JsonConvert.DeserializeObject<TaskViewModel>(await taskResponse.Content.ReadAsStringAsync()) 
                 : null;
+        }
+        
+        private static async Task TryReserve(
+            HttpClient client,
+            Guid taskId,
+            // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
+            HttpStatusCode expectedCode = HttpStatusCode.OK)
+        {
+            var inWorkViewModel1 = new TaskViewModel
+            {
+                Id = taskId,
+            };
+            var inWorkResponse1 = await client.PostAsync(
+                PerformerUrl("reserve_task"), 
+                new StringContent(JsonConvert.SerializeObject(inWorkViewModel1), Encoding.UTF8, ContentType));
+            Assert.Equal(expectedCode, inWorkResponse1.StatusCode);
         }
         
         private static async Task TryTakeIntoWork(
@@ -776,7 +704,7 @@ namespace DeliveryTrackerTest.Controllers
             // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
             HttpStatusCode expectedCode = HttpStatusCode.OK)
         {
-            var inWorkViewModel1 = new TaskInfoViewModel
+            var inWorkViewModel1 = new TaskViewModel
             {
                 Id = taskId,
             };
@@ -793,10 +721,10 @@ namespace DeliveryTrackerTest.Controllers
             // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
             HttpStatusCode expectedCode = HttpStatusCode.OK)
         {
-            var completeTaskViewModel3 = new TaskInfoViewModel
+            var completeTaskViewModel3 = new TaskViewModel
             {
                 Id = taskId,
-                TaskState = state,
+                State = state,
             };
             var completeTaskResponse1 = await client.PostAsync(
                 PerformerUrl("complete_task"), 
@@ -810,7 +738,7 @@ namespace DeliveryTrackerTest.Controllers
             // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
             HttpStatusCode expectedCode = HttpStatusCode.OK)
         {
-            var inWorkViewModel1 = new TaskInfoViewModel
+            var inWorkViewModel1 = new TaskViewModel
             {
                 Id = taskId,
             };
@@ -837,32 +765,26 @@ namespace DeliveryTrackerTest.Controllers
             // Смотрим задания за менеджеров
             var response1 = await clientManager1.GetAsync(ManagerUrl("my_tasks"));
             var tasksList1 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response1.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response1.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList1.Length);
-            Assert.Equal(firstExpectedState, tasksList1.First().TaskState);
-            Assert.Equal("TaskCaption", tasksList1.First().Caption);
-            Assert.Equal("TaskContent", tasksList1.First().ContentPreview);
+            Assert.Equal(firstExpectedState, tasksList1.First().State);
             
             var response2 = await clientManager2.GetAsync(ManagerUrl("my_tasks"));
             var tasksList2 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response2.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response2.Content.ReadAsStringAsync());
             Assert.Equal(0, tasksList2.Length);
             
             // Смотрим задания за исполнителей
             var response3 = await clientPerformer1.GetAsync(PerformerUrl("undistributed_tasks"));
             var tasksList3 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response3.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response3.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList3.Length);
-            Assert.Equal(firstExpectedState, tasksList3.First().TaskState);
-            Assert.Equal("TaskCaption", tasksList3.First().Caption);
-            Assert.Equal("TaskContent", tasksList3.First().ContentPreview);
+            Assert.Equal(firstExpectedState, tasksList3.First().State);
             var response4 = await clientPerformer2.GetAsync(PerformerUrl("undistributed_tasks"));
             var tasksList4 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response4.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response4.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList4.Length);
-            Assert.Equal(secondExpectedState, tasksList4.First().TaskState);
-            Assert.Equal("TaskCaption", tasksList4.First().Caption);
-            Assert.Equal("TaskContent", tasksList4.First().ContentPreview);
+            Assert.Equal(secondExpectedState, tasksList4.First().State);
         }
         
         private static async Task CheckOneTask(
@@ -876,28 +798,24 @@ namespace DeliveryTrackerTest.Controllers
             // Смотрим задания за менеджеров
             var response1 = await clientManager1.GetAsync(ManagerUrl("my_tasks"));
             var tasksList1 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response1.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response1.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList1.Length);
-            Assert.Equal(firstExpectedState, tasksList1.First().TaskState);
-            Assert.Equal("TaskCaption", tasksList1.First().Caption);
-            Assert.Equal("TaskContent", tasksList1.First().ContentPreview);
+            Assert.Equal(firstExpectedState, tasksList1.First().State);
             
             var response2 = await clientManager2.GetAsync(ManagerUrl("my_tasks"));
             var tasksList2 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response2.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response2.Content.ReadAsStringAsync());
             Assert.Equal(0, tasksList2.Length);
             
             // Смотрим задания за исполнителей
             var response3 = await clientPerformer1.GetAsync(PerformerUrl("my_tasks"));
             var tasksList3 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response3.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response3.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList3.Length);
-            Assert.Equal(firstExpectedState, tasksList3.First().TaskState);
-            Assert.Equal("TaskCaption", tasksList3.First().Caption);
-            Assert.Equal("TaskContent", tasksList3.First().ContentPreview);
+            Assert.Equal(firstExpectedState, tasksList3.First().State);
             var response4 = await clientPerformer2.GetAsync(PerformerUrl("my_tasks"));
             var tasksList4 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response4.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response4.Content.ReadAsStringAsync());
             Assert.Equal(0, tasksList4.Length);
         }
         
@@ -918,49 +836,41 @@ namespace DeliveryTrackerTest.Controllers
             // Смотрим задания за менеджеров
             var response1 = await clientManager1.GetAsync(ManagerUrl("my_tasks"));
             var tasksList1 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response1.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response1.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList1.Length);
-            Assert.Equal(firstExpectedState, tasksList1.First().TaskState);
-            Assert.Equal("TaskCaption1", tasksList1.First().Caption);
-            Assert.Equal("TaskContent1", tasksList1.First().ContentPreview);
+            Assert.Equal(firstExpectedState, tasksList1.First().State);
             var firstTaskId = tasksList1.First().Id;
             
             var response2 = await clientManager2.GetAsync(ManagerUrl("my_tasks"));
             var tasksList2 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response2.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response2.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList2.Length);
-            Assert.Equal(secondExpectedState ?? firstExpectedState, tasksList2.First().TaskState);
-            Assert.Equal("TaskCaption2", tasksList2.First().Caption);
-            Assert.Equal("TaskContent2", tasksList2.First().ContentPreview);
+            Assert.Equal(secondExpectedState ?? firstExpectedState, tasksList2.First().State);
             var secondTaskId = tasksList2.First().Id;
             
             // Смотрим нераспределенные за исполнителей
             var response3 = await clientPerformer1.GetAsync(PerformerUrl("undistributed_tasks"));
             var tasksList3 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response3.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response3.Content.ReadAsStringAsync());
             Assert.Equal(0, tasksList3.Length);
             var response4 = await clientPerformer2.GetAsync(PerformerUrl("undistributed_tasks"));
             var tasksList4 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response4.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response4.Content.ReadAsStringAsync());
             Assert.Equal(0, tasksList4.Length);
             
             // Смотрим задания за исполнителей
             var response5 = await clientPerformer1.GetAsync(PerformerUrl("my_tasks"));
             var tasksList5 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response5.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response5.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList5.Length);
             Assert.Equal(firstTaskId, tasksList5.First().Id);
-            Assert.Equal(firstExpectedState, tasksList5.First().TaskState);
-            Assert.Equal("TaskCaption1", tasksList5.First().Caption);
-            Assert.Equal("TaskContent1", tasksList5.First().ContentPreview);
+            Assert.Equal(firstExpectedState, tasksList5.First().State);
             var response6 = await clientPerformer2.GetAsync(PerformerUrl("my_tasks"));
             var tasksList6 =  
-                JsonConvert.DeserializeObject<TaskPreviewViewModel[]>(await response6.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<TaskViewModel[]>(await response6.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList6.Length);
             Assert.Equal(secondTaskId, tasksList6.First().Id);
-            Assert.Equal(secondExpectedState ?? firstExpectedState, tasksList6.First().TaskState);
-            Assert.Equal("TaskCaption2", tasksList6.First().Caption);
-            Assert.Equal("TaskContent2", tasksList6.First().ContentPreview);
+            Assert.Equal(secondExpectedState ?? firstExpectedState, tasksList6.First().State);
 
         }
 

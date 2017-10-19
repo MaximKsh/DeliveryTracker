@@ -3,6 +3,7 @@ using System.Linq;
 using DeliveryTracker.Validation;
 using DeliveryTracker.ViewModels;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.Logging;
 
 namespace DeliveryTracker.Helpers
 {
@@ -67,5 +68,14 @@ namespace DeliveryTracker.Helpers
         
         #endregion
         
+        #region Logger extensions
+
+        public static void Trace<T>(this ILogger<T> logger, string username, string message)
+        {
+            logger.LogTrace($"[{username}]: {message}");
+        }
+        
+        #endregion
+       
     }
 }

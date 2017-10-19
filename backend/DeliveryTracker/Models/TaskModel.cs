@@ -12,14 +12,24 @@ namespace DeliveryTracker.Models
         public Guid Id { get; set; }
 
         /// <summary>
-        /// Заголовок задания.
+        /// Номер задания
         /// </summary>
-        public string Caption { get; set; }
+        public string Number { get; set; }
 
         /// <summary>
         /// Описание задания.
         /// </summary>
-        public string Content { get; set; }
+        public string Details { get; set; }
+        
+        /// <summary>
+        /// Предмет доставки.
+        /// </summary>
+        public string ShippingDesc { get; set; }
+        
+        /// <summary>
+        /// Адрес доставки.
+        /// </summary>
+        public string Address { get; set; }
 
         /// <summary>
         /// Идентификатор состояния задания.
@@ -44,12 +54,12 @@ namespace DeliveryTracker.Models
         /// <summary>
         /// ID отправителя задания.
         /// </summary>
-        public Guid SenderId { get; set; }
+        public Guid AuthorId { get; set; }
 
         /// <summary>
         /// Отправитель. 
         /// </summary>
-        public virtual UserModel Sender { get; set; }
+        public virtual UserModel Author { get; set; }
 
         /// <summary>
         /// ID исполнителя. 
@@ -67,10 +77,20 @@ namespace DeliveryTracker.Models
         public DateTime CreationDate { get; set; }
 
         /// <summary>
-        /// Дедлайн задания.
+        /// Нижняя граница времени, когда нужно выполнить задание.
         /// </summary>
-        public DateTime? Deadline { get; set; }
-
+        public DateTime? DatetimeFrom { get; set; }
+        
+        /// <summary>
+        /// Верхняя граница задания, когда нужно выполнить задание.
+        /// </summary>
+        public DateTime? DatetimeTo { get; set; }
+        
+        /// <summary>
+        /// Дата указания исполнителя.
+        /// </summary>
+        public DateTime? SetPerformerDate { get; set; }
+        
         /// <summary>
         /// Дата взятия в работу.
         /// </summary>

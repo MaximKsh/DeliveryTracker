@@ -12,7 +12,7 @@ namespace DeliveryTracker.Db
 
         #region dbsets
 
-        public DbSet<InstanceModel> Groups { get; set; }
+        public DbSet<InstanceModel> Instances { get; set; }
 
         public DbSet<InvitationModel> Invitations { get; set; }
 
@@ -38,7 +38,7 @@ namespace DeliveryTracker.Db
             modelBuilder.HasPostgresExtension("citext");
 
             ConfigureIdentity(modelBuilder);
-            ConfigureGroupModel(modelBuilder);
+            ConfigureInstanceModel(modelBuilder);
             ConfigureInvitationModel(modelBuilder);
             ConfigureTaskStateModel(modelBuilder);
             ConfigureTaskModel(modelBuilder);
@@ -53,9 +53,16 @@ namespace DeliveryTracker.Db
 
                 // longitude и latitude инициализируются автоматически.
                 
-                b.Property(u => u.DisplayableName)
+                b.Property(u => u.Surname)
                     .HasColumnType("citext collate \"ucs_basic\"")
                     .IsRequired();
+                
+                b.Property(u => u.Name)
+                    .HasColumnType("citext collate \"ucs_basic\"")
+                    .IsRequired();
+
+                b.Property(u => u.Deleted)
+                    .HasDefaultValue(false);
                 
                 b.HasOne(u => u.Instance)
                     .WithMany(g => g.Users)
@@ -92,6 +99,15 @@ namespace DeliveryTracker.Db
                 b.Property(p => p.ExpirationDate)
                     .HasColumnType("timestamp")
                     .IsRequired();
+                
+                b.Property(u => u.Surname)
+                    .HasColumnType("citext collate \"ucs_basic\"");
+                
+                b.Property(u => u.Name)
+                    .HasColumnType("citext collate \"ucs_basic\"");
+
+                b.Property(u => u.PhoneNumber)
+                    .HasColumnName("varchar(20)");
 
                 b.HasOne(p => p.Role)
                     .WithMany(r => r.Invitations)
@@ -121,13 +137,13 @@ namespace DeliveryTracker.Db
             });
         }
 
-        private static void ConfigureGroupModel(ModelBuilder modelBuilder)
+        private static void ConfigureInstanceModel(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<InstanceModel>(b =>
             {
                 b.HasKey(p => p.Id);
 
-                b.Property(p => p.DisplayableName)
+                b.Property(p => p.InstanceName)
                     .HasColumnType("citext collate \"ucs_basic\"")
                     .IsRequired();
 
@@ -145,36 +161,57 @@ namespace DeliveryTracker.Db
             {
                 b.HasKey(p => p.Id);
 
-                b.Property(p => p.Caption)
+                b.Property(p => p.Number)
                     .HasColumnType("citext collate \"ucs_basic\"")
                     .IsRequired();
+                
+                b.Property(p => p.ShippingDesc)
+                    .HasColumnType("citext collate \"ucs_basic\"");
 
-                b.Property(p => p.Content)
-                    .HasColumnType("citext collate \"ucs_basic\"")
-                    .IsRequired();
+                b.Property(p => p.Details)
+                    .HasColumnType("citext collate \"ucs_basic\"");
+                
+                b.Property(p => p.Address)
+                    .HasColumnType("citext collate \"ucs_basic\"");
 
                 b.HasOne(t => t.State)
                     .WithMany(s => s.Tasks)
                     .HasForeignKey(t => t.StateId)
                     .IsRequired();
 
-                b.HasOne(t => t.Sender)
+                b.HasOne(t => t.Instance)
+                    .WithMany(u => u.Tasks)
+                    .HasForeignKey(t => t.InstanceId)
+                    .IsRequired();
+                
+                b.HasOne(t => t.Author)
                     .WithMany(u => u.SentTasks)
-                    .HasForeignKey(t => t.SenderId)
+                    .HasForeignKey(t => t.AuthorId)
                     .IsRequired();
 
                 b.HasOne(t => t.Performer)
                     .WithMany(u => u.PerformingTasks)
                     .HasForeignKey(t => t.PerformerId);
                 
+                
+                
+                b.Property(p => p.DatetimeFrom)
+                    .HasColumnType("timestamp");
+                
+                b.Property(p => p.DatetimeTo)
+                    .HasColumnType("timestamp");
+
                 b.Property(p => p.CreationDate)
                     .HasColumnType("timestamp")
                     .HasDefaultValueSql("now() at time zone 'utc'")
                     .IsRequired();
                 
-                b.Property(p => p.Deadline)
+                b.Property(p => p.SetPerformerDate)
                     .HasColumnType("timestamp");
-
+                
+                b.Property(p => p.InWorkDate)
+                    .HasColumnType("timestamp");
+                
                 b.Property(p => p.InWorkDate)
                     .HasColumnType("timestamp");
 
@@ -182,7 +219,7 @@ namespace DeliveryTracker.Db
                     .HasColumnType("timestamp");
                 
                 b.HasIndex(p => p.StateId);
-                b.HasIndex(p => p.SenderId);
+                b.HasIndex(p => p.AuthorId);
                 b.HasIndex(p => p.PerformerId);
                 b.HasIndex(p => p.InstanceId);
                 b.HasIndex(p => p.CreationDate);

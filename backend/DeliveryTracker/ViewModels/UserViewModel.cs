@@ -3,22 +3,32 @@
 namespace DeliveryTracker.ViewModels
 {
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-    public class UserInfoViewModel
+    public class UserViewModel
     {
         /// <summary>
         /// Уникальное имя пользователя(код приглашения).
         /// </summary>
-        public string UserName { get; set; }
+        public string Username { get; set; }
         
         /// <summary>
-        /// Отображаемое имя пользователя.
+        /// Фамилия.
         /// </summary>
-        public string DisplayableName { get; set; }
+        public string Surname { get; set; }
         
         /// <summary>
-        /// Группа пользователя.
+        /// Имя.
         /// </summary>
-        public string Instance { get; set; }
+        public string Name { get; set; }
+        
+        /// <summary>
+        /// Телефон пользователя.
+        /// </summary>
+        public string PhoneNumber { get; set; }
+        
+        /// <summary>
+        /// Инстанс пользователя.
+        /// </summary>
+        public InstanceViewModel Instance { get; set; }
         
         /// <summary>
         /// Роль пользователя.

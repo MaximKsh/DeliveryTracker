@@ -26,6 +26,9 @@ namespace DeliveryTrackerTest.Controllers
         protected static string PingUrl() =>
             "/";
 
+        protected static string UserUrl(string command) =>
+            $"/api/user/{command}";
+        
         protected static string SessionUrl(string command) =>
             $"/api/session/{command}";
         
@@ -38,7 +41,7 @@ namespace DeliveryTrackerTest.Controllers
         protected static string PerformerUrl(string command) =>
             $"/api/performer/{command}";
         
-        protected static async Task<(string, string, string, string)> CreateInstance(
+        protected static async Task<UserViewModel> CreateInstance(
             HttpClient client,
             string creatorName,
             string creatorPassword,
@@ -47,9 +50,20 @@ namespace DeliveryTrackerTest.Controllers
         {
             var createInstanceRequest = new CreateInstanceViewModel
             {
-                CreatorDisplayableName = creatorName,
-                CreatorPassword = creatorPassword,
-                InstanceName = instanceName,
+                Creator = new UserViewModel()
+                {
+                    Surname = creatorName,
+                    Name = creatorName,
+                    Role = RoleInfo.Creator
+                },
+                Credentials = new CredentialsViewModel
+                {
+                    Password = creatorPassword
+                },
+                Instance = new InstanceViewModel
+                {
+                    InstanceName = instanceName
+                },
             };
             var createInstanceContent = JsonConvert.SerializeObject(createInstanceRequest);
             var createInstanceResponse = await client.PostAsync(
@@ -58,21 +72,17 @@ namespace DeliveryTrackerTest.Controllers
             Assert.Equal(expectStatusCode, createInstanceResponse.StatusCode);
             if (!createInstanceResponse.IsSuccessStatusCode)
             {
-                return (null, null, null, null);
+                return null;
             }
             
             var createInstanceResponseBody =  
-                JsonConvert.DeserializeObject<UserInfoViewModel>(await createInstanceResponse.Content.ReadAsStringAsync());
+                JsonConvert.DeserializeObject<UserViewModel>(await createInstanceResponse.Content.ReadAsStringAsync());
             
             Assert.Equal(RoleInfo.Creator, createInstanceResponseBody.Role);
-            return (
-                createInstanceResponseBody.UserName,
-                createInstanceResponseBody.DisplayableName,
-                createInstanceResponseBody.Role,
-                createInstanceResponseBody.Instance);
+            return createInstanceResponseBody;
         }
 
-        protected static async Task<(string, string, string)> GetToken(
+        protected static async Task<TokenViewModel> GetToken(
             HttpClient client,
             string username,
             string password,
@@ -81,7 +91,7 @@ namespace DeliveryTrackerTest.Controllers
         {
             var loginRequest = new CredentialsViewModel
             {
-                UserName = username,
+                Username = username,
                 Password = password,
                 Role = role,
             };
@@ -92,15 +102,15 @@ namespace DeliveryTrackerTest.Controllers
             Assert.Equal(expectStatusCode, loginResponse.StatusCode);
             if (!loginResponse.IsSuccessStatusCode)
             {
-                return (null, null, null);
+                return null;
             }
             var tokenResponse =  
                 JsonConvert.DeserializeObject<TokenViewModel>(await loginResponse.Content.ReadAsStringAsync());
 
-            return (tokenResponse.User.DisplayableName, tokenResponse.Token, tokenResponse.User.Role);
+            return tokenResponse ;
         }
 
-        protected static async Task<(string, string, DateTime?, string)> Invite(
+        protected static async Task<string> Invite(
             HttpClient client,
             string role,
             string token,
@@ -120,71 +130,34 @@ namespace DeliveryTrackerTest.Controllers
                 throw new ArgumentException("role");
             }
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var response = await client.GetAsync(url);
+            var loginContent = JsonConvert.SerializeObject(new UserViewModel());
+            var response = await client.PostAsync(
+                url,
+                new StringContent(loginContent, Encoding.UTF8, ContentType));
             
             Assert.Equal(expectStatusCode, response.StatusCode);
             if (!response.IsSuccessStatusCode)
             {
-                return (null, null, null, null);
+                return null;
             }
             var responseBody =  
                 JsonConvert.DeserializeObject<InvitationViewModel>(await response.Content.ReadAsStringAsync());
 
-            return (
-                responseBody.InvitationCode,
-                responseBody.Role,
-                responseBody.ExpirationDate,
-                responseBody.InstanceName);
+            return responseBody.InvitationCode;
         }
 
-        protected static async Task<(string, string, string, string)> AcceptInvitation(
-            HttpClient client,
-            string invitationCode,
-            string displayableName,
-            string password,
-            HttpStatusCode expectStatusCode = HttpStatusCode.OK)
-        {
-            var acceptInvitaitonRequest = new AcceptInvitationViewModel
-            {
-                DisplayableName = displayableName,
-                InvitationCode = invitationCode,
-                Password = password
-            };
-            
-            var content = JsonConvert.SerializeObject(acceptInvitaitonRequest);
-            var response = await client.PostAsync(
-                InstanceUrl("accept_invitation"), 
-                new StringContent(content, Encoding.UTF8, ContentType));
-            Assert.Equal(expectStatusCode, response.StatusCode);
-            if (!response.IsSuccessStatusCode)
-            {
-                return (null, null, null, null);
-            }
-            var createInstanceResponseBody =  
-                JsonConvert.DeserializeObject<UserInfoViewModel>(await response.Content.ReadAsStringAsync());
-            return (
-                createInstanceResponseBody.UserName,
-                createInstanceResponseBody.DisplayableName,
-                createInstanceResponseBody.Role,
-                createInstanceResponseBody.Instance);
-        }
-        
-        protected static async Task<(string, string, string, string)> CheckSession(HttpClient client,string token)
+        protected static async Task<UserViewModel> CheckSession(HttpClient client,string token)
         {
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var response = await client.GetAsync(SessionUrl("check"));
             if (!response.IsSuccessStatusCode)
             {
-                return (null, null, null, null);
+                return null;
             }
             
             var createInstanceResponseBody =  
-                JsonConvert.DeserializeObject<UserInfoViewModel>(await response.Content.ReadAsStringAsync());
-            return (
-                createInstanceResponseBody.UserName,
-                createInstanceResponseBody.DisplayableName,
-                createInstanceResponseBody.Role,
-                createInstanceResponseBody.Instance);
+                JsonConvert.DeserializeObject<UserViewModel>(await response.Content.ReadAsStringAsync());
+            return createInstanceResponseBody;
             
         }
 
@@ -200,13 +173,11 @@ namespace DeliveryTrackerTest.Controllers
                 .Select(p => p)
                 .Select(async _ =>
                 {
-                    var (invitationCode, _, _, _) = 
-                        await Invite(client, role, token);
-            
-                    var (userName1, _ ,_ ,_) = 
-                        await AcceptInvitation(client, invitationCode, $"MassCreatedUser_{Guid.NewGuid():N}", password);
+                    var invitationCode = await Invite(client, role, token);
 
-                    return userName1;
+                    await GetToken(client, invitationCode, password, role, HttpStatusCode.Created);
+                    
+                    return invitationCode;
                 })
                 .ToList();
             

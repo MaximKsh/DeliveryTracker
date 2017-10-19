@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
+using DeliveryTracker.Db;
 using DeliveryTracker.Helpers;
 using DeliveryTracker.Services;
 using DeliveryTracker.Validation;
@@ -14,6 +16,8 @@ namespace DeliveryTracker.Controllers
     public class SessionController: Controller
     {
         #region fields
+
+        private readonly DeliveryTrackerDbContext dbContext;
         
         private readonly AccountService accountService;
 
@@ -24,9 +28,11 @@ namespace DeliveryTracker.Controllers
         #region constuctor
         
         public SessionController(
+            DeliveryTrackerDbContext dbContext,
             AccountService accountService, 
             ILogger<SessionController> logger)
         {
+            this.dbContext = dbContext;
             this.accountService = accountService;
             this.logger = logger;
         }
@@ -42,16 +48,53 @@ namespace DeliveryTracker.Controllers
             {
                 return this.BadRequest(this.ModelState.ToErrorListViewModel());
             }
-
-            var loginResult = await this.accountService.Login(
-                credentials.UserName, 
-                credentials.Password,
-                credentials.Role);
-            if (!loginResult.Success)
+            
+            var loginResult = await this.accountService.Login(credentials);
+            // Залогинили - отдаем токен
+            if (loginResult.Success)
             {
+                this.logger.Trace(credentials.Username, "logged in");
+                return this.Ok(loginResult.Result);
+            }
+            // Не залогинили - ошибка не связана с отсутствием юзера, или юзер отсутствует,
+            // но приглашения для него тоже нет
+            if (loginResult.Errors.All(p => p.Code != ErrorCode.UserNotFound) 
+                || !this.accountService.TryGetInvitaiton(credentials.Username, out var invitation))
+            {
+                this.logger.Trace(credentials.Username, "failed login");
                 return this.Unauthorized();
             }
-            return this.Ok(loginResult.Result);
+            // Транзакция нужна, т.к. происходит регистрация внутри которой данные меняются не только через dbSaveChanges.
+            using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    // пробуем пригласить юзера
+                    var acceptInvitationResult = await this.accountService.RegisterWithInvitation(invitation, credentials);
+                    if (!acceptInvitationResult.Success)
+                    {
+                        transaction.Rollback();
+                        this.logger.Trace(credentials.Username, "failed login");
+                        return this.Unauthorized();
+                    }
+                    loginResult = await this.accountService.Login(credentials);
+                    if (!loginResult.Success)
+                    {
+                        transaction.Rollback();
+                        this.logger.Trace(credentials.Username, "failed login");
+                        return this.Unauthorized();
+                    }
+                    await this.dbContext.SaveChangesAsync();
+                    transaction.Commit();
+                    this.logger.Trace(credentials.Username, "accepted invitation");
+                    return this.StatusCode(201, loginResult.Result);
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+            }
         }
 
         [Authorize]
@@ -75,12 +118,17 @@ namespace DeliveryTracker.Controllers
                 ? new GeopositionViewModel {Latitude = user.Latitude.Value, Longitude = user.Longitude.Value}
                 : null;
             
-            return this.Ok(new UserInfoViewModel
+            return this.Ok(new UserViewModel
             {
-                DisplayableName = user.DisplayableName,
-                Instance = user.Instance.DisplayableName,
+                Username = user.UserName,
+                Surname = user.Surname,
+                Name = user.Name,
+                PhoneNumber = user.PhoneNumber,
+                Instance = new InstanceViewModel
+                {
+                    InstanceName = user.Instance.InstanceName,
+                },
                 Role = role,
-                UserName = user.UserName,
                 Position = position, 
             });
         }

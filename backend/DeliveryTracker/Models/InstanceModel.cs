@@ -18,10 +18,10 @@ namespace DeliveryTracker.Models
         /// <summary>
         /// Отображаемое имя инстанса.
         /// </summary>
-        public string DisplayableName { get; set; }
+        public string InstanceName { get; set; }
 
         /// <summary>
-        /// Идентификатор создателя инстанса
+        /// Идентификатор создателя инстанса.
         /// </summary>
         public Guid? CreatorId { get; set; }
         
@@ -31,13 +31,18 @@ namespace DeliveryTracker.Models
         public virtual UserModel Creator { get; set; }
 
         /// <summary>
-        /// Пользователи инстанса.
+        /// Пользователи в данном инстансе.
         /// </summary>
         public virtual ICollection<UserModel> Users { get; set; }
         
         /// <summary>
-        /// Приглашения в инстанса.
+        /// Приглашения в инстанс.
         /// </summary>
         public virtual ICollection<InvitationModel> Invitations { get; set; }
+        
+        /// <summary>
+        /// Таски, выданные в рамках инстанса.
+        /// </summary>
+        public virtual ICollection<TaskModel> Tasks { get; set; }
     }
 }

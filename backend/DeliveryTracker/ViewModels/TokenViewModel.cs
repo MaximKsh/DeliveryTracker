@@ -9,7 +9,7 @@ namespace DeliveryTracker.ViewModels
         /// <summary>
         /// Пользователь, связанный с токеном.
         /// </summary>
-        public UserInfoViewModel User { get; set; }
+        public UserViewModel User { get; set; }
         
         /// <summary>
         /// JWT токен.

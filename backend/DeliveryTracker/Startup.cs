@@ -98,7 +98,14 @@ namespace DeliveryTracker
                         };
                     });
 
-            services.AddMvc();
+            services.AddMvc().AddJsonOptions(
+                p =>
+                {
+                    p.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                    p.SerializerSettings.MissingMemberHandling = MissingMemberHandling.Ignore;
+                    p.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+                    p.SerializerSettings.Formatting = Formatting.None;
+                });
 
             services
                 .AddDeliveryTrackerServices()

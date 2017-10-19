@@ -43,35 +43,41 @@
             public const string IncorrectTaskStateTransition = Pref + "IncorrectTaskStateTransition";
             
             public const string TaskIsForbidden = Pref + "TaskIsForbidden";
+            
+            public const string AccessDenied = Pref + "AccessDenied";
 
+            public const string UserDeleted = Pref + "UserDeleted";
+            
 
-            public const string IdIsRequired = "IdIsRequired";
+            public const string IdIsRequired = Pref + "IdIsRequired";
             
-            public const string UserNameIsRequired = "UserNameIsRequired";
+            public const string UserNameIsRequired = Pref + "UserNameIsRequired";
             
-            public const string RoleIsRequired = "RoleIsRequired";
+            public const string RoleIsRequired = Pref + "RoleIsRequired";
+            
+            public const string RoleRange= Pref + "RoleRange";
 
-            public const string DisplayableNameIsRequired = "DisplayableNameIsRequired";
+            public const string DisplayableNameIsRequired = Pref + "DisplayableNameIsRequired";
 
-            public const string InvitationCodeIsRequired = "InvitationCodeIsRequired";
+            public const string InvitationCodeIsRequired = Pref + "InvitationCodeIsRequired";
 
-            public const string PasswordIsRequired = "PasswordIsRequired";
+            public const string PasswordIsRequired = Pref + "PasswordIsRequired";
             
-            public const string CaptionIsRequired = "CaptionIsRequired";
+            public const string CaptionIsRequired = Pref + "CaptionIsRequired";
             
-            public const string ContentIsRequired = "ContentIsRequired";
+            public const string ContentIsRequired = Pref + "ContentIsRequired";
             
-            public const string InstanceNameIsRequired = "InstanceNameIsRequired";
+            public const string InstanceNameIsRequired = Pref + "InstanceNameIsRequired";
             
-            public const string CreatorDisplayableNameIsRequired = "CreatorDisplayableNameIsRequired";
+            public const string CreatorDisplayableNameIsRequired = Pref + "CreatorDisplayableNameIsRequired";
             
-            public const string CreatorPasswordIsRequired = "CreatorPasswordIsRequired";
+            public const string CreatorPasswordIsRequired = Pref + "CreatorPasswordIsRequired";
             
-            public const string LongitudeIsRequired = "LongitudeIsRequired";
+            public const string LongitudeIsRequired = Pref + "LongitudeIsRequired";
             
-            public const string LatitudeIsRequired = "LatitudeIsRequired";
+            public const string LatitudeIsRequired = Pref + "LatitudeIsRequired";
             
-            public const string ExpirationDateIsRequired = "ExpirationDateIsRequired";
+            public const string ExpirationDateIsRequired = Pref + "ExpirationDateIsRequired";
 
         }
         

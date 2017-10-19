@@ -15,21 +15,14 @@ namespace DeliveryTracker.ViewModels
         public string InvitationCode { get; set; }
         
         /// <summary>
-        /// Роль, для которой действителен код приглашения.
-        /// </summary>
-        [Required(ErrorMessage = LocalizationString.Error.RoleIsRequired)]
-        public string Role { get; set; }
-        
-        /// <summary>
         /// Дата истечения кода.
         /// </summary>
         [Required(ErrorMessage = LocalizationString.Error.ExpirationDateIsRequired)]
         public DateTime ExpirationDate { get; set; }
-
+        
         /// <summary>
-        /// Название группы в которую приглашают.
+        /// Предварительные данные о пользователе, указанные при создании приглашения.
         /// </summary>
-        [Required(ErrorMessage = LocalizationString.Error.InstanceNameIsRequired)]
-        public string InstanceName { get; set; }
+        public UserViewModel PreliminaryUser { get; set; }
     }
 }

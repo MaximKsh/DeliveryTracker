@@ -9,9 +9,14 @@ namespace DeliveryTracker.Models
     public class UserModel : IdentityUser<Guid>
     {
         /// <summary>
-        /// Отображаемое имя пользователя.
+        /// Фамилия.
         /// </summary>
-        public string DisplayableName { get; set; }
+        public string Surname { get; set; }
+        
+        /// <summary>
+        /// Имя.
+        /// </summary>
+        public string Name { get; set; }
         
         /// <summary>
         /// Долгота.
@@ -29,6 +34,11 @@ namespace DeliveryTracker.Models
         public DateTime LastTimePositionUpdated { get; set; }
         
         /// <summary>
+        /// Пользователь удален.
+        /// </summary>
+        public bool Deleted { get; set; }
+        
+        /// <summary>
         /// ID группы пользователя.
         /// </summary>
         public Guid InstanceId { get; set; }
@@ -36,7 +46,7 @@ namespace DeliveryTracker.Models
         /// <summary>
         /// Группа пользователя.
         /// </summary>
-        public InstanceModel Instance { get; set;}
+        public virtual InstanceModel Instance { get; set;}
 
         /// <summary>
         /// Группа, созданная пользователем.
