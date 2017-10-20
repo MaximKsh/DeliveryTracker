@@ -49,29 +49,11 @@
             public const string UserDeleted = Pref + "UserDeleted";
             
 
-            public const string IdIsRequired = Pref + "IdIsRequired";
-            
-            public const string UserNameIsRequired = Pref + "UserNameIsRequired";
-            
-            public const string RoleIsRequired = Pref + "RoleIsRequired";
-            
             public const string RoleRange= Pref + "RoleRange";
-
-            public const string DisplayableNameIsRequired = Pref + "DisplayableNameIsRequired";
 
             public const string InvitationCodeIsRequired = Pref + "InvitationCodeIsRequired";
 
-            public const string PasswordIsRequired = Pref + "PasswordIsRequired";
-            
-            public const string CaptionIsRequired = Pref + "CaptionIsRequired";
-            
-            public const string ContentIsRequired = Pref + "ContentIsRequired";
-            
             public const string InstanceNameIsRequired = Pref + "InstanceNameIsRequired";
-            
-            public const string CreatorDisplayableNameIsRequired = Pref + "CreatorDisplayableNameIsRequired";
-            
-            public const string CreatorPasswordIsRequired = Pref + "CreatorPasswordIsRequired";
             
             public const string LongitudeIsRequired = Pref + "LongitudeIsRequired";
             

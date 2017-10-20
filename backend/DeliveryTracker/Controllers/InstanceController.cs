@@ -54,12 +54,13 @@ namespace DeliveryTracker.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateInstanceViewModel instanceViewModel)
         {
-            if (!this.ModelState.IsValid)
-            {
-                return this.BadRequest(this.ModelState.ToErrorListViewModel());
-            }
             var validateQueryParametersResult = new ParametersValidator()
-                .AddRule("role", instanceViewModel.Creator.Role, p => p == this.roleCache.Creator.Name)
+                .AddRule("instanceInfo", instanceViewModel, p => p != null)
+                .AddRule("instanceName", instanceViewModel?.Instance?.InstanceName, p => !string.IsNullOrWhiteSpace(p))
+                .AddRule("surname", instanceViewModel?.Creator?.Surname, p => !string.IsNullOrWhiteSpace(p))
+                .AddRule("name", instanceViewModel?.Creator?.Name, p => !string.IsNullOrWhiteSpace(p))
+                .AddRule("role", instanceViewModel?.Creator?.Role, p => p == this.roleCache.Creator.Name)
+                .AddRule("password", instanceViewModel?.Credentials?.Password, p => !string.IsNullOrWhiteSpace(p))
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
@@ -196,7 +197,8 @@ namespace DeliveryTracker.Controllers
         public async Task<IActionResult> DeletePerformer([FromBody] UserViewModel userInfo)
         {
             var validateQueryParametersResult = new ParametersValidator()
-                .AddRule("username", userInfo.Username, p => p != null)
+                .AddRule("user", userInfo, p => p != null)
+                .AddRule("username", userInfo?.Username, p => p != null)
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
@@ -207,6 +209,7 @@ namespace DeliveryTracker.Controllers
             {
                 try
                 {
+                    // ReSharper disable once PossibleNullReferenceException
                     var result = await this.instanceService.DeletePerformer(this.User.Identity.Name, userInfo.Username);
                     if (!result.Success)
                     {
@@ -241,7 +244,8 @@ namespace DeliveryTracker.Controllers
         public async Task<IActionResult> DeleteManager([FromBody] UserViewModel userInfo)
         {
             var validateQueryParametersResult = new ParametersValidator()
-                .AddRule("number", userInfo.Username, p => p != null)
+                .AddRule("user", userInfo, p => p != null)
+                .AddRule("number", userInfo?.Username, p => p != null)
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
@@ -251,6 +255,7 @@ namespace DeliveryTracker.Controllers
             {
                 try
                 {
+                    // ReSharper disable once PossibleNullReferenceException
                     var result = await this.instanceService.DeleteManager(this.User.Identity.Name, userInfo.Username);
                     if (!result.Success)
                     {

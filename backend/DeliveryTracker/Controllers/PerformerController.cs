@@ -55,11 +55,14 @@ namespace DeliveryTracker.Controllers
         [HttpPost("update_position")]
         public async Task<IActionResult> UpdatePosition([FromBody] GeopositionViewModel newPosition)
         {
-            if (!this.ModelState.IsValid)
+            var validateQueryParametersResult = new ParametersValidator()
+                .AddRule("newPosition", newPosition, p => p != null)
+                .Validate();
+            if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(this.ModelState.ToErrorListViewModel());
+                return this.BadRequest(validateQueryParametersResult.Error);
             }
-
+             
             var updateResult = await this.performerService.UpdatePosition(
                 this.User.Identity.Name,
                 newPosition.Longitude,
@@ -102,13 +105,8 @@ namespace DeliveryTracker.Controllers
         [HttpPost("reserve_task")]
         public async Task<IActionResult> ReserveTask([FromBody] TaskViewModel taskInfo)
         {
-            if (!this.ModelState.IsValid)
-            {
-                return this.BadRequest(this.ModelState.ToErrorListViewModel());
-            }
-            
             var validateQueryParametersResult = new ParametersValidator()
-                .AddRule("id", taskInfo.Id, p => p != null)
+                .AddRule("id", taskInfo?.Id, p => p != null)
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
@@ -117,6 +115,7 @@ namespace DeliveryTracker.Controllers
             
             var taskResult = await this.taskService.ReserveTask(
                 // ReSharper disable once PossibleInvalidOperationException
+                // ReSharper disable once PossibleNullReferenceException
                 taskInfo.Id.Value,
                 this.User.Identity.Name);
             if (!taskResult.Success)
@@ -148,13 +147,9 @@ namespace DeliveryTracker.Controllers
         [HttpPost("take_task_to_work")]
         public async Task<IActionResult> TakeTaskToWork([FromBody] TaskViewModel taskInfo)
         {
-            if (!this.ModelState.IsValid)
-            {
-                return this.BadRequest(this.ModelState.ToErrorListViewModel());
-            }
-            
             var validateQueryParametersResult = new ParametersValidator()
-                .AddRule("id", taskInfo.Id, p => p != null)
+                .AddRule("taskInfo", taskInfo, p => p != null)
+                .AddRule("id", taskInfo?.Id, p => p != null)
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
@@ -163,6 +158,7 @@ namespace DeliveryTracker.Controllers
             
             var taskResult = await this.taskService.TakeTaskToWork(
                 // ReSharper disable once PossibleInvalidOperationException
+                // ReSharper disable once PossibleNullReferenceException
                 taskInfo.Id.Value,
                 this.User.Identity.Name);
             if (!taskResult.Success)
@@ -199,7 +195,8 @@ namespace DeliveryTracker.Controllers
                 return this.BadRequest(this.ModelState.ToErrorListViewModel());
             }
             var validateQueryParametersResult = new ParametersValidator()
-                .AddRule("id", taskInfo.Id, p => p != null)
+                .AddRule("taskInfo", taskInfo, p => p != null)
+                .AddRule("id", taskInfo?.Id, p => p != null)
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
@@ -209,6 +206,7 @@ namespace DeliveryTracker.Controllers
             var taskResult = await this.taskService.CompleteTaskByPerformer(
                 this.User.Identity.Name,
                 // ReSharper disable once PossibleInvalidOperationException
+                // ReSharper disable once PossibleNullReferenceException
                 taskInfo.Id.Value,
                 taskInfo.State);
             if (!taskResult.Success)

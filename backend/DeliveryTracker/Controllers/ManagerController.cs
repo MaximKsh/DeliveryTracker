@@ -57,12 +57,9 @@ namespace DeliveryTracker.Controllers
         [HttpPost("add_task")]
         public async Task<IActionResult> AddTask([FromBody] TaskViewModel addTaskViewModel)
         {
-            if (!this.ModelState.IsValid)
-            {
-                return this.BadRequest(this.ModelState.ToErrorListViewModel());
-            }
             var validateQueryParametersResult = new ParametersValidator()
-                .AddRule("number", addTaskViewModel.Number, p => p != null)
+                .AddRule("task", addTaskViewModel, p => p != null)
+                .AddRule("number", addTaskViewModel?.Number, p => p != null)
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
@@ -101,11 +98,6 @@ namespace DeliveryTracker.Controllers
         [HttpPost("cancel_task")]
         public async Task<IActionResult> CancelTask([FromBody] TaskViewModel taskInfo)
         {
-            if (!this.ModelState.IsValid)
-            {
-                return this.BadRequest(this.ModelState.ToErrorListViewModel());
-            }
-            
             var validateQueryParametersResult = new ParametersValidator()
                 .AddRule("id", taskInfo.Id, p => p != null)
                 .Validate();
