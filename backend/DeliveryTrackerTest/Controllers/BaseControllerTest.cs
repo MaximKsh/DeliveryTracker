@@ -86,14 +86,12 @@ namespace DeliveryTrackerTest.Controllers
             HttpClient client,
             string username,
             string password,
-            string role,
             HttpStatusCode expectStatusCode = HttpStatusCode.OK)
         {
             var loginRequest = new CredentialsViewModel
             {
                 Username = username,
                 Password = password,
-                Role = role,
             };
             var loginContent = JsonConvert.SerializeObject(loginRequest);
             var loginResponse = await client.PostAsync(
@@ -175,7 +173,7 @@ namespace DeliveryTrackerTest.Controllers
                 {
                     var invitationCode = await Invite(client, role, token);
 
-                    await GetToken(client, invitationCode, password, role, HttpStatusCode.Created);
+                    await GetToken(client, invitationCode, password, HttpStatusCode.Created);
                     
                     return invitationCode;
                 })

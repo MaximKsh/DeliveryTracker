@@ -28,10 +28,10 @@ namespace DeliveryTrackerTest.Controllers
             
             var creator = 
                 await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
-            var token = await GetToken(client, creator.Username, "123qQ!", creator.Role);
+            var token = await GetToken(client, creator.Username, "123qQ!");
             var performersUsernames = await MassCreateUsers(client, token.Token, RoleInfo.Performer, "123qQ!", 10);
             var manager = (await MassCreateUsers(client, token.Token, RoleInfo.Manager, "123qQ!", 1)).First();
-            var managerToken = (await GetToken(client, manager, "123qQ!", RoleInfo.Manager)).Token;
+            var managerToken = (await GetToken(client, manager, "123qQ!")).Token;
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken);
             
             // Смотрим активных
@@ -44,7 +44,7 @@ namespace DeliveryTrackerTest.Controllers
             for (var i = 0; i < performersUsernames.Count; i += 2)
             {
                 var perfClient = this.Server.CreateClient();
-                var perfToken = await GetToken(client, performersUsernames[i], "123qQ!", RoleInfo.Performer);
+                var perfToken = await GetToken(client, performersUsernames[i], "123qQ!");
                 perfClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", perfToken.Token);
                 await UpdateRandomPosition(perfClient);
             }
@@ -59,7 +59,7 @@ namespace DeliveryTrackerTest.Controllers
             for (var i = 0; i < performersUsernames.Count; i += 2)
             {
                 var perfClient = this.Server.CreateClient();
-                var perfToken = await GetToken(client, performersUsernames[i], "123qQ!", RoleInfo.Performer);
+                var perfToken = await GetToken(client, performersUsernames[i], "123qQ!");
                 perfClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", perfToken.Token);
                 await SetInactive(perfClient);
             }
@@ -95,18 +95,18 @@ namespace DeliveryTrackerTest.Controllers
             
             var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
-            var token = await GetToken(clientManager1, creator.Username, "123qQ!", creator.Role);
+            var token = await GetToken(clientManager1, creator.Username, "123qQ!");
             var performers = await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 2);
             var managers = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 2));
             
-            var managerToken1 = await GetToken(clientManager1, managers.First(), "123qQ!", RoleInfo.Manager);
+            var managerToken1 = await GetToken(clientManager1, managers.First(), "123qQ!");
             clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1.Token);
-            var managerToken2 = await GetToken(clientManager2, managers.Last(), "123qQ!", RoleInfo.Manager);
+            var managerToken2 = await GetToken(clientManager2, managers.Last(), "123qQ!");
             clientManager2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken2.Token);
             
-            var performerToken1 = await GetToken(clientPerformer1, performers.First(), "123qQ!", RoleInfo.Performer);
+            var performerToken1 = await GetToken(clientPerformer1, performers.First(), "123qQ!");
             clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken1.Token);
-            var performerToken2 = await GetToken(clientPerformer2, performers.Last(), "123qQ!", RoleInfo.Performer);
+            var performerToken2 = await GetToken(clientPerformer2, performers.Last(), "123qQ!");
             clientPerformer2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken2.Token);
             
             // Поставим исполнителя в работу
@@ -185,18 +185,18 @@ namespace DeliveryTrackerTest.Controllers
             
             var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
-            var token = await GetToken(clientManager1, creator.Username, "123qQ!", creator.Role);
+            var token = await GetToken(clientManager1, creator.Username, "123qQ!");
             var performers = await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 2);
             var managers = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 2));
             
-            var managerToken1 = await GetToken(clientManager1, managers.First(), "123qQ!", RoleInfo.Manager);
+            var managerToken1 = await GetToken(clientManager1, managers.First(), "123qQ!");
             clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1.Token);
-            var managerToken2 = await GetToken(clientManager2, managers.Last(), "123qQ!", RoleInfo.Manager);
+            var managerToken2 = await GetToken(clientManager2, managers.Last(), "123qQ!");
             clientManager2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken2.Token);
             
-            var performerToken1 = await GetToken(clientPerformer1, performers.First(), "123qQ!", RoleInfo.Performer);
+            var performerToken1 = await GetToken(clientPerformer1, performers.First(), "123qQ!");
             clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken1.Token);
-            var performerToken2 = await GetToken(clientPerformer2, performers.Last(), "123qQ!", RoleInfo.Performer);
+            var performerToken2 = await GetToken(clientPerformer2, performers.Last(), "123qQ!");
             clientPerformer2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken2.Token);
             
             // Поставим исполнителя в работу
@@ -278,24 +278,24 @@ namespace DeliveryTrackerTest.Controllers
             
             var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
-            var token1 = await GetToken(clientManager1, creator.Username, "123qQ!", creator.Role);
+            var token1 = await GetToken(clientManager1, creator.Username, "123qQ!");
             var performers1 = await MassCreateUsers(clientManager1, token1.Token, RoleInfo.Performer, "123qQ!", 1);
             var managers1 = (await MassCreateUsers(clientManager1, token1.Token, RoleInfo.Manager, "123qQ!", 1));
             
             var creator2 = 
                 await CreateInstance(clientManager2, "Иванов И.И.", "123qQ!", "Instance1");
-            var token2 = await GetToken(clientManager2, creator2.Username, "123qQ!", creator2.Role);
+            var token2 = await GetToken(clientManager2, creator2.Username, "123qQ!");
             var performers2 = await MassCreateUsers(clientManager2, token2.Token, RoleInfo.Performer, "123qQ!", 1);
             var managers2 = (await MassCreateUsers(clientManager2, token2.Token, RoleInfo.Manager, "123qQ!", 1));
             
-            var managerToken1 = await GetToken(clientManager1, managers1.First(), "123qQ!", RoleInfo.Manager);
+            var managerToken1 = await GetToken(clientManager1, managers1.First(), "123qQ!");
             clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1.Token);
-            var managerToken2 = await GetToken(clientManager2, managers2.First(), "123qQ!", RoleInfo.Manager);
+            var managerToken2 = await GetToken(clientManager2, managers2.First(), "123qQ!");
             clientManager2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken2.Token);
             
-            var performerToken1 = await GetToken(clientPerformer1, performers1.First(), "123qQ!", RoleInfo.Performer);
+            var performerToken1 = await GetToken(clientPerformer1, performers1.First(), "123qQ!");
             clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken1.Token);
-            var performerToken2 = await GetToken(clientPerformer2, performers2.First(), "123qQ!", RoleInfo.Performer);
+            var performerToken2 = await GetToken(clientPerformer2, performers2.First(), "123qQ!");
             clientPerformer2.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken2.Token);
            
             
@@ -419,14 +419,14 @@ namespace DeliveryTrackerTest.Controllers
             
             var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
-            var token = await GetToken(clientManager1, creator.Username, "123qQ!", creator.Role);
+            var token = await GetToken(clientManager1, creator.Username, "123qQ!");
             var performer = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 1))[0];
             var manager = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 1))[0];
             
-            var managerToken = await GetToken(clientManager1, manager, "123qQ!", RoleInfo.Manager);
+            var managerToken = await GetToken(clientManager1, manager, "123qQ!");
             clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken.Token);
             
-            var performerToken = await GetToken(clientPerformer1, performer, "123qQ!", RoleInfo.Performer);
+            var performerToken = await GetToken(clientPerformer1, performer, "123qQ!");
             clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken.Token);
             
             var taskIUndistributed = await AddTask(clientManager1, "1", "1");
@@ -485,14 +485,14 @@ namespace DeliveryTrackerTest.Controllers
             
             var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
-            var token = await GetToken(clientManager1, creator.Username, "123qQ!", creator.Role);
+            var token = await GetToken(clientManager1, creator.Username, "123qQ!");
             var performer = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 1))[0];
             var manager = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 1))[0];
             
-            var managerToken = await GetToken(clientManager1, manager, "123qQ!", RoleInfo.Manager);
+            var managerToken = await GetToken(clientManager1, manager, "123qQ!");
             clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken.Token);
             
-            var performerToken = await GetToken(clientPerformer1, performer, "123qQ!", RoleInfo.Performer);
+            var performerToken = await GetToken(clientPerformer1, performer, "123qQ!");
             clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken.Token);
             
             var taskIUndistributed = await AddTask(clientManager1, "1", "1");
@@ -539,14 +539,14 @@ namespace DeliveryTrackerTest.Controllers
             
             var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
-            var token = await GetToken(clientManager1, creator.Username, "123qQ!", creator.Role);
+            var token = await GetToken(clientManager1, creator.Username, "123qQ!");
             var performer = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 1))[0];
             var manager = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 1))[0];
             
-            var managerToken = await GetToken(clientManager1, manager, "123qQ!", RoleInfo.Manager);
+            var managerToken = await GetToken(clientManager1, manager, "123qQ!");
             clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken.Token);
             
-            var performerToken = await GetToken(clientPerformer1, performer, "123qQ!", RoleInfo.Performer);
+            var performerToken = await GetToken(clientPerformer1, performer, "123qQ!");
             clientPerformer1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken.Token);
             
             var taskIdInWork = await AddTask(clientManager1, "1", "1", performer);

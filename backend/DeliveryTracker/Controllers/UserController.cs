@@ -90,6 +90,16 @@ namespace DeliveryTracker.Controllers
         [HttpPost("modify")]
         public async Task<IActionResult> Modify([FromBody] UserViewModel userInfo)
         {
+            var validateQueryParametersResult = new ParametersValidator()
+                .AddRule("userInfo", userInfo, p => p != null)
+                .Validate();
+            
+            if (!validateQueryParametersResult.Success)
+            {
+                return this.BadRequest(validateQueryParametersResult.Error);
+            }
+            
+            
             using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
             {
                 try
@@ -135,6 +145,22 @@ namespace DeliveryTracker.Controllers
         [HttpPost("change_password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordViewModel passwords)
         {
+            var validateQueryParametersResult = new ParametersValidator()
+                .AddRule("passwords", passwords, p => p != null)
+                .AddRule("currentCredentials", passwords.CurrentCredentials, p => p != null)
+                .AddRule("newCredentials", passwords.NewCredentials, p => p != null)
+                .Validate();
+            
+            if (!validateQueryParametersResult.Success)
+            {
+                return this.BadRequest(validateQueryParametersResult.Error);
+            }
+            
+            if (!this.ModelState.IsValid)
+            {
+                return this.BadRequest(this.ModelState.ToErrorListViewModel());
+            }
+            
             using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
             {
                 try

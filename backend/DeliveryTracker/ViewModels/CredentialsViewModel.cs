@@ -17,14 +17,5 @@ namespace DeliveryTracker.ViewModels
         /// Пароль.
         /// </summary>
         public string Password { get; set; }
-        
-        /// <summary>
-        /// Какая роль ожидается для пользователя.
-        /// </summary>
-        [RegularExpression(
-            "^(" + RoleInfo.Creator + "|"+ RoleInfo.Manager
-              + "|" + RoleInfo.Performer  + ")$",
-            ErrorMessage = LocalizationString.Error.RoleRange)]
-        public string Role { get; set; }
     }
 }

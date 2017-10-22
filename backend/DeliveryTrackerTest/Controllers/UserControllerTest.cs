@@ -27,7 +27,7 @@ namespace DeliveryTrackerTest.Controllers
             var client1 = this.Server.CreateClient();
             
             var creator = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
-            var token = await GetToken(client, creator.Username, "123qQ!", creator.Role);
+            var token = await GetToken(client, creator.Username, "123qQ!");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
             
             var obj1 = JsonConvert.SerializeObject(new UserViewModel
@@ -45,7 +45,7 @@ namespace DeliveryTrackerTest.Controllers
             var invitationCode = responseBody1.InvitationCode;
             
             var performerToken = 
-                await GetToken(client1, invitationCode, "123qQ!", RoleInfo.Performer, HttpStatusCode.Created);
+                await GetToken(client1, invitationCode, "123qQ!", HttpStatusCode.Created);
             Assert.Equal(invitationCode, performerToken.User.Username);
             Assert.Equal("Тест1", performerToken.User.Surname);
             Assert.Equal("Тест2", performerToken.User.Name);
@@ -59,7 +59,7 @@ namespace DeliveryTrackerTest.Controllers
                 Surname = "Тест3",
                 Name = "Тест4"
             });
-            var response2 = await client1.PostAsync(
+            await client1.PostAsync(
                 UserUrl("modify"),
                 new StringContent(obj2, Encoding.UTF8, ContentType));
             
@@ -83,7 +83,7 @@ namespace DeliveryTrackerTest.Controllers
             var client = this.Server.CreateClient();
             
             var creator = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
-            var token = await GetToken(client, creator.Username, "123qQ!", creator.Role);
+            var token = await GetToken(client, creator.Username, "123qQ!");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
             
             var obj1 = JsonConvert.SerializeObject(new ChangePasswordViewModel
@@ -102,8 +102,8 @@ namespace DeliveryTrackerTest.Controllers
                 new StringContent(obj1, Encoding.UTF8, ContentType));
             Assert.True(response1.IsSuccessStatusCode);
             
-            await GetToken(client, creator.Username, "123qQ!", creator.Role, HttpStatusCode.Unauthorized);
-            token = await GetToken(client, creator.Username, "321qQ!", creator.Role);
+            await GetToken(client, creator.Username, "123qQ!", HttpStatusCode.Unauthorized);
+            token = await GetToken(client, creator.Username, "321qQ!");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
             
             var obj2 = JsonConvert.SerializeObject(new ChangePasswordViewModel

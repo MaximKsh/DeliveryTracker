@@ -72,6 +72,7 @@ namespace DeliveryTracker.Controllers
             {
                 try
                 {
+                    // ReSharper disable once PossibleNullReferenceException
                     var instanceResult = this.instanceService.CreateInstance(instanceViewModel.Instance);
                     if (!instanceResult.Success)
                     {

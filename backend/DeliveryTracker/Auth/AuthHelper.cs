@@ -10,24 +10,26 @@ namespace DeliveryTracker.Auth
     internal static class AuthHelper
     {
         /// <summary>
-        /// Приватный ключ для токена
+        /// Приватный ключ для токена.
         /// </summary>
         private const string Key = "mysupersecret_secretkey!123";
 
         /// <summary>
-        /// Издатель токена
+        /// Издатель токена.
         /// </summary>
         internal const string Issuer = "DeliveryTracker";
 
         /// <summary>
-        /// Потребитель токена
+        /// Потребитель токена.
         /// </summary>
         internal const string Audience = "http://localhost:5000/"; 
         
         /// <summary>
-        /// Время жизни токена в минутах
+        /// Время жизни токена в минутах.
         /// </summary>
-        internal const int Lifetime = 100; 
+        internal const int Lifetime = 1;
+
+        internal const int ClockCkew = 1;
         
         internal static SymmetricSecurityKey GetSymmetricSecurityKey() =>
             new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Key));

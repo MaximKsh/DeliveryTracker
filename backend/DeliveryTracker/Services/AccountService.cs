@@ -19,6 +19,7 @@ namespace DeliveryTracker.Services
 {
     public class AccountService
     {
+        
         #region constants
 
         private const int InvitationExpirationPeriodInDays = 3;
@@ -278,11 +279,6 @@ namespace DeliveryTracker.Services
             {
                 return new ServiceResult<UserModel>(ErrorFactory.InvitaitonExpired(invitation.InvitationCode));
             }
-            if (invitation.Role.Name != credentials.Role)
-            {
-                return new ServiceResult<UserModel>(
-                    ErrorFactory.InvitationDoesNotExist(invitation.InvitationCode, credentials.Role));
-            }
             
             this.dbContext.Invitations.Remove(invitation);
             
@@ -294,7 +290,7 @@ namespace DeliveryTracker.Services
                 PhoneNumber = invitation.PhoneNumber ?? string.Empty,
                 InstanceId = invitation.InstanceId,
             };
-            return await this.RegisterInternal(newUser, credentials.Password, credentials.Role);
+            return await this.RegisterInternal(newUser, credentials.Password, invitation.Role.Name);
         }
         
         /// <summary>
@@ -306,7 +302,6 @@ namespace DeliveryTracker.Services
         {
             var username = credentials.Username;
             var password = credentials.Password;
-            var role = credentials.Role;
             
             var userResult = await this.FindUser(username);
             if (!userResult.Success 
@@ -320,12 +315,13 @@ namespace DeliveryTracker.Services
             }
 
             var user = userResult.Result;
-            if (!await this.IsInRole(user, role))
+            var role = await this.GetUserRole(user);
+            if (!role.Success)
             {
-                return new ServiceResult<TokenViewModel>(ErrorFactory.UserNotInRole(user.UserName, role));
+                return new ServiceResult<TokenViewModel>(ErrorFactory.UserWithoutRole(user.UserName));
             }
 
-            var token = CreateToken(user.UserName, role);
+            var token = CreateToken(user.UserName, role.Result);
 
             return new ServiceResult<TokenViewModel>(new TokenViewModel
             {
@@ -334,7 +330,7 @@ namespace DeliveryTracker.Services
                     Surname = user.Surname,
                     Name = user.Name,
                     PhoneNumber = user.PhoneNumber,
-                    Role = role,
+                    Role = role.Result,
                     Username = user.UserName,
                     Instance = new InstanceViewModel
                     {
@@ -557,7 +553,7 @@ namespace DeliveryTracker.Services
                     SecurityAlgorithms.HmacSha256));
             return new JwtSecurityTokenHandler().WriteToken(jwt);
         }
-
+        
         private async Task<bool> UserCanCreateInvitaiton(UserModel user, RoleModel invitationRole)
         {
             var roleResult = await this.GetUserRole(user);

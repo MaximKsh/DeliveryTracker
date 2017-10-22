@@ -48,8 +48,8 @@
 
             public const string UserDeleted = Pref + "UserDeleted";
             
-
             public const string RoleRange= Pref + "RoleRange";
+
 
             public const string InvitationCodeIsRequired = Pref + "InvitationCodeIsRequired";
 

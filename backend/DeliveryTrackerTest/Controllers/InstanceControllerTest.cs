@@ -72,13 +72,13 @@ namespace DeliveryTrackerTest.Controllers
             var client = this.Server.CreateClient();
             
             var creator = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
-            var creatorToken = await GetToken(client, creator.Username, "123qQ!", creator.Role);
+            var creatorToken = await GetToken(client, creator.Username, "123qQ!");
             
             var invitationCode = await Invite(client, RoleInfo.Manager, creatorToken.Token);
             Assert.NotNull(invitationCode);
             
             var managerToken = 
-                await GetToken(client, invitationCode, "123qQ!", RoleInfo.Manager, HttpStatusCode.Created);
+                await GetToken(client, invitationCode, "123qQ!", HttpStatusCode.Created);
             Assert.Equal(invitationCode, managerToken.User.Username);
             Assert.Equal(RoleInfo.Manager, managerToken.User.Role);
             Assert.Equal("Instance1", managerToken.User.Instance.InstanceName);
@@ -92,13 +92,13 @@ namespace DeliveryTrackerTest.Controllers
             var client = this.Server.CreateClient();
             
             var creator = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
-            var creatorToken = await GetToken(client, creator.Username, "123qQ!", creator.Role);
+            var creatorToken = await GetToken(client, creator.Username, "123qQ!");
             
             var invitationCode = await Invite(client, RoleInfo.Performer, creatorToken.Token);
             Assert.NotNull(invitationCode);
             
             var performerToken = 
-                await GetToken(client, invitationCode, "123qQ!", RoleInfo.Performer, HttpStatusCode.Created);
+                await GetToken(client, invitationCode, "123qQ!", HttpStatusCode.Created);
             Assert.Equal(invitationCode, performerToken.User.Username);
             Assert.Equal(RoleInfo.Performer, performerToken.User.Role);
             Assert.Equal("Instance1", performerToken.User.Instance.InstanceName);
@@ -121,13 +121,13 @@ namespace DeliveryTrackerTest.Controllers
             var client = this.Server.CreateClient();
             
             var creator = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
-            var creatorToken = await GetToken(client, creator.Username, "123qQ!", creator.Role);
+            var creatorToken = await GetToken(client, creator.Username, "123qQ!");
             
             var invitationCode = await Invite(client, RoleInfo.Manager, creatorToken.Token);
             Assert.NotNull(invitationCode);
             
-            await GetToken(client, invitationCode, "123qQ!", RoleInfo.Manager, HttpStatusCode.Created);
-            await GetToken(client, invitationCode, "123qQ!", RoleInfo.Manager, HttpStatusCode.OK);
+            await GetToken(client, invitationCode, "123qQ!", HttpStatusCode.Created);
+            await GetToken(client, invitationCode, "123qQ!", HttpStatusCode.OK);
         }
         
         [Fact]
@@ -137,13 +137,13 @@ namespace DeliveryTrackerTest.Controllers
             
             var creator = 
                 await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
-            var creatorToken = await GetToken(client, creator.Username, "123qQ!", creator.Role);
+            var creatorToken = await GetToken(client, creator.Username, "123qQ!");
             
             var invitationCode = 
                 await Invite(client, RoleInfo.Manager, creatorToken.Token);
             
             var managerToken = 
-                await GetToken(client, invitationCode, "123qQ!", RoleInfo.Manager, HttpStatusCode.Created);
+                await GetToken(client, invitationCode, "123qQ!", HttpStatusCode.Created);
             
             await Invite(client, RoleInfo.Manager, managerToken.Token, HttpStatusCode.Forbidden);
         }
@@ -155,13 +155,13 @@ namespace DeliveryTrackerTest.Controllers
             
             var creator = 
                 await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
-            var creatorToken = await GetToken(client, creator.Username, "123qQ!", creator.Role);
+            var creatorToken = await GetToken(client, creator.Username, "123qQ!");
             
             var invitationCode = 
                 await Invite(client, RoleInfo.Performer, creatorToken.Token);
             
             var performerToken = 
-                await GetToken(client, invitationCode, "123qQ!", RoleInfo.Performer, HttpStatusCode.Created);
+                await GetToken(client, invitationCode, "123qQ!", HttpStatusCode.Created);
             
             await Invite(client, RoleInfo.Performer, performerToken.Token, HttpStatusCode.Forbidden);
         }

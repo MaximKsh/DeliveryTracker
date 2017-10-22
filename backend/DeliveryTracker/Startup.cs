@@ -90,6 +90,7 @@ namespace DeliveryTracker
                             ValidAudience = AuthHelper.Audience,
                             // будет ли валидироваться время существования
                             ValidateLifetime = true,
+                            ClockSkew = TimeSpan.FromMinutes(AuthHelper.ClockCkew),
  
                             // установка ключа безопасности
                             IssuerSigningKey = AuthHelper.GetSymmetricSecurityKey(),
