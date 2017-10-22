@@ -84,8 +84,8 @@ namespace DeliveryTracker.Services
         /// <returns></returns>
         public async Task<ServiceResult<List<UserModel>>> GetPerformers(
             string username,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             var currentUserResult = await this.accountService.FindUser(username);
             if (!currentUserResult.Success)
@@ -93,7 +93,7 @@ namespace DeliveryTracker.Services
                 return new ServiceResult<List<UserModel>>(ErrorFactory.UserNotFound(username));
             }
             var user = currentUserResult.Result;
-            return this.GetPerformers(user, offset, limit);
+            return this.GetPerformers(user, limit, offset);
         }
 
         /// <summary>
@@ -105,8 +105,8 @@ namespace DeliveryTracker.Services
         /// <returns></returns>
         public ServiceResult<List<UserModel>> GetPerformers(
             UserModel user,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             return this.GetUsers(user.InstanceId, this.roleCache.Performer.Id, limit, offset);
         }
@@ -120,8 +120,8 @@ namespace DeliveryTracker.Services
         /// <returns></returns>
         public async Task<ServiceResult<List<UserModel>>> GetManagers(
             string username,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             var currentUserResult = await this.accountService.FindUser(username);
             if (!currentUserResult.Success)
@@ -130,7 +130,7 @@ namespace DeliveryTracker.Services
                     ErrorFactory.UserNotFound(username));
             }
             var user = currentUserResult.Result;
-            return this.GetManagers(user, offset, limit);
+            return this.GetManagers(user, limit, offset);
         }
 
         /// <summary>
@@ -142,10 +142,10 @@ namespace DeliveryTracker.Services
         /// <returns></returns>
         public ServiceResult<List<UserModel>> GetManagers(
             UserModel user,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
-            return this.GetUsers(user.InstanceId, this.roleCache.Performer.Id, limit, offset);
+            return this.GetUsers(user.InstanceId, this.roleCache.Manager.Id, limit, offset);
         }
 
         /// <summary>
@@ -227,8 +227,8 @@ namespace DeliveryTracker.Services
         private ServiceResult<List<UserModel>> GetUsers(
             Guid instanceId,
             Guid roleId,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             IQueryable<UserModel> users = this.dbContext.Users
                 .Join(this.dbContext.UserRoles, user => user.Id, ru => ru.UserId, (user, ru) => new {user, ru})

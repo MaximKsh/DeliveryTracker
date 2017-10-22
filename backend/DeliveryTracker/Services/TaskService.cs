@@ -438,8 +438,8 @@ namespace DeliveryTracker.Services
         /// <returns></returns>
         public async Task<ServiceResult<List<TaskModel>>> GetMyTasks(
             string username,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             var currentUserResult = await this.accountService.FindUser(username);
             if (!currentUserResult.Success)
@@ -459,8 +459,8 @@ namespace DeliveryTracker.Services
         /// <returns></returns>
         public async Task<ServiceResult<List<TaskModel>>> GetMyTasks(
             UserModel user,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             var roleResult = await this.accountService.GetUserRole(user);
             if (!roleResult.Success)
@@ -470,11 +470,11 @@ namespace DeliveryTracker.Services
             var role = roleResult.Result;
             if (role == this.roleCache.Manager.Name)
             {
-                return await this.GetMyTasksForManager(user, offset, limit);
+                return await this.GetMyTasksForManager(user, limit, offset);
             }
             if (role == this.roleCache.Performer.Name)
             {
-                return await this.GetMyTasksForPerformer(user, offset, limit);
+                return await this.GetMyTasksForPerformer(user, limit, offset);
             }
             return new ServiceResult<List<TaskModel>>(ErrorFactory.UserWithoutRole(user.UserName));
         }
@@ -488,8 +488,8 @@ namespace DeliveryTracker.Services
         /// <returns></returns>
         public async Task<ServiceResult<List<TaskModel>>> GetTasks(
             string username,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             var currentUserResult = await this.accountService.FindUser(username);
             if (!currentUserResult.Success)
@@ -509,8 +509,8 @@ namespace DeliveryTracker.Services
         /// <returns></returns>
         public async Task<ServiceResult<List<TaskModel>>> GetTasks(
             UserModel user,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             var roleResult = await this.accountService.GetUserRole(user);
             if (!roleResult.Success)
@@ -520,7 +520,7 @@ namespace DeliveryTracker.Services
             var role = roleResult.Result;
             if (role == this.roleCache.Manager.Name)
             {
-                return await this.GetTasksForManager(user, offset, limit);
+                return await this.GetTasksForManager(user, limit, offset);
             }
             if (role == this.roleCache.Performer.Name)
             {
@@ -538,8 +538,8 @@ namespace DeliveryTracker.Services
         /// <returns></returns>
         public async Task<ServiceResult<List<TaskModel>>> GetUndistributedTasks(
             string username,
-            int offset,
-            int limit)
+            int limit, 
+            int offset)
         {
             var currentUserResult = await this.accountService.FindUser(username);
             if (!currentUserResult.Success)
@@ -559,12 +559,12 @@ namespace DeliveryTracker.Services
         /// <returns></returns>
         public async Task<ServiceResult<List<TaskModel>>> GetUndistributedTasks(
             UserModel user,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             if (await this.accountService.IsInRole(user, this.roleCache.Performer.Name))
             {
-                return await this.GetUndistributedTasksInternal(user, offset, limit);
+                return await this.GetUndistributedTasksInternal(user, limit, offset);
             }
             return new ServiceResult<List<TaskModel>>(
                 ErrorFactory.UserNotInRole(user.UserName, this.roleCache.Performer.Name));
@@ -628,8 +628,8 @@ namespace DeliveryTracker.Services
 
         private async Task<ServiceResult<List<TaskModel>>> GetTasksForManager(
             UserModel user,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             IQueryable<TaskModel> tasks = this.dbContext.Tasks
                 .Where(p => p.InstanceId == user.InstanceId)
@@ -644,8 +644,8 @@ namespace DeliveryTracker.Services
         
         private async Task<ServiceResult<List<TaskModel>>> GetMyTasksForManager(
             UserModel user,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             IQueryable<TaskModel> tasks = this.dbContext.Tasks
                 .Where(p => p.InstanceId == user.InstanceId && p.AuthorId == user.Id)
@@ -660,8 +660,8 @@ namespace DeliveryTracker.Services
         
         private async Task<ServiceResult<List<TaskModel>>> GetMyTasksForPerformer(
             UserModel user,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             IQueryable<TaskModel> tasks = this.dbContext.Tasks
                 .Where(p => p.InstanceId == user.InstanceId && p.PerformerId == user.Id)
@@ -676,8 +676,8 @@ namespace DeliveryTracker.Services
         
         private async Task<ServiceResult<List<TaskModel>>> GetUndistributedTasksInternal(
             UserModel user,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             IQueryable<TaskModel> tasks = this.dbContext.Tasks
                 .Where(p => p.InstanceId == user.InstanceId

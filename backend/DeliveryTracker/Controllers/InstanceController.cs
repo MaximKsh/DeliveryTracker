@@ -341,8 +341,8 @@ namespace DeliveryTracker.Controllers
             var limit = limitParam ?? 100;
             var offset = offsetParam ?? 0;
             var result = performers
-                ? await this.instanceService.GetPerformers(this.User.Identity.Name, offset, limit)
-                : await this.instanceService.GetManagers(this.User.Identity.Name, offset, limit);
+                ? await this.instanceService.GetPerformers(this.User.Identity.Name, limit, offset)
+                : await this.instanceService.GetManagers(this.User.Identity.Name, limit, offset);
             if (!result.Success)
             {
                 // Обработаем первую ошибку

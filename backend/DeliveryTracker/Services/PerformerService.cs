@@ -104,8 +104,8 @@ namespace DeliveryTracker.Services
         /// <returns></returns>
         public async Task<ServiceResult<List<UserModel>>> GetAvailablePerformers(
             string username,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             var currentUserResult = await this.accountService.FindUser(username);
             if (!currentUserResult.Success)
@@ -125,8 +125,8 @@ namespace DeliveryTracker.Services
         /// <returns></returns>
         public async Task<ServiceResult<List<UserModel>>> GetAvailablePerformers(
             UserModel currentUser,
-            int offset,
-            int limit)
+            int limit,
+            int offset)
         {
             if (!await this.accountService.IsInRole(currentUser, this.roleCache.Manager))
             {
