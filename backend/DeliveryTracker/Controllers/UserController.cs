@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using DeliveryTracker.Db;
 using DeliveryTracker.Helpers;
-using DeliveryTracker.Roles;
 using DeliveryTracker.Services;
 using DeliveryTracker.Validation;
 using DeliveryTracker.ViewModels;
@@ -22,10 +21,6 @@ namespace DeliveryTracker.Controllers
         
         private readonly AccountService accountService;
         
-        private readonly RoleCache roleCache;
-        
-        private readonly InstanceService instanceService;
-        
         private readonly ILogger<UserController> logger;
         
         #endregion
@@ -35,14 +30,10 @@ namespace DeliveryTracker.Controllers
         public UserController(
             DeliveryTrackerDbContext dbContext, 
             AccountService accountService,
-            RoleCache roleCache,
-            InstanceService instanceService, 
             ILogger<UserController> logger)
         {
             this.dbContext = dbContext;
             this.accountService = accountService;
-            this.roleCache = roleCache;
-            this.instanceService = instanceService;
             this.logger = logger;
         }
 
@@ -50,42 +41,7 @@ namespace DeliveryTracker.Controllers
         
         #region actions
         
-        [HttpGet("get/{username}")]
-        public async Task<IActionResult> GetUser(string username)
-        {
-            var validateQueryParametersResult = new ParametersValidator()
-                .AddRule("username", username, p => p != null && !string.IsNullOrWhiteSpace(p))
-                .Validate();
-            if (!validateQueryParametersResult.Success)
-            {
-                return this.BadRequest(validateQueryParametersResult.Error);
-            }
-            var currentUserResult = await this.accountService.FindUser(this.User.Identity.Name);
-            if (!currentUserResult.Success)
-            {
-                return this.NotFound(ErrorFactory.UserNotFound(this.User.Identity.Name).ToErrorListViewModel());
-            }
-            var userResult = await this.accountService.FindUser(username);
-            if (!userResult.Success)
-            {
-                return this.NotFound(ErrorFactory.UserNotFound(username).ToErrorListViewModel());
-            }
-            var user = userResult.Result;
-            var role = await this.accountService.GetUserRole(user);
-            return this.Ok(new UserViewModel
-            {
-                Instance = new InstanceViewModel
-                {
-                    InstanceName = user.Instance.InstanceName
-                },
-                Username = user.UserName,
-                Surname = user.Surname,
-                Name = user.Name,
-                PhoneNumber = user.PhoneNumber,
-                Role = role.Result ?? string.Empty,
-                
-            });
-        }
+        
 
         [HttpPost("modify")]
         public async Task<IActionResult> Modify([FromBody] UserViewModel userInfo)

@@ -122,6 +122,45 @@ namespace DeliveryTracker.Controllers
                 }
             }
         }
+        
+        [Authorize]
+        [HttpGet("get_user/{username}")]
+        public async Task<IActionResult> GetUser(string username)
+        {
+            var validateQueryParametersResult = new ParametersValidator()
+                .AddRule("username", username, p => p != null && !string.IsNullOrWhiteSpace(p))
+                .Validate();
+            if (!validateQueryParametersResult.Success)
+            {
+                return this.BadRequest(validateQueryParametersResult.Error);
+            }
+            var currentUserResult = await this.accountService.FindUser(this.User.Identity.Name, false);
+            if (!currentUserResult.Success)
+            {
+                return this.NotFound(ErrorFactory.UserNotFound(this.User.Identity.Name).ToErrorListViewModel());
+            }
+            var userResult = await this.accountService.FindUser(username);
+            if (!userResult.Success
+                || userResult.Result.InstanceId != currentUserResult.Result.InstanceId)
+            {
+                return this.NotFound(ErrorFactory.UserNotFound(username).ToErrorListViewModel());
+            }
+            var user = userResult.Result;
+            var role = await this.accountService.GetUserRole(user);
+            return this.Ok(new UserViewModel
+            {
+                Instance = new InstanceViewModel
+                {
+                    InstanceName = user.Instance.InstanceName
+                },
+                Username = user.UserName,
+                Surname = user.Surname,
+                Name = user.Name,
+                PhoneNumber = user.PhoneNumber,
+                Role = role.Result ?? string.Empty,
+                
+            });
+        }
 
         [Authorize(Policy = AuthPolicies.Creator)]
         [HttpPost("invite_manager")]
