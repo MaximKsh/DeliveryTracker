@@ -19,7 +19,6 @@ using DeliveryTracker.Validation;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace DeliveryTracker
@@ -73,31 +72,7 @@ namespace DeliveryTracker
                 options.AddPolicy(AuthPolicies.Performer, AuthPolicies.PerformerPolicy);
             });
             
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                    .AddJwtBearer(options =>
-                    {
-                        options.RequireHttpsMetadata = false;
-                        options.TokenValidationParameters = new TokenValidationParameters
-                        {
-                            // укзывает, будет ли валидироваться издатель при валидации токена
-                            ValidateIssuer = true,
-                            // строка, представляющая издателя
-                            ValidIssuer = AuthHelper.Issuer,
- 
-                            // будет ли валидироваться потребитель токена
-                            ValidateAudience = true,
-                            // установка потребителя токена
-                            ValidAudience = AuthHelper.Audience,
-                            // будет ли валидироваться время существования
-                            ValidateLifetime = true,
-                            ClockSkew = TimeSpan.FromMinutes(AuthHelper.ClockCkew),
- 
-                            // установка ключа безопасности
-                            IssuerSigningKey = AuthHelper.GetSymmetricSecurityKey(),
-                            // валидация ключа безопасности
-                            ValidateIssuerSigningKey = true,
-                        };
-                    });
+            this.ConfigureAuthorization(services);
 
             services.AddMvc().AddJsonOptions(
                 p =>
@@ -108,6 +83,8 @@ namespace DeliveryTracker
                     p.SerializerSettings.Formatting = Formatting.None;
                 });
 
+            
+            
             services
                 .AddDeliveryTrackerServices()
                 .AddDeliveryTrackerRoles()
@@ -131,6 +108,45 @@ namespace DeliveryTracker
             });
             app.UseAuthentication();
             app.UseMvc();
+        }
+
+        private void ConfigureAuthorization(IServiceCollection services)
+        {
+            var authInfo = new AuthInfo(
+                this.configuration.GetValue<string>("AuthInfo:Key", null) ?? throw new NullReferenceException("specify secret key"),
+                this.configuration.GetValue<string>("AuthInfo:Issuer", null) ?? throw new NullReferenceException("specify issuer"),
+                this.configuration.GetValue<string>("AuthInfo:Audience", null) ?? throw new NullReferenceException("specify audience"),
+                this.configuration.GetValue("AuthInfo:Lifetime", 1),
+                this.configuration.GetValue("AuthInfo:ClockCkew", 1),
+                this.configuration.GetValue("AuthInfo:RequireHttps", true));
+            
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.RequireHttpsMetadata = authInfo.RequireHttps;
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        // укзывает, будет ли валидироваться издатель при валидации токена
+                        ValidateIssuer = true,
+                        // строка, представляющая издателя
+                        ValidIssuer = authInfo.Issuer,
+ 
+                        // будет ли валидироваться потребитель токена
+                        ValidateAudience = true,
+                        // установка потребителя токена
+                        ValidAudience = authInfo.Audience,
+                        // будет ли валидироваться время существования
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.FromMinutes(authInfo.ClockCkew),
+ 
+                        // установка ключа безопасности
+                        IssuerSigningKey = authInfo.GetSymmetricSecurityKey(),
+                        // валидация ключа безопасности
+                        ValidateIssuerSigningKey = true,
+                    };
+                });
+
+            services.AddSingleton(authInfo);
         }
     }
 }

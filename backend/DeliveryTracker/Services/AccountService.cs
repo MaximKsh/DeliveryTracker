@@ -43,6 +43,8 @@ namespace DeliveryTracker.Services
         
         private readonly RoleCache roleCache;
 
+        private readonly AuthInfo authInfo;
+
         #endregion
 
         #region constuctor
@@ -50,11 +52,13 @@ namespace DeliveryTracker.Services
         public AccountService(
             UserManager<UserModel> userManager,
             DeliveryTrackerDbContext dbContext,
-            RoleCache roleCache)
+            RoleCache roleCache, 
+            AuthInfo authInfo)
         {
             this.userManager = userManager;
             this.dbContext = dbContext;
             this.roleCache = roleCache;
+            this.authInfo = authInfo;
         }
 
         #endregion
@@ -321,7 +325,7 @@ namespace DeliveryTracker.Services
                 return new ServiceResult<TokenViewModel>(ErrorFactory.UserWithoutRole(user.UserName));
             }
 
-            var token = CreateToken(user.UserName, role.Result);
+            var token = this.CreateToken(user.UserName, role.Result);
 
             return new ServiceResult<TokenViewModel>(new TokenViewModel
             {
@@ -527,7 +531,7 @@ namespace DeliveryTracker.Services
             return await userModelFunc(userResult.Result);
         }
         
-        private static string CreateToken(string username, string role)
+        private string CreateToken(string username, string role)
         {
             var claims = new List<Claim>
             {
@@ -543,13 +547,13 @@ namespace DeliveryTracker.Services
             var now = DateTime.UtcNow;
             // создаем JWT-токен
             var jwt = new JwtSecurityToken(
-                issuer: AuthHelper.Issuer,
-                audience: AuthHelper.Audience,
+                issuer: this.authInfo.Issuer,
+                audience: this.authInfo.Audience,
                 notBefore: now,
                 claims: identity.Claims,
-                expires: now.AddMinutes(AuthHelper.Lifetime),
+                expires: now.AddMinutes(this.authInfo.Lifetime),
                 signingCredentials: new SigningCredentials(
-                    AuthHelper.GetSymmetricSecurityKey(),
+                    this.authInfo.GetSymmetricSecurityKey(),
                     SecurityAlgorithms.HmacSha256));
             return new JwtSecurityTokenHandler().WriteToken(jwt);
         }

@@ -64,7 +64,7 @@ namespace DeliveryTrackerTest.Controllers
                 new StringContent(obj2, Encoding.UTF8, ContentType));
             
             var response3 = await client.GetAsync(
-                UserUrl($"get/{performerToken.User.Username}"));
+                InstanceUrl($"get_user/{performerToken.User.Username}"));
             
             var responseBody3 =  
                 JsonConvert.DeserializeObject<UserViewModel>(await response3.Content.ReadAsStringAsync());

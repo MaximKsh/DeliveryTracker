@@ -8,5 +8,14 @@
     "LogLevel": {
       "Default": "Trace"
     }
+  },
+  
+  "AuthInfo": {
+    "Key": "mysupersecret_secretkey!123",
+    "Issuer": "DeliveryTracker",
+    "Audience": "http://localhost:5000",
+    "Lifetime": 1,
+    "ClockCkew": 1,
+    "RequireHttps": true
   }
 }
