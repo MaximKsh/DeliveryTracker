@@ -234,6 +234,8 @@ namespace DeliveryTracker.Services
                 .Join(this.dbContext.UserRoles, user => user.Id, ru => ru.UserId, (user, ru) => new {user, ru})
                 .Join(this.dbContext.Roles, arg => arg.ru.RoleId, role => role.Id, (arg, role) => new {arg.user, role})
                 .Where(p => p.user.InstanceId == instanceId && p.role.Id == roleId)
+                .OrderBy(p => p.user.Surname)
+                .ThenBy(p => p.user.Name)
                 .Skip(offset)
                 .Take(limit)
                 .Select(p => p.user);

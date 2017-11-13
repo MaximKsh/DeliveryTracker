@@ -365,7 +365,7 @@ namespace DeliveryTracker.Controllers
                         Surname = p.Surname,
                         Name = p.Name,
                         PhoneNumber = p.PhoneNumber,
-                        Role = this.roleCache.Performer.Name
+                        Role = performers ? this.roleCache.Performer.Name : this.roleCache.Manager.Name
                     });
             return this.Ok(users);
         }
