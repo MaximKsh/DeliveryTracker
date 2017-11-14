@@ -74,6 +74,17 @@ namespace DeliveryTracker.Services
             var entityEntry = this.dbContext.Instances.Update(instance);
             return new ServiceResult<InstanceModel>(entityEntry.Entity);
         }
+        
+        /// <summary>
+        /// Получить создателя указанного инстанса.
+        /// </summary>
+        /// <param name="instance"></param>
+        /// <returns></returns>
+        public async Task<ServiceResult<UserModel>> GetCreator(InstanceModel instance)
+        {
+            await this.dbContext.Entry(instance).Reference(p => p.Creator).LoadAsync();
+            return new ServiceResult<UserModel>(instance.Creator);
+        }
 
         /// <summary>
         /// Получить список исполнетелей в инстансе.

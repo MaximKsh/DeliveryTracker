@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using DeliveryTracker.Auth;
 using DeliveryTracker.Db;
 using DeliveryTracker.Helpers;
+using DeliveryTracker.Models;
 using DeliveryTracker.Roles;
 using DeliveryTracker.Services;
 using DeliveryTracker.Validation;
@@ -343,6 +344,26 @@ namespace DeliveryTracker.Controllers
             var result = performers
                 ? await this.instanceService.GetPerformers(this.User.Identity.Name, limit, offset)
                 : await this.instanceService.GetManagers(this.User.Identity.Name, limit, offset);
+
+            UserModel creator = null;
+            if (!performers)
+            {
+                // TODO: переписать нормально, чтобы для менеджеров в выборку попадал создатель
+                // Но пока тоже нормально, юзер должен лежать в кэше ef
+                var currentUserResult = await this.accountService.FindUser(this.User.Identity.Name);
+                if (!currentUserResult.Success)
+                {
+                    return this.BadRequest(currentUserResult.Errors);
+                }
+                var currentInstance = currentUserResult.Result.Instance;
+                var creatorResult = await this.instanceService.GetCreator(currentInstance);
+                if (!creatorResult.Success)
+                {
+                    return this.BadRequest(creatorResult.Errors);
+                }
+                creator = creatorResult.Result;
+            }
+            
             if (!result.Success)
             {
                 // Обработаем первую ошибку
@@ -366,7 +387,23 @@ namespace DeliveryTracker.Controllers
                         Name = p.Name,
                         PhoneNumber = p.PhoneNumber,
                         Role = performers ? this.roleCache.Performer.Name : this.roleCache.Manager.Name
+                    })
+                .ToList();
+
+            if (creator != null)
+            {
+                // TODO: вставка в начало - грустно
+                users.Insert(
+                    0, 
+                    new UserViewModel
+                    {
+                        Username = creator.UserName,
+                        Surname = creator.Surname,
+                        Name = creator.Name,
+                        PhoneNumber = creator.PhoneNumber,
+                        Role = this.roleCache.Creator.Name
                     });
+            }
             return this.Ok(users);
         }
         
