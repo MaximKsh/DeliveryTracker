@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 namespace DeliveryTracker.Controllers
 {
     
-    [Authorize(Policy = AuthPolicies.Manager)]
+    [Authorize(Policy = AuthPolicies.CreatorOrManager)]
     [Route("api/manager")]
     public class ManagerController: Controller
     {

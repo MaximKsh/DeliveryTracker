@@ -62,7 +62,7 @@ namespace DeliveryTracker.Services
             var sender = authorResult.Result;
 
             UserModel performer = null;
-            if (taskInfo.Performer.Username != null)
+            if (taskInfo?.Performer?.Username != null)
             {
                 var performerResult = await this.accountService.FindUser(taskInfo.Performer.Username);
                 if (!performerResult.Success)
