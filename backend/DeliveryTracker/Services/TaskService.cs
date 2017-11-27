@@ -93,10 +93,13 @@ namespace DeliveryTracker.Services
             {
                 return new ServiceResult<TaskModel>(ErrorFactory.UserWithoutRole(sender.UserName));
             }
-            if (managerRoleResult.Result != this.roleCache.Manager.Name)
+            if (managerRoleResult.Result != this.roleCache.Manager.Name
+                && managerRoleResult.Result != this.roleCache.Creator.Name)
             {
                 return new ServiceResult<TaskModel>(
-                    ErrorFactory.UserNotInRole(sender.UserName, this.roleCache.Manager.Name));
+                    ErrorFactory.UserNotInRole(
+                        sender.UserName, 
+                        $"{this.roleCache.Creator.Name}, {this.roleCache.Manager.Name}"));
             }
             
             if (performer != null)
@@ -468,7 +471,8 @@ namespace DeliveryTracker.Services
                 return new ServiceResult<List<TaskModel>>(ErrorFactory.UserWithoutRole(user.UserName));
             }
             var role = roleResult.Result;
-            if (role == this.roleCache.Manager.Name)
+            if (role == this.roleCache.Manager.Name
+                || role == this.roleCache.Creator.Name)
             {
                 return await this.GetMyTasksForManager(user, limit, offset);
             }
@@ -518,7 +522,8 @@ namespace DeliveryTracker.Services
                 return new ServiceResult<List<TaskModel>>(ErrorFactory.UserWithoutRole(user.UserName));
             }
             var role = roleResult.Result;
-            if (role == this.roleCache.Manager.Name)
+            if (role == this.roleCache.Manager.Name
+                || role == this.roleCache.Creator.Name)
             {
                 return await this.GetTasksForManager(user, limit, offset);
             }
@@ -608,7 +613,8 @@ namespace DeliveryTracker.Services
                     ErrorFactory.UserWithoutRole(user.UserName));
             }
             var role = roleResult.Result;
-            if (role == this.roleCache.Manager.Name)
+            if (role == this.roleCache.Manager.Name
+                || role == this.roleCache.Creator.Name)
             {
                 return await this.GetTaskForManager(user, taskId);
             }
