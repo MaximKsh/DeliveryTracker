@@ -43,7 +43,7 @@ namespace DeliveryTracker.Controllers
         
         
 
-        [HttpPost("modify")]
+        [HttpPost("edit")]
         public async Task<IActionResult> Modify([FromBody] UserViewModel userInfo)
         {
             var validateQueryParametersResult = new ParametersValidator()
@@ -52,7 +52,7 @@ namespace DeliveryTracker.Controllers
             
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
             
             
@@ -109,7 +109,7 @@ namespace DeliveryTracker.Controllers
             
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
             
             if (!this.ModelState.IsValid)

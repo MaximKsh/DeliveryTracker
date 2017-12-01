@@ -60,7 +60,7 @@ namespace DeliveryTracker.Controllers
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
              
             var updateResult = await this.performerService.UpdatePosition(
@@ -110,7 +110,7 @@ namespace DeliveryTracker.Controllers
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
             
             var taskResult = await this.taskService.ReserveTask(
@@ -153,7 +153,7 @@ namespace DeliveryTracker.Controllers
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
             
             var taskResult = await this.taskService.TakeTaskToWork(
@@ -200,7 +200,7 @@ namespace DeliveryTracker.Controllers
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
             
             var taskResult = await this.taskService.CompleteTaskByPerformer(
@@ -244,7 +244,7 @@ namespace DeliveryTracker.Controllers
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
             var limit = limitParam ?? 100;
             var offset = offsetParam ?? 0;
@@ -315,7 +315,7 @@ namespace DeliveryTracker.Controllers
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
             var limit = limitParam ?? 100;
             var offset = offsetParam ?? 0;
@@ -385,7 +385,7 @@ namespace DeliveryTracker.Controllers
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
 
             var taskResult =

@@ -65,7 +65,7 @@ namespace DeliveryTracker.Controllers
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
             
             // Регистрацию необходмо выполнять в транзакции.
@@ -133,7 +133,7 @@ namespace DeliveryTracker.Controllers
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
             var currentUserResult = await this.accountService.FindUser(this.User.Identity.Name, false);
             if (!currentUserResult.Success)
@@ -243,7 +243,7 @@ namespace DeliveryTracker.Controllers
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
 
             using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
@@ -290,7 +290,7 @@ namespace DeliveryTracker.Controllers
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
             using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
             {
@@ -337,7 +337,7 @@ namespace DeliveryTracker.Controllers
                 .Validate();
             if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(validateQueryParametersResult.Error);
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
             var limit = limitParam ?? 100;
             var offset = offsetParam ?? 0;
