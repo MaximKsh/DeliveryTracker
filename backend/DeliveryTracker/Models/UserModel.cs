@@ -62,5 +62,10 @@ namespace DeliveryTracker.Models
         /// Задания, выполняемые пользователем.
         /// </summary>
         public virtual ICollection<TaskModel> PerformingTasks { get; set; }
+        
+        /// <summary>
+        /// Устройство пользователя.
+        /// </summary>
+        public virtual DeviceModel Device { get; set; }
     }
 }

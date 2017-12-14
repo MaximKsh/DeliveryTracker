@@ -9,6 +9,8 @@ namespace DeliveryTracker.Services
         public static IServiceCollection AddDeliveryTrackerServices(this IServiceCollection services)
         {
             services
+                .AddSingleton<PushMessageService>()
+                    
                 .AddScoped<AccountService>()
                 .AddScoped<InstanceService>()
                 .AddScoped<PerformerService>()

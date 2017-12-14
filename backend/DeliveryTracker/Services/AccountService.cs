@@ -87,10 +87,12 @@ namespace DeliveryTracker.Services
             {
                 return new ServiceResult<UserModel>(ErrorFactory.UserDeleted(currentUser.Name));
             }
+            this.dbContext.Entry(currentUser).Reference(p => p.Device).Load();
             if (withInstance)
             {
                 this.dbContext.Entry(currentUser).Reference(p => p.Instance).Load();
             }
+            
             return new ServiceResult<UserModel>(currentUser);
         }
 
@@ -471,6 +473,44 @@ namespace DeliveryTracker.Services
             return identityResult.Succeeded 
                 ? new ServiceResult() 
                 : new ServiceResult(identityResult.Errors.Select(ErrorFactory.IdentityError));
+        }
+
+        /// <summary>
+        /// Обновить используемое пользователем устройство. 
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        public async Task<ServiceResult> UpdateUserDevice(string userName, DeviceViewModel device)
+        {
+            var userResult = await this.FindUser(userName);
+            if (!userResult.Success)
+            {
+                return new ServiceResult(userResult.Errors);
+            }
+            return await this.UpdateUserDevice(userResult.Result, device);
+        }
+        
+        /// <summary>
+        /// Обновить используемое пользователем устройство. 
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="device"></param>
+        /// <returns></returns>
+        public async Task<ServiceResult> UpdateUserDevice(UserModel user, DeviceViewModel device)
+        {
+            var currentDevice = user.Device;
+            if (currentDevice == null)
+            {
+                currentDevice = new DeviceModel
+                {
+                    Id = Guid.NewGuid(),
+                    FirebaseId = device.FirebaseId,
+                    UserId = user.Id,
+                };
+            }
+            var result = await this.dbContext.Devices.AddAsync(currentDevice);
+            return new ServiceResult();
         }
         
         #endregion

@@ -24,6 +24,10 @@ namespace DeliveryTracker.Controllers
 
         private readonly TaskService taskService;
         
+        private readonly PushMessageService pushMessageService;
+
+        private readonly AccountService accountService;
+        
         private readonly DeliveryTrackerDbContext dbContext;
 
         private readonly TaskStateCache taskStateCache;
@@ -39,12 +43,16 @@ namespace DeliveryTracker.Controllers
             DeliveryTrackerDbContext dbContext, 
             TaskStateCache taskStateCache,
             TaskService taskService, 
+            PushMessageService pushMessageService,
+            AccountService accountService,
             ILogger<PerformerController> logger)
         {
             this.performerService = performerService;
             this.dbContext = dbContext;
             this.taskStateCache = taskStateCache;
             this.taskService = taskService;
+            this.pushMessageService = pushMessageService;
+            this.accountService = accountService;
             this.logger = logger;
         }
         

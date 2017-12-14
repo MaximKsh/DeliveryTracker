@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using DeliveryTracker.Auth;
 using DeliveryTracker.Db;
 using DeliveryTracker.Helpers;
+using DeliveryTracker.Localization;
 using DeliveryTracker.Services;
 using DeliveryTracker.TaskStates;
 using DeliveryTracker.Validation;
@@ -29,6 +30,10 @@ namespace DeliveryTracker.Controllers
 
         private readonly PerformerService performerService;
 
+        private readonly AccountService accountService;
+        
+        private readonly PushMessageService pushMessageService;
+
         private readonly ILogger<ManagerController> logger;
         
         #endregion
@@ -40,12 +45,16 @@ namespace DeliveryTracker.Controllers
             DeliveryTrackerDbContext dbContext,
             TaskStateCache taskStateCache, 
             PerformerService performerService,
+            PushMessageService pushMessageService,
+            AccountService accountService,
             ILogger<ManagerController> logger)
         {
             this.taskService = taskService;
             this.dbContext = dbContext;
             this.taskStateCache = taskStateCache;
             this.performerService = performerService;
+            this.pushMessageService = pushMessageService;
+            this.accountService = accountService;
             this.logger = logger;
         }
         
@@ -84,8 +93,15 @@ namespace DeliveryTracker.Controllers
                 }
                 return this.BadRequest(error.ToErrorListViewModel());
             }
-                
             await this.dbContext.SaveChangesAsync();
+            if (result.Result.Performer != null)
+            {
+                await this.pushMessageService.SendMessage(
+                    result.Result.Performer,
+                    new PushMessageViewModel {Content = LocalizationString.PushMessage.AddTask},
+                    result.Result.Id);
+            }
+            
             return this.StatusCode(
                 201,
                 new TaskViewModel

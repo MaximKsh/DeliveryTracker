@@ -65,7 +65,21 @@
         
         #endregion
             
+        #region Push Message Group
         
+        private const string PushMessageGroup = "PushMessage";
+        
+        public static class PushMessage
+        {
+            private const string Pref = LocalizationStringPrefix + "_" + PushMessageGroup + "_";
+                    
+            public const string AddTask = Pref + "AddTask";
+            public const string CompleteTask = Pref + "CompleteTask";
+            public const string CancelTask = Pref + "CancelTask";
+            public const string TaskCancelledByManager = Pref + "TaskCancelledByManager";
+        }
+        
+        #endregion
         
     }
 }

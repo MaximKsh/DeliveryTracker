@@ -19,6 +19,8 @@ namespace DeliveryTracker.Db
         public DbSet<TaskStateModel> TaskStates { get; set; }
 
         public DbSet<TaskModel> Tasks { get; set; }
+        
+        public DbSet<DeviceModel> Devices { get; set; }
 
         #endregion
 
@@ -42,6 +44,7 @@ namespace DeliveryTracker.Db
             ConfigureInvitationModel(modelBuilder);
             ConfigureTaskStateModel(modelBuilder);
             ConfigureTaskModel(modelBuilder);
+            ConfigureDeviceModel(modelBuilder);
         }
 
         private static void ConfigureIdentity(ModelBuilder modelBuilder)
@@ -223,6 +226,24 @@ namespace DeliveryTracker.Db
                 b.HasIndex(p => p.PerformerId);
                 b.HasIndex(p => p.InstanceId);
                 b.HasIndex(p => p.CreationDate);
+            });
+        }
+        
+        private static void ConfigureDeviceModel(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<DeviceModel>(b =>
+            {
+                b.HasKey(p => p.Id);
+
+                b.Property(p => p.FirebaseId)
+                    .HasColumnType("varchar(200)")
+                    .IsRequired();
+
+                b.HasOne(p => p.User)
+                    .WithOne(p => p.Device)
+                    .HasForeignKey<DeviceModel>(p => p.UserId);
+                
+                b.HasIndex(p => p.UserId);
             });
         }
 

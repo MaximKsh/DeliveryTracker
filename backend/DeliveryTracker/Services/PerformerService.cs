@@ -128,7 +128,8 @@ namespace DeliveryTracker.Services
             int limit,
             int offset)
         {
-            if (!await this.accountService.IsInRole(currentUser, this.roleCache.Manager))
+            if (!await this.accountService.IsInRole(currentUser, this.roleCache.Manager)
+                && !await this.accountService.IsInRole(currentUser, this.roleCache.Creator))
             {
                 return new ServiceResult<List<UserModel>>(
                     ErrorFactory.UserNotInRole(currentUser.UserName, this.roleCache.Manager.Name));

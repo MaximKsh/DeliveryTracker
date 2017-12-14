@@ -44,16 +44,26 @@ namespace DeliveryTracker.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] CredentialsViewModel credentials)
         {
-            if (!this.ModelState.IsValid)
+            var validateQueryParametersResult = new ParametersValidator()
+                .AddRule("username", credentials, p => p?.Username != null)
+                .AddRule("password", credentials, p => p?.Password != null)
+                .Validate();
+            if (!validateQueryParametersResult.Success)
             {
-                return this.BadRequest(this.ModelState.ToErrorListViewModel());
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
             }
             
             var loginResult = await this.accountService.Login(credentials);
             // Залогинили - отдаем токен
             if (loginResult.Success)
             {
-                this.logger.Trace(credentials.Username, "logged in");
+                if (!string.IsNullOrWhiteSpace(credentials.Device?.FirebaseId))
+                {
+                    await this.accountService.UpdateUserDevice(
+                        credentials.Username, 
+                        credentials.Device);
+                    await this.dbContext.SaveChangesAsync();
+                }
                 return this.Ok(loginResult.Result);
             }
             // Не залогинили - ошибка не связана с отсутствием юзера, или юзер отсутствует,
@@ -61,7 +71,6 @@ namespace DeliveryTracker.Controllers
             if (loginResult.Errors.All(p => p.Code != ErrorCode.UserNotFound) 
                 || !this.accountService.TryGetInvitaiton(credentials.Username, out var invitation))
             {
-                this.logger.Trace(credentials.Username, "failed login");
                 return this.Unauthorized();
             }
             // Транзакция нужна, т.к. происходит регистрация внутри которой данные меняются не только через dbSaveChanges.
@@ -74,19 +83,22 @@ namespace DeliveryTracker.Controllers
                     if (!acceptInvitationResult.Success)
                     {
                         transaction.Rollback();
-                        this.logger.Trace(credentials.Username, "failed login");
                         return this.Unauthorized();
                     }
                     loginResult = await this.accountService.Login(credentials);
                     if (!loginResult.Success)
                     {
                         transaction.Rollback();
-                        this.logger.Trace(credentials.Username, "failed login");
                         return this.Unauthorized();
+                    }
+                    if (!string.IsNullOrWhiteSpace(credentials.Device?.FirebaseId))
+                    {
+                        await this.accountService.UpdateUserDevice(
+                            credentials.Username, 
+                            credentials.Device);
                     }
                     await this.dbContext.SaveChangesAsync();
                     transaction.Commit();
-                    this.logger.Trace(credentials.Username, "accepted invitation");
                     return this.StatusCode(201, loginResult.Result);
                 }
                 catch (Exception)
@@ -131,6 +143,28 @@ namespace DeliveryTracker.Controllers
                 Role = role,
                 Position = position, 
             });
+        }
+
+        [Authorize]
+        [HttpPost("update_device")]
+        public async Task<IActionResult> UpdateDevice([FromBody] DeviceViewModel device)
+        {
+            var validateQueryParametersResult = new ParametersValidator()
+                .AddRule("device", device, p => !string.IsNullOrWhiteSpace(p?.FirebaseId))
+                .Validate();
+            if (!validateQueryParametersResult.Success)
+            {
+                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
+            }
+            
+            var updateDeviceResult = 
+                await this.accountService.UpdateUserDevice(this.User.Identity.Name, device);
+            if (!updateDeviceResult.Success)
+            {
+                return this.BadRequest(updateDeviceResult.Errors.ToErrorListViewModel());
+            }
+
+            return this.Ok();
         }
         
         #endregion

@@ -17,5 +17,10 @@ namespace DeliveryTracker.ViewModels
         /// Пароль.
         /// </summary>
         public string Password { get; set; }
+        
+        /// <summary>
+        /// Устройство пользователя.
+        /// </summary>
+        public DeviceViewModel Device { get; set; }
     }
 }

@@ -44,7 +44,7 @@ namespace DeliveryTracker.Controllers
         
 
         [HttpPost("edit")]
-        public async Task<IActionResult> Modify([FromBody] UserViewModel userInfo)
+        public async Task<IActionResult> Edit([FromBody] UserViewModel userInfo)
         {
             var validateQueryParametersResult = new ParametersValidator()
                 .AddRule("userInfo", userInfo, p => p != null)
