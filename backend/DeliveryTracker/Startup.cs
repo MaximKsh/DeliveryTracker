@@ -43,7 +43,16 @@ namespace DeliveryTracker
             services.AddDbContext<DeliveryTrackerDbContext>(
                 options => options.UseNpgsql(connectionString));
  
-            services.AddIdentity<UserModel, RoleModel>()
+            services.AddIdentity<UserModel, RoleModel>(o =>
+                {
+                    o.Password.RequiredLength = 1;
+                    o.Password.RequireUppercase = false;
+                    o.Password.RequireLowercase = false;
+                    o.Password.RequireNonAlphanumeric = false;
+                    o.Password.RequireDigit = false;
+                    o.Password.RequiredUniqueChars = 0;
+
+                })
                 .AddEntityFrameworkStores<DeliveryTrackerDbContext>()
                 .AddDefaultTokenProviders()
                 .AddUserStore<UserStore<UserModel, RoleModel, DeliveryTrackerDbContext, Guid>>()

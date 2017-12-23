@@ -36,15 +36,20 @@ namespace DeliveryTracker.Services
     ""to"": ""{user.Device.FirebaseId}""
 }}";
 
+            try
+            {
+                var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
+                var msg = new HttpRequestMessage();
+                msg.Method = HttpMethod.Post;
+                msg.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
+                msg.Headers.TryAddWithoutValidation("Authorization", $"key={this.key}");
+                msg.RequestUri = new Uri("https://fcm.googleapis.com/fcm/send");
+                var resp = await this.client.SendAsync(msg);
+            }
+            catch(HttpRequestException)
+            {
+            }
             
-            var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-            var msg = new HttpRequestMessage();
-            msg.Method = HttpMethod.Post;
-            msg.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-            msg.Headers.TryAddWithoutValidation("Authorization", $"key={this.key}");
-            msg.RequestUri = new Uri("https://fcm.googleapis.com/fcm/send");
-            
-            var resp = await this.client.SendAsync(msg);
             return new ServiceResult();
         }
         
