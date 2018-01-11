@@ -8,7 +8,7 @@
     "LogLevel": {
       "Default": "Warning"
     }
-  }
+  },
   
   "AuthInfo": {
     "Key": "mysupersecret_secretkey!123",

@@ -10,13 +10,14 @@ using DeliveryTracker.Validation;
 using DeliveryTracker.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
 //using DeliveryTracker.Auth;
 
 namespace DeliveryTracker.Instances
 {
-    public class AccountService
+    public class AccountService : IAccountService
     {
-        
         #region constants
 
         private const int InvitationExpirationPeriodInDays = 3;
@@ -40,6 +41,8 @@ namespace DeliveryTracker.Instances
         
         private readonly RoleCache roleCache;
 
+        private readonly ILogger<AccountService> logger;
+
         // private readonly AuthInfo authInfo;
 
         #endregion
@@ -62,36 +65,7 @@ namespace DeliveryTracker.Instances
 
         #region public
 
-        /// <summary>
-        /// Загрузить пользователя по имени.
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="withInstance"></param>
-        /// <returns>
-        /// </returns>
-        public async Task<ServiceResult<UserModel>> FindUser(string username, bool withInstance = true)
-        {
-            if (string.IsNullOrWhiteSpace(username))
-            {
-                return new ServiceResult<UserModel>(ErrorFactory.UserNotFound(username));
-            }
-            var currentUser = await this.userManager.FindByNameAsync(username);
-            if (currentUser == null)
-            {
-                return new ServiceResult<UserModel>(ErrorFactory.UserNotFound(username));
-            }
-            if (currentUser.Deleted)
-            {
-                return new ServiceResult<UserModel>(ErrorFactory.UserDeleted(currentUser.Name));
-            }
-            this.dbContext.Entry(currentUser).Reference(p => p.Device).Load();
-            if (withInstance)
-            {
-                this.dbContext.Entry(currentUser).Reference(p => p.Instance).Load();
-            }
-            
-            return new ServiceResult<UserModel>(currentUser);
-        }
+        
 
         /// <summary>
         /// Получить роль пользователя.
@@ -399,21 +373,7 @@ namespace DeliveryTracker.Instances
             return new ServiceResult<InvitationModel>(invitation);
         }
 
-        /// <summary>
-        /// Попытаться получить пришлашение по коду.
-        /// </summary>
-        /// <param name="invitationCode"></param>
-        /// <param name="invitation"></param>
-        /// <returns></returns>
-        public bool TryGetInvitaiton(string invitationCode, out InvitationModel invitation)
-        {
-            invitation =  this.dbContext
-                .Invitations
-                .Include(p => p.Role)
-                .Include(p => p.Instance)
-                .FirstOrDefault(p => p.InvitationCode == invitationCode);
-            return invitation != null;
-        }
+        
         
         /// <summary>
         /// Отметить пользователя как удаленного.
@@ -608,8 +568,247 @@ namespace DeliveryTracker.Instances
             return role == this.roleCache.Creator.Name
                    || role == this.roleCache.Manager.Name && invitationRole == this.roleCache.Performer;
         }
-        
+
+        /// <summary>
+        /// Загрузить пользователя по имени.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns>
+        /// </returns>
+        private async Task<ServiceResult<UserModel>> FindUserAsync(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                return new ServiceResult<UserModel>(ErrorFactory.UserNotFound(username));
+            }
+            var currentUser = await this.userManager.FindByNameAsync(username);
+            if (currentUser == null)
+            {
+                return new ServiceResult<UserModel>(ErrorFactory.UserNotFound(username));
+            }
+            if (currentUser.Deleted)
+            {
+                return new ServiceResult<UserModel>(ErrorFactory.UserDeleted(currentUser.Name));
+            }
+            //this.dbContext.Entry(currentUser).Reference(p => p.Device).Load();
+            //this.dbContext.Entry(currentUser).Reference(p => p.Instance).Load();
+
+            return new ServiceResult<UserModel>(currentUser);
+        }
+
+        /// <summary>
+        /// Попытаться получить пришлашение по коду.
+        /// </summary>
+        /// <param name="invitationCode"></param>
+        /// <param name="invitation"></param>
+        /// <returns></returns>
+        public bool TryGetInvitaiton(string invitationCode, out InvitationModel invitation)
+        {
+            invitation = this.dbContext
+                .Invitations
+                .Include(p => p.Role)
+                .Include(p => p.Instance)
+                .FirstOrDefault(p => p.InvitationCode == invitationCode);
+            return invitation != null;
+        }
+
         #endregion
-       
+
+        /// <inheritdoc />
+        public async Task<ServiceResult<Tuple<User, UserCredentials>>> RegisterAsync(
+            User user,
+            UsernamePassword usernamePassword)
+        {
+            var newUser = new UserModel
+            {
+                Id = Guid.NewGuid(),
+                InstanceId = user.Instance.Id,
+                UserName = usernamePassword.Username,
+                Surname = user.Surname,
+                Name = user.Name,
+                PhoneNumber = user.PhoneNumber,
+            };
+
+            var result = await this.userManager.CreateAsync(newUser);
+            if (!result.Succeeded)
+            {
+                // TODO: разбор ошибок.
+                return new ServiceResult<Tuple<User, UserCredentials>>(
+                    null,
+                    result.Errors.Select(ErrorFactory.IdentityError));
+            }
+            result = await this.userManager.AddPasswordAsync(newUser, usernamePassword.Password);
+            if (!result.Succeeded)
+            {
+                // TODO: разбор ошибок.
+                return new ServiceResult<Tuple<User, UserCredentials>>(
+                    null,
+                    result.Errors.Select(ErrorFactory.IdentityError));
+            }
+            result = await this.userManager.AddToRoleAsync(newUser, user.Role);
+            if (!result.Succeeded)
+            {
+                // TODO: разбор ошибок.
+                return new ServiceResult<Tuple<User, UserCredentials>>(
+                    null,
+                    result.Errors.Select(ErrorFactory.IdentityError));
+            }
+
+            var registeredUser = new User(newUser);
+            var userCredentials = new UserCredentials(newUser.UserName, user.Role, newUser.InstanceId);
+
+            return new ServiceResult<Tuple<User, UserCredentials>>(
+                new Tuple<User, UserCredentials>(registeredUser, userCredentials));
+        }
+
+        /// <inheritdoc />
+        public async Task<ServiceResult<Tuple<User, UserCredentials>>> LoginAsync(
+            UsernamePassword usernamePassword)
+        {
+            var username = usernamePassword.Username;
+            var password = usernamePassword.Password;
+
+            var userResult = await this.FindUserAsync(username);
+            if (!userResult.Success)
+            {
+                return new ServiceResult<Tuple<User, UserCredentials>>(userResult.Errors);
+            }
+            if (!await this.userManager.CheckPasswordAsync(userResult.Result, password))
+            {
+                return new ServiceResult<Tuple<User, UserCredentials>>(ErrorFactory.AccessDenied());
+            }
+
+            var user = userResult.Result;
+            var roleResult = await this.GetUserRole(user);
+            if (!roleResult.Success)
+            {
+                return new ServiceResult<Tuple<User, UserCredentials>>(ErrorFactory.UserWithoutRole(user.UserName));
+            }
+
+            var role = roleResult.Result;
+            var registeredUser = new User(user);
+            var userCredentials = new UserCredentials(user.UserName, role, user.InstanceId);
+            return new ServiceResult<Tuple<User, UserCredentials>>(
+                new Tuple<User, UserCredentials>(registeredUser, userCredentials));
+        }
+
+        /// <inheritdoc />
+        public async Task<ServiceResult<Tuple<User, UserCredentials>>> LoginWithRegistrationAsync(
+            UsernamePassword usernamePassword)
+        {
+            using (var transaction = this.dbContext.Database.BeginTransaction())
+            {
+                try
+                {
+                    var loginResult = await this.LoginAsync(usernamePassword);
+                    if (loginResult.Success)
+                    {
+                        transaction.Commit();
+                        return loginResult;
+                    }
+                    
+                    InvitationModel invitationModel = null;
+                    foreach (var error in loginResult.Errors)
+                    {
+                        if (error.Code == ErrorCode.UserNotFound
+                            && this.TryGetInvitaiton(usernamePassword.Username, out invitationModel))
+                        {
+                            break;
+                        }
+                    }
+
+                    if (invitationModel == null)
+                    {
+                        // Несмотря на ошибку, никаких изменений не произведено.
+                        transaction.Commit();
+                        return loginResult;
+                    }
+
+                    if (loginResult.Errors.All(p => p.Code != ErrorCode.UserNotFound)
+                        || !this.TryGetInvitaiton(usernamePassword.Username, out var invitation))
+                    {
+                        // Несмотря на ошибку, никаких изменений не произведено.
+                        transaction.Commit();
+                        return new ServiceResult<Tuple<User, UserCredentials>>(
+                            ErrorFactory.UserNotFound(usernamePassword.Username));
+                    }
+
+                    var newUser = new User
+                    {
+                        Username = usernamePassword.Username,
+                        Surname = invitation.Surname,
+                        Name = invitation.Name,
+                        PhoneNumber = invitation.PhoneNumber,
+                        Instance = new Instance(invitation.Instance),
+                        Role = invitation.Role.Name,
+                    };
+
+                    this.dbContext.Invitations.Remove(invitation);
+                    var registrationResult = await this.RegisterAsync(newUser, usernamePassword);
+                    if (!registrationResult.Success)
+                    {
+                        await this.dbContext.SaveChangesAsync();
+                        transaction.Commit();
+                    }
+                    else
+                    {
+                        transaction.Rollback();
+                    }
+
+                    return registrationResult;
+                }
+                catch (Exception e)
+                {
+                    transaction.Rollback();
+                    this.logger.LogError(e, "LoginWithRegistrationAsync");
+                }
+            }
+            return new ServiceResult<Tuple<User, UserCredentials>>(ErrorFactory.ServerError());
+        }
+        
+        /// <inheritdoc />
+        public ServiceResult Edit(string userName, User newData)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
+        public async Task<ServiceResult> ValidatePasswordAsync(UsernamePassword usernamePassword)
+        {
+            var userResult = await this.FindUserAsync(usernamePassword.Username);
+            if (!userResult.Success)
+            {
+                return new ServiceResult(userResult.Errors);
+            }
+            if (!await this.userManager.CheckPasswordAsync(userResult.Result, usernamePassword.Password))
+            {
+                return new ServiceResult(ErrorFactory.AccessDenied());
+            }
+            return new ServiceResult();
+        }
+
+        /// <inheritdoc />
+        public async Task<ServiceResult> ChangePasswordAsync(
+            string username, 
+            string oldPassword,
+            string newPassword)
+        {
+            var userResult = await this.FindUserAsync(username);
+            if (!userResult.Success)
+            {
+                return new ServiceResult(userResult.Errors);
+            }
+
+            var user = userResult.Result;
+
+            var result = await this.userManager.ChangePasswordAsync(
+                user,
+                oldPassword,
+                newPassword);
+            // TODO: обработка IdentityError
+            return result.Succeeded
+                ? new ServiceResult()
+                : new ServiceResult(result.Errors.Select(ErrorFactory.IdentityError));
+        }
     }
 }

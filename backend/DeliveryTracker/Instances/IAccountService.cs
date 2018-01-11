@@ -1,18 +1,24 @@
-﻿using DeliveryTracker.Common;
-using DeliveryTracker.Services;
+﻿using System;
+using System.Threading.Tasks;
+using DeliveryTracker.Common;
 
 namespace DeliveryTracker.Instances
 {
     public interface IAccountService
     {
-        ServiceResult<UserCredentials> Login(LoginPassword loginPassword);
+        Task<ServiceResult<Tuple<User, UserCredentials>>> RegisterAsync(User user, UsernamePassword usernamePassword);
 
-        ServiceResult<User> About(string userName);
+        Task<ServiceResult<Tuple<User, UserCredentials>>> LoginAsync(UsernamePassword usernamePassword);
+
+        Task<ServiceResult<Tuple<User, UserCredentials>>> LoginWithRegistrationAsync(UsernamePassword usernamePassword);
 
         ServiceResult Edit(string userName, User newData);
 
-        ServiceResult ValidatePassword(LoginPassword loginPassword);
+        Task<ServiceResult> ValidatePasswordAsync(UsernamePassword usernamePassword);
         
-        ServiceResult ChangePassword(LoginPassword loginPassword);
+        Task<ServiceResult> ChangePasswordAsync(
+            string userName,
+            string oldPassword,
+            string newPassword);
     }
 }

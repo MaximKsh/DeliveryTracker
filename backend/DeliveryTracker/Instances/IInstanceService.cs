@@ -5,6 +5,6 @@ namespace DeliveryTracker.Instances
 {
     public interface IInstanceService
     {
-        ServiceResult<Instance> Create(Instance instance, User creator, LoginPassword loginPassword);
+        ServiceResult<Instance> Create(Instance instance, User creator, UsernamePassword usernamePassword);
     }
 }

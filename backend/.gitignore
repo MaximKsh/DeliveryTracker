@@ -6,3 +6,6 @@
 .vscode/*
 Migrations/*
 .idea/*
+.vs/*
+*.user
+*/Properties/*
