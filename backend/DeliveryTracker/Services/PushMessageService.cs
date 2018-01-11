@@ -2,7 +2,8 @@
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using DeliveryTracker.Models;
+using DeliveryTracker.Common;
+using DeliveryTracker.DbModels;
 using DeliveryTracker.ViewModels;
 
 namespace DeliveryTracker.Services

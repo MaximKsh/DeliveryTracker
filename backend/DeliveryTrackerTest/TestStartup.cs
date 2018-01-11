@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
-using DeliveryTracker.Auth;
-using DeliveryTracker.Db;
-using DeliveryTracker.Models;
-using DeliveryTracker.Roles;
+using DeliveryTracker.DbModels;
 using DeliveryTracker.Services;
-using DeliveryTracker.TaskStates;
+using DeliveryTrackerWeb.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -16,7 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 
-namespace DeliveryTracker
+namespace DeliveryTrackerTest
 {
     public class TestStartup
     {
@@ -83,9 +80,7 @@ namespace DeliveryTracker
             services.AddMvc();
 
             services
-                .AddDeliveryTrackerServices()
-                .AddDeliveryTrackerRoles()
-                .AddDeliveryTrackerTaskStates();
+                .AddDeliveryTrackerServices();
         }
 
         public void Configure(IApplicationBuilder app)

@@ -6,8 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using DeliveryTracker;
-using DeliveryTracker.Roles;
+using DeliveryTracker.Instances;
 using DeliveryTracker.ViewModels;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -54,7 +53,7 @@ namespace DeliveryTrackerTest.Controllers
                 {
                     Surname = creatorName,
                     Name = creatorName,
-                    Role = RoleInfo.Creator
+                    Role = RoleAlias.Creator
                 },
                 Credentials = new CredentialsViewModel
                 {
@@ -78,7 +77,7 @@ namespace DeliveryTrackerTest.Controllers
             var createInstanceResponseBody =  
                 JsonConvert.DeserializeObject<UserViewModel>(await createInstanceResponse.Content.ReadAsStringAsync());
             
-            Assert.Equal(RoleInfo.Creator, createInstanceResponseBody.Role);
+            Assert.Equal(RoleAlias.Creator, createInstanceResponseBody.Role);
             return createInstanceResponseBody;
         }
 
@@ -115,11 +114,11 @@ namespace DeliveryTrackerTest.Controllers
             HttpStatusCode expectStatusCode = HttpStatusCode.OK)
         {
             string url;
-            if (role == RoleInfo.Manager)
+            if (role == RoleAlias.Manager)
             {
                 url = InstanceUrl("invite_manager");
             }
-            else if (role == RoleInfo.Performer)
+            else if (role == RoleAlias.Performer)
             {
                 url = InstanceUrl("invite_performer");
             }

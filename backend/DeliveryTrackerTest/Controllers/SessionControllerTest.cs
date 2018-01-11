@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
-using DeliveryTracker.Roles;
+using DeliveryTracker.Instances;
 using Xunit;
 
 namespace DeliveryTrackerTest.Controllers
@@ -23,11 +23,11 @@ namespace DeliveryTrackerTest.Controllers
             var creator = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var token = await GetToken(client, creator.Username, "123qQ!");
             Assert.Equal("Иванов И.И.", token.User.Surname);
-            Assert.Equal(RoleInfo.Creator, token.User.Role);
+            Assert.Equal(RoleAlias.Creator, token.User.Role);
             Assert.True(!string.IsNullOrWhiteSpace(token.Token));
             var user = await CheckSession(client, token.Token);
             Assert.Equal(creator.Username, user.Username);
-            Assert.Equal(RoleInfo.Creator, user.Role);
+            Assert.Equal(RoleAlias.Creator, user.Role);
         }
         
         [Fact]
@@ -50,10 +50,10 @@ namespace DeliveryTrackerTest.Controllers
             var creator = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var token = await GetToken(client, creator.Username, "123qQ!");
             Assert.Equal("Иванов И.И.", token.User.Surname);
-            Assert.Equal(RoleInfo.Creator, token.User.Role);
-            var invitation = await Invite(client, RoleInfo.Manager, token.Token);
+            Assert.Equal(RoleAlias.Creator, token.User.Role);
+            var invitation = await Invite(client, RoleAlias.Manager, token.Token);
             var token2 = await GetToken(client, invitation, "123qQ!", HttpStatusCode.Created); 
-            Assert.Equal(RoleInfo.Manager, token2.User.Role);
+            Assert.Equal(RoleAlias.Manager, token2.User.Role);
             Assert.True(!string.IsNullOrWhiteSpace(token2.Token));
         }
         
@@ -65,10 +65,10 @@ namespace DeliveryTrackerTest.Controllers
             var creator = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var token = await GetToken(client, creator.Username, "123qQ!");
             Assert.Equal("Иванов И.И.", token.User.Surname);
-            Assert.Equal(RoleInfo.Creator, token.User.Role);
-            var invitation = await Invite(client, RoleInfo.Manager, token.Token);
+            Assert.Equal(RoleAlias.Creator, token.User.Role);
+            var invitation = await Invite(client, RoleAlias.Manager, token.Token);
             var token2 = await GetToken(client, invitation, "123qQ!", HttpStatusCode.Created); 
-            Assert.Equal(RoleInfo.Manager, token2.User.Role);
+            Assert.Equal(RoleAlias.Manager, token2.User.Role);
             token2 = await GetToken(client, invitation, "123qQ1", HttpStatusCode.Unauthorized); 
             Assert.True(string.IsNullOrWhiteSpace(token2?.Token));
         }
@@ -81,10 +81,10 @@ namespace DeliveryTrackerTest.Controllers
             var creator = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var token = await GetToken(client, creator.Username, "123qQ!");
             Assert.Equal("Иванов И.И.", token.User.Surname);
-            Assert.Equal(RoleInfo.Creator, token.User.Role);
-            var invitation = await Invite(client, RoleInfo.Performer, token.Token);
+            Assert.Equal(RoleAlias.Creator, token.User.Role);
+            var invitation = await Invite(client, RoleAlias.Performer, token.Token);
             var token2 = await GetToken(client, invitation, "123qQ!", HttpStatusCode.Created); 
-            Assert.Equal(RoleInfo.Performer, token2.User.Role);
+            Assert.Equal(RoleAlias.Performer, token2.User.Role);
             Assert.True(!string.IsNullOrWhiteSpace(token2.Token));
         }
         
@@ -96,10 +96,10 @@ namespace DeliveryTrackerTest.Controllers
             var creator = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var token = await GetToken(client, creator.Username, "123qQ!");
             Assert.Equal("Иванов И.И.", token.User.Surname);
-            Assert.Equal(RoleInfo.Creator, token.User.Role);
-            var invitation = await Invite(client, RoleInfo.Performer, token.Token);
+            Assert.Equal(RoleAlias.Creator, token.User.Role);
+            var invitation = await Invite(client, RoleAlias.Performer, token.Token);
             var token2 = await GetToken(client, invitation, "123qQ!", HttpStatusCode.Created); 
-            Assert.Equal(RoleInfo.Performer, token2.User.Role);
+            Assert.Equal(RoleAlias.Performer, token2.User.Role);
             token2 = await GetToken(client, invitation, "123qQ1", HttpStatusCode.Unauthorized); 
             Assert.True(string.IsNullOrWhiteSpace(token2?.Token));
         }

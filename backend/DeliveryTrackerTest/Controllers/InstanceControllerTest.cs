@@ -1,6 +1,6 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
-using DeliveryTracker.Roles;
+using DeliveryTracker.Instances;
 using Xunit;
 
 namespace DeliveryTrackerTest.Controllers
@@ -17,7 +17,7 @@ namespace DeliveryTrackerTest.Controllers
         }
         
         [Fact]
-        public async Task CreateInstance()
+        public async Task CreateOneInstance()
         {
             var client = this.Server.CreateClient();
             
@@ -25,7 +25,7 @@ namespace DeliveryTrackerTest.Controllers
 
             Assert.NotNull(creator.Username);
             Assert.Equal("Иванов И.И.", creator.Surname);
-            Assert.Equal(RoleInfo.Creator, creator.Role);
+            Assert.Equal(RoleAlias.Creator, creator.Role);
             Assert.Equal("Instance1", creator.Instance.InstanceName);
         }
         
@@ -54,7 +54,7 @@ namespace DeliveryTrackerTest.Controllers
 
             Assert.NotNull(creator.Username);
             Assert.Equal("Иванов И.И.", creator.Surname);
-            Assert.Equal(RoleInfo.Creator, creator.Role);
+            Assert.Equal(RoleAlias.Creator, creator.Role);
             Assert.Equal("Instance1", creator.Instance.InstanceName);
             
             var creator2 = 
@@ -62,7 +62,7 @@ namespace DeliveryTrackerTest.Controllers
 
             Assert.NotNull(creator2.Username);
             Assert.Equal("Иванов И.И.", creator2.Surname);
-            Assert.Equal(RoleInfo.Creator, creator2.Role);
+            Assert.Equal(RoleAlias.Creator, creator2.Role);
             Assert.Equal("Instance1", creator2.Instance.InstanceName);
         }
         
@@ -74,13 +74,13 @@ namespace DeliveryTrackerTest.Controllers
             var creator = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var creatorToken = await GetToken(client, creator.Username, "123qQ!");
             
-            var invitationCode = await Invite(client, RoleInfo.Manager, creatorToken.Token);
+            var invitationCode = await Invite(client, RoleAlias.Manager, creatorToken.Token);
             Assert.NotNull(invitationCode);
             
             var managerToken = 
                 await GetToken(client, invitationCode, "123qQ!", HttpStatusCode.Created);
             Assert.Equal(invitationCode, managerToken.User.Username);
-            Assert.Equal(RoleInfo.Manager, managerToken.User.Role);
+            Assert.Equal(RoleAlias.Manager, managerToken.User.Role);
             Assert.Equal("Instance1", managerToken.User.Instance.InstanceName);
             Assert.NotNull(managerToken.Token);
         }
@@ -94,13 +94,13 @@ namespace DeliveryTrackerTest.Controllers
             var creator = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var creatorToken = await GetToken(client, creator.Username, "123qQ!");
             
-            var invitationCode = await Invite(client, RoleInfo.Performer, creatorToken.Token);
+            var invitationCode = await Invite(client, RoleAlias.Performer, creatorToken.Token);
             Assert.NotNull(invitationCode);
             
             var performerToken = 
                 await GetToken(client, invitationCode, "123qQ!", HttpStatusCode.Created);
             Assert.Equal(invitationCode, performerToken.User.Username);
-            Assert.Equal(RoleInfo.Performer, performerToken.User.Role);
+            Assert.Equal(RoleAlias.Performer, performerToken.User.Role);
             Assert.Equal("Instance1", performerToken.User.Instance.InstanceName);
             Assert.NotNull(performerToken.Token);
         }
@@ -110,7 +110,7 @@ namespace DeliveryTrackerTest.Controllers
         {
             var client = this.Server.CreateClient();
             var invitationCode = 
-                await Invite(client, RoleInfo.Performer, "", HttpStatusCode.Unauthorized);
+                await Invite(client, RoleAlias.Performer, "", HttpStatusCode.Unauthorized);
             Assert.Null(invitationCode);
         }
         
@@ -123,7 +123,7 @@ namespace DeliveryTrackerTest.Controllers
             var creator = await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var creatorToken = await GetToken(client, creator.Username, "123qQ!");
             
-            var invitationCode = await Invite(client, RoleInfo.Manager, creatorToken.Token);
+            var invitationCode = await Invite(client, RoleAlias.Manager, creatorToken.Token);
             Assert.NotNull(invitationCode);
             
             await GetToken(client, invitationCode, "123qQ!", HttpStatusCode.Created);
@@ -140,12 +140,12 @@ namespace DeliveryTrackerTest.Controllers
             var creatorToken = await GetToken(client, creator.Username, "123qQ!");
             
             var invitationCode = 
-                await Invite(client, RoleInfo.Manager, creatorToken.Token);
+                await Invite(client, RoleAlias.Manager, creatorToken.Token);
             
             var managerToken = 
                 await GetToken(client, invitationCode, "123qQ!", HttpStatusCode.Created);
             
-            await Invite(client, RoleInfo.Manager, managerToken.Token, HttpStatusCode.Forbidden);
+            await Invite(client, RoleAlias.Manager, managerToken.Token, HttpStatusCode.Forbidden);
         }
         
         [Fact]
@@ -158,12 +158,12 @@ namespace DeliveryTrackerTest.Controllers
             var creatorToken = await GetToken(client, creator.Username, "123qQ!");
             
             var invitationCode = 
-                await Invite(client, RoleInfo.Performer, creatorToken.Token);
+                await Invite(client, RoleAlias.Performer, creatorToken.Token);
             
             var performerToken = 
                 await GetToken(client, invitationCode, "123qQ!", HttpStatusCode.Created);
             
-            await Invite(client, RoleInfo.Performer, performerToken.Token, HttpStatusCode.Forbidden);
+            await Invite(client, RoleAlias.Performer, performerToken.Token, HttpStatusCode.Forbidden);
         }
         
     }

@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using DeliveryTracker.Localization;
-using DeliveryTracker.Roles;
 
 namespace DeliveryTracker.ViewModels
 {

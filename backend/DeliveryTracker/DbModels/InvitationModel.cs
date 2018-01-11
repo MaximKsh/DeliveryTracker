@@ -1,0 +1,62 @@
+using System;
+using System.Diagnostics.CodeAnalysis;
+
+namespace DeliveryTracker.DbModels
+{
+    /// <summary>
+    /// Приглашение.
+    /// </summary>
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
+    public class InvitationModel
+    {
+        /// <summary>
+        /// ID приглашения.
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
+        /// Код приглашения.
+        /// </summary>
+        public string InvitationCode {get; set; }
+
+        /// <summary>
+        /// Дата истечения кода.
+        /// </summary>
+        public DateTime ExpirationDate { get; set; }
+        
+        /// <summary>
+        /// Предварительно указанная фамилия.
+        /// </summary>
+        public string Surname { get; set; }
+        
+        /// <summary>
+        /// Предварительно указанное имя.
+        /// </summary>
+        public string Name { get; set; }
+        
+        /// <summary>
+        /// Предварительно указанный телефон.
+        /// </summary>
+        public string PhoneNumber { get; set; }
+
+        /// <summary>
+        /// Идентификатор роли, для которой предназначено приглашение.
+        /// </summary>
+        public Guid RoleId { get; set; }
+        
+        /// <summary>
+        /// Роль, для которой предназначено приглашение.
+        /// </summary>
+        public virtual RoleModel Role { get; set; }
+        
+        /// <summary>
+        /// Идентификатор инстанса, в которую приглашают.
+        /// </summary>
+        public Guid InstanceId { get; set; }
+        
+        /// <summary>
+        /// Инстанс, в которую приглашают.
+        /// </summary>
+        public virtual InstanceModel Instance { get; set; }
+    }
+}

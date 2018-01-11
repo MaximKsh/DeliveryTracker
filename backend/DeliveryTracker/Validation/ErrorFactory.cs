@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DeliveryTracker.DbModels;
 using DeliveryTracker.Localization;
-using DeliveryTracker.Models;
 using Microsoft.AspNetCore.Identity;
 
 namespace DeliveryTracker.Validation
@@ -16,7 +16,7 @@ namespace DeliveryTracker.Validation
         public static IError ServerError() =>
             new Error(
                 ErrorCode.ServerError,
-                LocalizationString.Error.ServerError);
+                LocalizationAlias.Error.ServerError);
 
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace DeliveryTracker.Validation
         public static IError InvalidInputParameters(IEnumerable<KeyValuePair<string, object>> invalidParameters) =>
             new Error(
                 ErrorCode.InvalidInputParameter,
-                LocalizationString.Error.InvalidInputParameter,
+                LocalizationAlias.Error.InvalidInputParameter,
                 invalidParameters.ToDictionary(k => k.Key, v => v.Value?.ToString() ?? "null"));
       
         /// <summary>
@@ -38,7 +38,7 @@ namespace DeliveryTracker.Validation
         public static IError UserNotFound(string username) =>
             new Error(
                 ErrorCode.UserNotFound,
-                LocalizationString.Error.UserNotFound,
+                LocalizationAlias.Error.UserNotFound,
                 new Dictionary<string, string>
                 {
                     ["username"] = username,
@@ -52,7 +52,7 @@ namespace DeliveryTracker.Validation
         public static IError UserWithoutRole(string username) =>
             new Error(
                 ErrorCode.UserWithoutRole,
-                LocalizationString.Error.UserWithoutRole,
+                LocalizationAlias.Error.UserWithoutRole,
                 new Dictionary<string, string>
                 {
                     ["username"] = username,
@@ -67,7 +67,7 @@ namespace DeliveryTracker.Validation
         public static IError UserNotInRole(string username, string expected) =>
             new Error(
                 ErrorCode.UserNotInRole,
-                LocalizationString.Error.UserNotInRole,
+                LocalizationAlias.Error.UserNotInRole,
                 new Dictionary<string, string>
                 {
                     ["username"] = username,
@@ -82,7 +82,7 @@ namespace DeliveryTracker.Validation
         public static IError IdentityError(IdentityError error) =>
             new Error(
                 ErrorCode.IdentityError,
-                LocalizationString.Error.IdentityError,
+                LocalizationAlias.Error.IdentityError,
                 new Dictionary<string, string>
                 {
                     ["details"] = error.Description,
@@ -97,7 +97,7 @@ namespace DeliveryTracker.Validation
         public static IError InvitationDoesNotExist(string invitationCode, string role) =>
             new Error(
                 ErrorCode.InvitationDoesnotExist,
-                LocalizationString.Error.InvitationDoesnotExist,
+                LocalizationAlias.Error.InvitationDoesnotExist,
                 new Dictionary<string, string>
                 {
                     ["invitationCode"] = invitationCode,
@@ -112,7 +112,7 @@ namespace DeliveryTracker.Validation
         public static IError InvitaitonExpired(string invitationCode) =>
             new Error(
                 ErrorCode.InvitationExpired,
-                LocalizationString.Error.InvitationExpired,
+                LocalizationAlias.Error.InvitationExpired,
                 new Dictionary<string, string>
                 {
                     ["invitationCode"] = invitationCode
@@ -126,7 +126,7 @@ namespace DeliveryTracker.Validation
         public static IError InstanceAlreadyHasCreator(string instanceDisplayableName) =>
             new Error(
                 ErrorCode.InstanceAlreadyHasCreator,
-                LocalizationString.Error.InstanceAlreadyHasCreator,
+                LocalizationAlias.Error.InstanceAlreadyHasCreator,
                 new Dictionary<string, string>
                 {
                     ["instanceDisplayableName"] = instanceDisplayableName,
@@ -139,7 +139,7 @@ namespace DeliveryTracker.Validation
         public static IError PerformerInAnotherInstance() =>
             new Error(
                 ErrorCode.PerformerInAnotherInstance,
-                LocalizationString.Error.PerformerInAnotherInstance);
+                LocalizationAlias.Error.PerformerInAnotherInstance);
         
         /// <summary>
         /// Задание не найдено.
@@ -148,7 +148,7 @@ namespace DeliveryTracker.Validation
         public static IError TaskNotFound(Guid taskId) =>
             new Error(
                 ErrorCode.TaskNotFound,
-                LocalizationString.Error.TaskNotFound,
+                LocalizationAlias.Error.TaskNotFound,
                 new Dictionary<string, string>
                 {
                     ["taskId"] = taskId.ToString()
@@ -161,7 +161,7 @@ namespace DeliveryTracker.Validation
         public static IError IncorrectTaskState(TaskStateModel actual, params TaskStateModel[] expected) =>
             new Error(
                 ErrorCode.IncorrectTaskState,
-                LocalizationString.Error.IncorrectTaskState,
+                LocalizationAlias.Error.IncorrectTaskState,
                 new Dictionary<string, string>
                 {
                     ["actual"] = actual?.Alias ?? "null",
@@ -177,7 +177,7 @@ namespace DeliveryTracker.Validation
             TaskStateModel currentState) =>
             new Error(
                 ErrorCode.IncorrectTaskStateTransition,
-                LocalizationString.Error.IncorrectTaskStateTransition,
+                LocalizationAlias.Error.IncorrectTaskStateTransition,
                 new Dictionary<string, string>
                 {
                     ["newState"] = newState?.Alias ?? "null",
@@ -191,7 +191,7 @@ namespace DeliveryTracker.Validation
         public static IError TaskIsForbidden() =>
             new Error(
                 ErrorCode.TaskIsForbidden,
-                LocalizationString.Error.TaskIsForbidden);
+                LocalizationAlias.Error.TaskIsForbidden);
         
         /// <summary>
         /// Доступ запрещен.
@@ -200,7 +200,7 @@ namespace DeliveryTracker.Validation
         public static IError AccessDenied() =>
             new Error(
                 ErrorCode.TaskIsForbidden,
-                LocalizationString.Error.AccessDenied);
+                LocalizationAlias.Error.AccessDenied);
         
         /// <summary>
         /// Пользователь удален.
@@ -209,7 +209,7 @@ namespace DeliveryTracker.Validation
         public static IError UserDeleted(string username) =>
             new Error(
                 ErrorCode.UserDeleted,
-                LocalizationString.Error.UserDeleted,
+                LocalizationAlias.Error.UserDeleted,
                 new Dictionary<string, string>
                 {
                     ["username"] = username,

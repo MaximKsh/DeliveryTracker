@@ -8,13 +8,13 @@ namespace DeliveryTracker.ViewModels
         /// <summary>
         /// Долгота.
         /// </summary>
-        [Required(ErrorMessage = LocalizationString.Error.LongitudeIsRequired)]
+        [Required(ErrorMessage = LocalizationAlias.Error.LongitudeIsRequired)]
         public double Longitude { get; set; }
         
         /// <summary>
         /// Широта.
         /// </summary>
-        [Required(ErrorMessage = LocalizationString.Error.LatitudeIsRequired)]
+        [Required(ErrorMessage = LocalizationAlias.Error.LatitudeIsRequired)]
         public double Latitude { get; set; }
     }
 }

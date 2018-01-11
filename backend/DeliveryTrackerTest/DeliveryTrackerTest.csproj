@@ -11,6 +11,7 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DeliveryTrackerWeb\DeliveryTrackerWeb.csproj" />
     <ProjectReference Include="..\DeliveryTracker\DeliveryTracker.csproj" />
   </ItemGroup>
   <ItemGroup>

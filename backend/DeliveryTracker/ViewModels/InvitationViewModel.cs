@@ -11,13 +11,13 @@ namespace DeliveryTracker.ViewModels
         /// <summary>
         /// Код приглашения.
         /// </summary>
-        [Required(ErrorMessage =  LocalizationString.Error.InvitationCodeIsRequired)]
+        [Required(ErrorMessage =  LocalizationAlias.Error.InvitationCodeIsRequired)]
         public string InvitationCode { get; set; }
         
         /// <summary>
         /// Дата истечения кода.
         /// </summary>
-        [Required(ErrorMessage = LocalizationString.Error.ExpirationDateIsRequired)]
+        [Required(ErrorMessage = LocalizationAlias.Error.ExpirationDateIsRequired)]
         public DateTime ExpirationDate { get; set; }
         
         /// <summary>

@@ -1,5 +1,7 @@
 
 
+using DeliveryTracker.Instances;
+using DeliveryTracker.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DeliveryTracker.Services

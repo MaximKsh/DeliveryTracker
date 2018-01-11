@@ -5,8 +5,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using DeliveryTracker.Roles;
-using DeliveryTracker.TaskStates;
+using DeliveryTracker.Instances;
+using DeliveryTracker.Tasks;
 using DeliveryTracker.Validation;
 using DeliveryTracker.ViewModels;
 using Newtonsoft.Json;
@@ -29,8 +29,8 @@ namespace DeliveryTrackerTest.Controllers
             var creator = 
                 await CreateInstance(client, "Иванов И.И.", "123qQ!", "Instance1");
             var token = await GetToken(client, creator.Username, "123qQ!");
-            var performersUsernames = await MassCreateUsers(client, token.Token, RoleInfo.Performer, "123qQ!", 10);
-            var manager = (await MassCreateUsers(client, token.Token, RoleInfo.Manager, "123qQ!", 1)).First();
+            var performersUsernames = await MassCreateUsers(client, token.Token, RoleAlias.Performer, "123qQ!", 10);
+            var manager = (await MassCreateUsers(client, token.Token, RoleAlias.Manager, "123qQ!", 1)).First();
             var managerToken = (await GetToken(client, manager, "123qQ!")).Token;
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken);
             
@@ -96,8 +96,8 @@ namespace DeliveryTrackerTest.Controllers
             var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
             var token = await GetToken(clientManager1, creator.Username, "123qQ!");
-            var performers = await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 2);
-            var managers = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 2));
+            var performers = await MassCreateUsers(clientManager1, token.Token, RoleAlias.Performer, "123qQ!", 2);
+            var managers = (await MassCreateUsers(clientManager1, token.Token, RoleAlias.Manager, "123qQ!", 2));
             
             var managerToken1 = await GetToken(clientManager1, managers.First(), "123qQ!");
             clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1.Token);
@@ -121,8 +121,8 @@ namespace DeliveryTrackerTest.Controllers
                 clientManager2,
                 clientPerformer1,
                 clientPerformer2,
-                TaskStateInfo.NewUndistributedState,
-                TaskStateInfo.NewUndistributedState);
+                TaskStateAlias.NewUndistributedState,
+                TaskStateAlias.NewUndistributedState);
             
             // Резервируем за первого исполнителя
             await TryReserve(clientPerformer1, taskId);
@@ -135,7 +135,7 @@ namespace DeliveryTrackerTest.Controllers
                 clientManager2,
                 clientPerformer1,
                 clientPerformer2,
-                TaskStateInfo.InWorkState);
+                TaskStateAlias.InWorkState);
             
             // Смотрим задания за исполнителей по нераспределенным
             var response7 = await clientPerformer1.GetAsync(PerformerUrl("undistributed_tasks"));
@@ -148,17 +148,17 @@ namespace DeliveryTrackerTest.Controllers
             Assert.Equal(0, tasksList8.Length);
             
             // Пытаемся завершить за второго
-            await TryCompleteTask(clientPerformer2, taskId, TaskStateInfo.PerformedState, HttpStatusCode.Forbidden);
+            await TryCompleteTask(clientPerformer2, taskId, TaskStateAlias.PerformedState, HttpStatusCode.Forbidden);
             
             // Завершаем задание за первого 
-            await TryCompleteTask(clientPerformer1, taskId, TaskStateInfo.PerformedState);
+            await TryCompleteTask(clientPerformer1, taskId, TaskStateAlias.PerformedState);
             
             await CheckOneTask(
                 clientManager1,
                 clientManager2,
                 clientPerformer1,
                 clientPerformer2,
-                TaskStateInfo.PerformedState);
+                TaskStateAlias.PerformedState);
             
         }
 
@@ -186,8 +186,8 @@ namespace DeliveryTrackerTest.Controllers
             var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
             var token = await GetToken(clientManager1, creator.Username, "123qQ!");
-            var performers = await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 2);
-            var managers = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 2));
+            var performers = await MassCreateUsers(clientManager1, token.Token, RoleAlias.Performer, "123qQ!", 2);
+            var managers = (await MassCreateUsers(clientManager1, token.Token, RoleAlias.Manager, "123qQ!", 2));
             
             var managerToken1 = await GetToken(clientManager1, managers.First(), "123qQ!");
             clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1.Token);
@@ -213,7 +213,7 @@ namespace DeliveryTrackerTest.Controllers
                 clientManager2,
                 clientPerformer1,
                 clientPerformer2,
-                TaskStateInfo.NewState);
+                TaskStateAlias.NewState);
             
             // Берем в работу за первого исполнителя второе задание
             await TryTakeIntoWork(clientPerformer1, secondTaskId, HttpStatusCode.Forbidden);
@@ -232,17 +232,17 @@ namespace DeliveryTrackerTest.Controllers
                 clientManager2,
                 clientPerformer1,
                 clientPerformer2,
-                TaskStateInfo.InWorkState);
+                TaskStateAlias.InWorkState);
             
             // Пытаемся завершать чужое задание
-            await TryCompleteTask(clientPerformer1, secondTaskId, TaskStateInfo.PerformedState, HttpStatusCode.Forbidden);
-            await TryCompleteTask(clientManager2, firstTaskId, TaskStateInfo.CancelledState, HttpStatusCode.Forbidden);
+            await TryCompleteTask(clientPerformer1, secondTaskId, TaskStateAlias.PerformedState, HttpStatusCode.Forbidden);
+            await TryCompleteTask(clientManager2, firstTaskId, TaskStateAlias.CancelledState, HttpStatusCode.Forbidden);
             
             // Завершаем первое задание за первого 
-            await TryCompleteTask(clientPerformer1, firstTaskId, TaskStateInfo.PerformedState);
+            await TryCompleteTask(clientPerformer1, firstTaskId, TaskStateAlias.PerformedState);
             
             // Отменяем второе задание за второго
-            await TryCompleteTask(clientPerformer2, secondTaskId, TaskStateInfo.CancelledState);
+            await TryCompleteTask(clientPerformer2, secondTaskId, TaskStateAlias.CancelledState);
             
             
         }
@@ -279,14 +279,14 @@ namespace DeliveryTrackerTest.Controllers
             var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
             var token1 = await GetToken(clientManager1, creator.Username, "123qQ!");
-            var performers1 = await MassCreateUsers(clientManager1, token1.Token, RoleInfo.Performer, "123qQ!", 1);
-            var managers1 = (await MassCreateUsers(clientManager1, token1.Token, RoleInfo.Manager, "123qQ!", 1));
+            var performers1 = await MassCreateUsers(clientManager1, token1.Token, RoleAlias.Performer, "123qQ!", 1);
+            var managers1 = (await MassCreateUsers(clientManager1, token1.Token, RoleAlias.Manager, "123qQ!", 1));
             
             var creator2 = 
                 await CreateInstance(clientManager2, "Иванов И.И.", "123qQ!", "Instance1");
             var token2 = await GetToken(clientManager2, creator2.Username, "123qQ!");
-            var performers2 = await MassCreateUsers(clientManager2, token2.Token, RoleInfo.Performer, "123qQ!", 1);
-            var managers2 = (await MassCreateUsers(clientManager2, token2.Token, RoleInfo.Manager, "123qQ!", 1));
+            var performers2 = await MassCreateUsers(clientManager2, token2.Token, RoleAlias.Performer, "123qQ!", 1);
+            var managers2 = (await MassCreateUsers(clientManager2, token2.Token, RoleAlias.Manager, "123qQ!", 1));
             
             var managerToken1 = await GetToken(clientManager1, managers1.First(), "123qQ!");
             clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken1.Token);
@@ -319,39 +319,39 @@ namespace DeliveryTrackerTest.Controllers
             var tasksList1 =  
                 JsonConvert.DeserializeObject<TaskViewModel[]>(await response1.Content.ReadAsStringAsync());
             Assert.Equal(2, tasksList1.Length);
-            Assert.Equal(TaskStateInfo.NewUndistributedState, tasksList1.First().State);
-            Assert.Equal(TaskStateInfo.NewState, tasksList1.Last().State);
+            Assert.Equal(TaskStateAlias.NewUndistributedState, tasksList1.First().State);
+            Assert.Equal(TaskStateAlias.NewState, tasksList1.Last().State);
             
             var response2 = await clientManager2.GetAsync(ManagerUrl("my_tasks"));
             var tasksList2 =  
                 JsonConvert.DeserializeObject<TaskViewModel[]>(await response2.Content.ReadAsStringAsync());
             Assert.Equal(2, tasksList2.Length);
-            Assert.Equal(TaskStateInfo.NewUndistributedState, tasksList2.First().State);
-            Assert.Equal(TaskStateInfo.NewState, tasksList2.Last().State);
+            Assert.Equal(TaskStateAlias.NewUndistributedState, tasksList2.First().State);
+            Assert.Equal(TaskStateAlias.NewState, tasksList2.Last().State);
             
             // Смотрим задания за исполнителей
             var response3 = await clientPerformer1.GetAsync(PerformerUrl("undistributed_tasks"));
             var tasksList3 =  
                 JsonConvert.DeserializeObject<TaskViewModel[]>(await response3.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList3.Length);
-            Assert.Equal(TaskStateInfo.NewUndistributedState, tasksList3.First().State);
+            Assert.Equal(TaskStateAlias.NewUndistributedState, tasksList3.First().State);
             var response4 = await clientPerformer1.GetAsync(PerformerUrl("my_tasks"));
             var tasksList4 =  
                 JsonConvert.DeserializeObject<TaskViewModel[]>(await response4.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList4.Length);
-            Assert.Equal(TaskStateInfo.NewState, tasksList4.First().State);
+            Assert.Equal(TaskStateAlias.NewState, tasksList4.First().State);
             
             var response5 = await clientPerformer2.GetAsync(PerformerUrl("undistributed_tasks"));
             var tasksList5 =  
                 JsonConvert.DeserializeObject<TaskViewModel[]>(await response5.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList5.Length);
-            Assert.Equal(TaskStateInfo.NewUndistributedState, tasksList5.First().State);
+            Assert.Equal(TaskStateAlias.NewUndistributedState, tasksList5.First().State);
             
             var response6 = await clientPerformer2.GetAsync(PerformerUrl("my_tasks"));
             var tasksList6 =  
                 JsonConvert.DeserializeObject<TaskViewModel[]>(await response6.Content.ReadAsStringAsync());
             Assert.Equal(1, tasksList6.Length);
-            Assert.Equal(TaskStateInfo.NewState, tasksList6.First().State);
+            Assert.Equal(TaskStateAlias.NewState, tasksList6.First().State);
             
             
             // Пытаемся взять чужие задания в работу
@@ -362,10 +362,10 @@ namespace DeliveryTrackerTest.Controllers
             await TryTakeIntoWork(clientPerformer2, taskId12, HttpStatusCode.Forbidden);
 
             // Загружаем и смотрим что ничего не поменялось
-            await CheckTaskStateByPerformer(clientPerformer1, taskId11, TaskStateInfo.NewUndistributedState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskId12, TaskStateInfo.NewState);
-            await CheckTaskStateByPerformer(clientPerformer2, taskId21, TaskStateInfo.NewUndistributedState);
-            await CheckTaskStateByPerformer(clientPerformer2, taskId22, TaskStateInfo.NewState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskId11, TaskStateAlias.NewUndistributedState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskId12, TaskStateAlias.NewState);
+            await CheckTaskStateByPerformer(clientPerformer2, taskId21, TaskStateAlias.NewUndistributedState);
+            await CheckTaskStateByPerformer(clientPerformer2, taskId22, TaskStateAlias.NewState);
             
             // Берем свои задания в работу
             await TryReserve(clientPerformer1, taskId11);
@@ -383,28 +383,28 @@ namespace DeliveryTrackerTest.Controllers
             await GetTaskByPerformer(clientPerformer2, taskId12, HttpStatusCode.NotFound);
 
             // Пробуем завершить чужие таски
-            await TryCompleteTask(clientPerformer1, taskId21, TaskStateInfo.PerformedState, HttpStatusCode.Forbidden);
-            await TryCompleteTask(clientPerformer1, taskId22, TaskStateInfo.PerformedState, HttpStatusCode.Forbidden);
-            await TryCompleteTask(clientPerformer2, taskId11, TaskStateInfo.PerformedState, HttpStatusCode.Forbidden);
-            await TryCompleteTask(clientPerformer2, taskId12, TaskStateInfo.PerformedState, HttpStatusCode.Forbidden);
+            await TryCompleteTask(clientPerformer1, taskId21, TaskStateAlias.PerformedState, HttpStatusCode.Forbidden);
+            await TryCompleteTask(clientPerformer1, taskId22, TaskStateAlias.PerformedState, HttpStatusCode.Forbidden);
+            await TryCompleteTask(clientPerformer2, taskId11, TaskStateAlias.PerformedState, HttpStatusCode.Forbidden);
+            await TryCompleteTask(clientPerformer2, taskId12, TaskStateAlias.PerformedState, HttpStatusCode.Forbidden);
             
             // Проверяем что ничего не поменялось
-            await CheckTaskStateByPerformer(clientPerformer1, taskId11, TaskStateInfo.InWorkState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskId12, TaskStateInfo.InWorkState);
-            await CheckTaskStateByPerformer(clientPerformer2, taskId21, TaskStateInfo.InWorkState);
-            await CheckTaskStateByPerformer(clientPerformer2, taskId22, TaskStateInfo.InWorkState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskId11, TaskStateAlias.InWorkState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskId12, TaskStateAlias.InWorkState);
+            await CheckTaskStateByPerformer(clientPerformer2, taskId21, TaskStateAlias.InWorkState);
+            await CheckTaskStateByPerformer(clientPerformer2, taskId22, TaskStateAlias.InWorkState);
             
             // Завершаем свои
-            await TryCompleteTask(clientPerformer1, taskId11, TaskStateInfo.PerformedState);
-            await TryCompleteTask(clientPerformer1, taskId12, TaskStateInfo.PerformedState);
-            await TryCompleteTask(clientPerformer2, taskId21, TaskStateInfo.PerformedState);
-            await TryCompleteTask(clientPerformer2, taskId22, TaskStateInfo.PerformedState);
+            await TryCompleteTask(clientPerformer1, taskId11, TaskStateAlias.PerformedState);
+            await TryCompleteTask(clientPerformer1, taskId12, TaskStateAlias.PerformedState);
+            await TryCompleteTask(clientPerformer2, taskId21, TaskStateAlias.PerformedState);
+            await TryCompleteTask(clientPerformer2, taskId22, TaskStateAlias.PerformedState);
             
             // Проверяем что завершились
-            await CheckTaskStateByPerformer(clientPerformer1, taskId11, TaskStateInfo.PerformedState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskId12, TaskStateInfo.PerformedState);
-            await CheckTaskStateByPerformer(clientPerformer2, taskId21, TaskStateInfo.PerformedState);
-            await CheckTaskStateByPerformer(clientPerformer2, taskId22, TaskStateInfo.PerformedState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskId11, TaskStateAlias.PerformedState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskId12, TaskStateAlias.PerformedState);
+            await CheckTaskStateByPerformer(clientPerformer2, taskId21, TaskStateAlias.PerformedState);
+            await CheckTaskStateByPerformer(clientPerformer2, taskId22, TaskStateAlias.PerformedState);
         }
 
 
@@ -420,8 +420,8 @@ namespace DeliveryTrackerTest.Controllers
             var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
             var token = await GetToken(clientManager1, creator.Username, "123qQ!");
-            var performer = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 1))[0];
-            var manager = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 1))[0];
+            var performer = (await MassCreateUsers(clientManager1, token.Token, RoleAlias.Performer, "123qQ!", 1))[0];
+            var manager = (await MassCreateUsers(clientManager1, token.Token, RoleAlias.Manager, "123qQ!", 1))[0];
             
             var managerToken = await GetToken(clientManager1, manager, "123qQ!");
             clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken.Token);
@@ -438,20 +438,20 @@ namespace DeliveryTrackerTest.Controllers
             await TryTakeIntoWork(clientPerformer1, taskIdInWork);
             await TryTakeIntoWork(clientPerformer1, taskIdPerformed);
             await TryTakeIntoWork(clientPerformer1, taskIdCancelled);
-            await TryCompleteTask(clientPerformer1, taskIdPerformed, TaskStateInfo.PerformedState);
-            await TryCompleteTask(clientPerformer1, taskIdCancelled, TaskStateInfo.CancelledState);
+            await TryCompleteTask(clientPerformer1, taskIdPerformed, TaskStateAlias.PerformedState);
+            await TryCompleteTask(clientPerformer1, taskIdCancelled, TaskStateAlias.CancelledState);
 
-            await CheckTaskStateByPerformer(clientPerformer1, taskIUndistributed, TaskStateInfo.NewUndistributedState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdNew, TaskStateInfo.NewState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdInWork, TaskStateInfo.InWorkState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdPerformed, TaskStateInfo.PerformedState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelled, TaskStateInfo.CancelledState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIUndistributed, TaskStateAlias.NewUndistributedState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdNew, TaskStateAlias.NewState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdInWork, TaskStateAlias.InWorkState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdPerformed, TaskStateAlias.PerformedState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelled, TaskStateAlias.CancelledState);
             
-            await CheckTaskStateByManager(clientManager1, taskIUndistributed, TaskStateInfo.NewUndistributedState);
-            await CheckTaskStateByManager(clientManager1, taskIdNew, TaskStateInfo.NewState);
-            await CheckTaskStateByManager(clientManager1, taskIdInWork, TaskStateInfo.InWorkState);
-            await CheckTaskStateByManager(clientManager1, taskIdPerformed, TaskStateInfo.PerformedState);
-            await CheckTaskStateByManager(clientManager1, taskIdCancelled, TaskStateInfo.CancelledState);
+            await CheckTaskStateByManager(clientManager1, taskIUndistributed, TaskStateAlias.NewUndistributedState);
+            await CheckTaskStateByManager(clientManager1, taskIdNew, TaskStateAlias.NewState);
+            await CheckTaskStateByManager(clientManager1, taskIdInWork, TaskStateAlias.InWorkState);
+            await CheckTaskStateByManager(clientManager1, taskIdPerformed, TaskStateAlias.PerformedState);
+            await CheckTaskStateByManager(clientManager1, taskIdCancelled, TaskStateAlias.CancelledState);
 
             await TryCancelByManager(clientManager1, taskIUndistributed);
             await TryCancelByManager(clientManager1, taskIdNew);
@@ -460,17 +460,17 @@ namespace DeliveryTrackerTest.Controllers
             await TryCancelByManager(clientManager1, taskIdCancelled, HttpStatusCode.BadRequest);
             
             
-            await CheckTaskStateByPerformer(clientPerformer1, taskIUndistributed, TaskStateInfo.CancelledByManagerState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdNew, TaskStateInfo.CancelledByManagerState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdInWork, TaskStateInfo.CancelledByManagerState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdPerformed, TaskStateInfo.PerformedState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelled, TaskStateInfo.CancelledState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIUndistributed, TaskStateAlias.CancelledByManagerState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdNew, TaskStateAlias.CancelledByManagerState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdInWork, TaskStateAlias.CancelledByManagerState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdPerformed, TaskStateAlias.PerformedState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelled, TaskStateAlias.CancelledState);
             
-            await CheckTaskStateByManager(clientManager1, taskIUndistributed, TaskStateInfo.CancelledByManagerState);
-            await CheckTaskStateByManager(clientManager1, taskIdNew, TaskStateInfo.CancelledByManagerState);
-            await CheckTaskStateByManager(clientManager1, taskIdInWork, TaskStateInfo.CancelledByManagerState);
-            await CheckTaskStateByManager(clientManager1, taskIdPerformed, TaskStateInfo.PerformedState);
-            await CheckTaskStateByManager(clientManager1, taskIdCancelled, TaskStateInfo.CancelledState);
+            await CheckTaskStateByManager(clientManager1, taskIUndistributed, TaskStateAlias.CancelledByManagerState);
+            await CheckTaskStateByManager(clientManager1, taskIdNew, TaskStateAlias.CancelledByManagerState);
+            await CheckTaskStateByManager(clientManager1, taskIdInWork, TaskStateAlias.CancelledByManagerState);
+            await CheckTaskStateByManager(clientManager1, taskIdPerformed, TaskStateAlias.PerformedState);
+            await CheckTaskStateByManager(clientManager1, taskIdCancelled, TaskStateAlias.CancelledState);
         }
 
 
@@ -486,8 +486,8 @@ namespace DeliveryTrackerTest.Controllers
             var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
             var token = await GetToken(clientManager1, creator.Username, "123qQ!");
-            var performer = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 1))[0];
-            var manager = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 1))[0];
+            var performer = (await MassCreateUsers(clientManager1, token.Token, RoleAlias.Performer, "123qQ!", 1))[0];
+            var manager = (await MassCreateUsers(clientManager1, token.Token, RoleAlias.Manager, "123qQ!", 1))[0];
             
             var managerToken = await GetToken(clientManager1, manager, "123qQ!");
             clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken.Token);
@@ -503,32 +503,32 @@ namespace DeliveryTrackerTest.Controllers
             
             await TryTakeIntoWork(clientPerformer1, taskIdPerformed);
             await TryTakeIntoWork(clientPerformer1, taskIdCancelled);
-            await TryCompleteTask(clientPerformer1, taskIdPerformed, TaskStateInfo.PerformedState);
-            await TryCompleteTask(clientPerformer1, taskIdCancelled, TaskStateInfo.CancelledState);
+            await TryCompleteTask(clientPerformer1, taskIdPerformed, TaskStateAlias.PerformedState);
+            await TryCompleteTask(clientPerformer1, taskIdCancelled, TaskStateAlias.CancelledState);
             await TryCancelByManager(clientManager1, taskIdCancelledByManager);
             
-            await CheckTaskStateByPerformer(clientPerformer1, taskIUndistributed, TaskStateInfo.NewUndistributedState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdNew, TaskStateInfo.NewState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdPerformed, TaskStateInfo.PerformedState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelled, TaskStateInfo.CancelledState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelledByManager, TaskStateInfo.CancelledByManagerState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIUndistributed, TaskStateAlias.NewUndistributedState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdNew, TaskStateAlias.NewState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdPerformed, TaskStateAlias.PerformedState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelled, TaskStateAlias.CancelledState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelledByManager, TaskStateAlias.CancelledByManagerState);
             
-            await TryCompleteTask(clientPerformer1, taskIUndistributed, TaskStateInfo.PerformedState, HttpStatusCode.BadRequest);
-            await TryCompleteTask(clientPerformer1, taskIUndistributed, TaskStateInfo.CancelledState, HttpStatusCode.BadRequest);
-            await TryCompleteTask(clientPerformer1, taskIdNew, TaskStateInfo.PerformedState, HttpStatusCode.BadRequest);
-            await TryCompleteTask(clientPerformer1, taskIdNew, TaskStateInfo.CancelledState, HttpStatusCode.BadRequest);
-            await TryCompleteTask(clientPerformer1, taskIdPerformed, TaskStateInfo.PerformedState, HttpStatusCode.BadRequest);
-            await TryCompleteTask(clientPerformer1, taskIdPerformed, TaskStateInfo.CancelledState, HttpStatusCode.BadRequest);
-            await TryCompleteTask(clientPerformer1, taskIdCancelled, TaskStateInfo.PerformedState, HttpStatusCode.BadRequest);
-            await TryCompleteTask(clientPerformer1, taskIdCancelled, TaskStateInfo.CancelledState, HttpStatusCode.BadRequest);
-            await TryCompleteTask(clientPerformer1, taskIdCancelledByManager, TaskStateInfo.PerformedState, HttpStatusCode.BadRequest);
-            await TryCompleteTask(clientPerformer1, taskIdCancelledByManager, TaskStateInfo.CancelledState, HttpStatusCode.BadRequest);
+            await TryCompleteTask(clientPerformer1, taskIUndistributed, TaskStateAlias.PerformedState, HttpStatusCode.BadRequest);
+            await TryCompleteTask(clientPerformer1, taskIUndistributed, TaskStateAlias.CancelledState, HttpStatusCode.BadRequest);
+            await TryCompleteTask(clientPerformer1, taskIdNew, TaskStateAlias.PerformedState, HttpStatusCode.BadRequest);
+            await TryCompleteTask(clientPerformer1, taskIdNew, TaskStateAlias.CancelledState, HttpStatusCode.BadRequest);
+            await TryCompleteTask(clientPerformer1, taskIdPerformed, TaskStateAlias.PerformedState, HttpStatusCode.BadRequest);
+            await TryCompleteTask(clientPerformer1, taskIdPerformed, TaskStateAlias.CancelledState, HttpStatusCode.BadRequest);
+            await TryCompleteTask(clientPerformer1, taskIdCancelled, TaskStateAlias.PerformedState, HttpStatusCode.BadRequest);
+            await TryCompleteTask(clientPerformer1, taskIdCancelled, TaskStateAlias.CancelledState, HttpStatusCode.BadRequest);
+            await TryCompleteTask(clientPerformer1, taskIdCancelledByManager, TaskStateAlias.PerformedState, HttpStatusCode.BadRequest);
+            await TryCompleteTask(clientPerformer1, taskIdCancelledByManager, TaskStateAlias.CancelledState, HttpStatusCode.BadRequest);
             
-            await CheckTaskStateByPerformer(clientPerformer1, taskIUndistributed, TaskStateInfo.NewUndistributedState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdNew, TaskStateInfo.NewState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdPerformed, TaskStateInfo.PerformedState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelled, TaskStateInfo.CancelledState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelledByManager, TaskStateInfo.CancelledByManagerState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIUndistributed, TaskStateAlias.NewUndistributedState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdNew, TaskStateAlias.NewState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdPerformed, TaskStateAlias.PerformedState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelled, TaskStateAlias.CancelledState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelledByManager, TaskStateAlias.CancelledByManagerState);
         }
 
         [Fact]
@@ -540,8 +540,8 @@ namespace DeliveryTrackerTest.Controllers
             var creator = 
                 await CreateInstance(clientManager1, "Иванов И.И.", "123qQ!", "Instance1");
             var token = await GetToken(clientManager1, creator.Username, "123qQ!");
-            var performer = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Performer, "123qQ!", 1))[0];
-            var manager = (await MassCreateUsers(clientManager1, token.Token, RoleInfo.Manager, "123qQ!", 1))[0];
+            var performer = (await MassCreateUsers(clientManager1, token.Token, RoleAlias.Performer, "123qQ!", 1))[0];
+            var manager = (await MassCreateUsers(clientManager1, token.Token, RoleAlias.Manager, "123qQ!", 1))[0];
             
             var managerToken = await GetToken(clientManager1, manager, "123qQ!");
             clientManager1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", managerToken.Token);
@@ -557,24 +557,24 @@ namespace DeliveryTrackerTest.Controllers
             await TryTakeIntoWork(clientPerformer1, taskIdInWork);
             await TryTakeIntoWork(clientPerformer1, taskIdPerformed);
             await TryTakeIntoWork(clientPerformer1, taskIdCancelled);
-            await TryCompleteTask(clientPerformer1, taskIdPerformed, TaskStateInfo.PerformedState);
-            await TryCompleteTask(clientPerformer1, taskIdCancelled, TaskStateInfo.CancelledState);
+            await TryCompleteTask(clientPerformer1, taskIdPerformed, TaskStateAlias.PerformedState);
+            await TryCompleteTask(clientPerformer1, taskIdCancelled, TaskStateAlias.CancelledState);
             await TryCancelByManager(clientManager1, taskIdCancelledByManager);
             
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdInWork, TaskStateInfo.InWorkState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdPerformed, TaskStateInfo.PerformedState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelled, TaskStateInfo.CancelledState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelledByManager, TaskStateInfo.CancelledByManagerState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdInWork, TaskStateAlias.InWorkState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdPerformed, TaskStateAlias.PerformedState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelled, TaskStateAlias.CancelledState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelledByManager, TaskStateAlias.CancelledByManagerState);
 
             await TryTakeIntoWork(clientPerformer1, taskIdInWork, HttpStatusCode.BadRequest);
             await TryTakeIntoWork(clientPerformer1, taskIdPerformed, HttpStatusCode.BadRequest);
             await TryTakeIntoWork(clientPerformer1, taskIdCancelled, HttpStatusCode.BadRequest);
             await TryTakeIntoWork(clientPerformer1, taskIdCancelledByManager, HttpStatusCode.BadRequest);
             
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdInWork, TaskStateInfo.InWorkState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdPerformed, TaskStateInfo.PerformedState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelled, TaskStateInfo.CancelledState);
-            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelledByManager, TaskStateInfo.CancelledByManagerState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdInWork, TaskStateAlias.InWorkState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdPerformed, TaskStateAlias.PerformedState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelled, TaskStateAlias.CancelledState);
+            await CheckTaskStateByPerformer(clientPerformer1, taskIdCancelledByManager, TaskStateAlias.CancelledByManagerState);
             
         }
         
@@ -639,8 +639,8 @@ namespace DeliveryTrackerTest.Controllers
                 var task =
                     JsonConvert.DeserializeObject<TaskViewModel>(await addTaskResponse.Content.ReadAsStringAsync());
                 var expectingState = performer != null
-                    ? TaskStateInfo.NewState
-                    : TaskStateInfo.NewUndistributedState;
+                    ? TaskStateAlias.NewState
+                    : TaskStateAlias.NewUndistributedState;
                 Assert.Equal(expectingState, task.State);
                 return task.Id ?? Guid.Empty;
             }

@@ -8,7 +8,7 @@ namespace DeliveryTracker.ViewModels
         /// <summary>
         /// Имя группы.
         /// </summary>
-        [Required(ErrorMessage = LocalizationString.Error.InstanceNameIsRequired)]
+        [Required(ErrorMessage = LocalizationAlias.Error.InstanceNameIsRequired)]
         public string InstanceName { get; set; }
     }
 }

@@ -3,7 +3,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using DeliveryTracker.Roles;
+using DeliveryTracker.Instances;
 using DeliveryTracker.ViewModels;
 using Newtonsoft.Json;
 using Xunit;
@@ -49,7 +49,7 @@ namespace DeliveryTrackerTest.Controllers
             Assert.Equal(invitationCode, performerToken.User.Username);
             Assert.Equal("Тест1", performerToken.User.Surname);
             Assert.Equal("Тест2", performerToken.User.Name);
-            Assert.Equal(RoleInfo.Performer, performerToken.User.Role);
+            Assert.Equal(RoleAlias.Performer, performerToken.User.Role);
             Assert.Equal("Instance1", performerToken.User.Instance.InstanceName);
             Assert.NotNull(performerToken.Token);
             client1.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", performerToken.Token);
@@ -72,7 +72,7 @@ namespace DeliveryTrackerTest.Controllers
             Assert.Equal(invitationCode, responseBody3.Username);
             Assert.Equal("Тест3", responseBody3.Surname);
             Assert.Equal("Тест4", responseBody3.Name);
-            Assert.Equal(RoleInfo.Performer, responseBody3.Role);
+            Assert.Equal(RoleAlias.Performer, responseBody3.Role);
             Assert.Equal("Instance1", responseBody3.Instance.InstanceName);
 
         }
