@@ -12,7 +12,7 @@ namespace DeliveryTracker.Instances
 
         Task<ServiceResult<Tuple<User, UserCredentials>>> LoginWithRegistrationAsync(UsernamePassword usernamePassword);
 
-        ServiceResult Edit(string userName, User newData);
+        Task<ServiceResult> EditAsync(string username, User newData);
 
         Task<ServiceResult> ValidatePasswordAsync(UsernamePassword usernamePassword);
         

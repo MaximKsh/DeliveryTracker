@@ -38,7 +38,7 @@ namespace DeliveryTrackerWeb.Controllers
         }
 
         #endregion
-        
+        /*
         #region actions
         
         [HttpPost("login")]
@@ -168,6 +168,6 @@ namespace DeliveryTrackerWeb.Controllers
         }
         
         #endregion
-        
+        */
     }
 }

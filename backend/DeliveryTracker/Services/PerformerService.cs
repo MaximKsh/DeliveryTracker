@@ -43,7 +43,7 @@ namespace DeliveryTracker.Services
             double longitude, 
             double latitude)
         {
-            var userResult = await this.accountService.FindUser(username, false);
+            ServiceResult<UserModel> userResult = null;
             if (!userResult.Success)
             {
                 return userResult;
@@ -76,13 +76,14 @@ namespace DeliveryTracker.Services
         /// <returns></returns>
         public async Task<ServiceResult<UserModel>> SetInactive(string username)
         {
-            var userResult = await this.accountService.FindUser(username, false);
-            if (!userResult.Success)
-            {
-                return userResult;
-            }
-            var user = userResult.Result;
-            return this.UpdateCoordinatesInternal(user, null, null);
+            throw new NotImplementedException();
+//            var userResult = await this.accountService.FindUser(username, false);
+//            if (!userResult.Success)
+//            {
+//                return userResult;
+//            }
+//            var user = userResult.Result;
+//            return this.UpdateCoordinatesInternal(user, null, null);
         }
         
         /// <summary>
@@ -107,13 +108,14 @@ namespace DeliveryTracker.Services
             int limit,
             int offset)
         {
-            var currentUserResult = await this.accountService.FindUser(username);
-            if (!currentUserResult.Success)
-            {
-                return new ServiceResult<List<UserModel>>(ErrorFactory.UserNotFound(username));
-            }
-            var user = currentUserResult.Result;
-            return await this.GetAvailablePerformers(user, limit, offset);
+            throw new NotImplementedException();
+//            var currentUserResult = await this.accountService.FindUser(username);
+//            if (!currentUserResult.Success)
+//            {
+//                return new ServiceResult<List<UserModel>>(ErrorFactory.UserNotFound(username));
+//            }
+//            var user = currentUserResult.Result;
+//            return await this.GetAvailablePerformers(user, limit, offset);
         }
 
         /// <summary>
@@ -128,22 +130,24 @@ namespace DeliveryTracker.Services
             int limit,
             int offset)
         {
-            if (!await this.accountService.IsInRole(currentUser, this.roleCache.Manager)
-                && !await this.accountService.IsInRole(currentUser, this.roleCache.Creator))
-            {
-                return new ServiceResult<List<UserModel>>(
-                    ErrorFactory.UserNotInRole(currentUser.UserName, this.roleCache.Manager.Name));
-            }
             
-            IQueryable<UserModel> users = this.dbContext.Users
-                .Join(this.dbContext.UserRoles, user => user.Id, ru => ru.UserId, (user, ru) => new {user, ru})
-                .Join(this.dbContext.Roles, arg => arg.ru.RoleId, role => role.Id, (arg, role) => new {arg.user, role})
-                .Where(p => p.user.InstanceId == currentUser.InstanceId && p.role.Id == this.roleCache.Performer.Id)
-                .Select(p => p.user)
-                .Skip(offset)
-                .Take(limit);
-            
-            return new ServiceResult<List<UserModel>>(users.ToList());
+            throw new NotImplementedException();
+//            if (!await this.accountService.IsInRole(currentUser, this.roleCache.Manager)
+//                && !await this.accountService.IsInRole(currentUser, this.roleCache.Creator))
+//            {
+//                return new ServiceResult<List<UserModel>>(
+//                    ErrorFactory.UserNotInRole(currentUser.UserName, this.roleCache.Manager.Name));
+//            }
+//            
+//            IQueryable<UserModel> users = this.dbContext.Users
+//                .Join(this.dbContext.UserRoles, user => user.Id, ru => ru.UserId, (user, ru) => new {user, ru})
+//                .Join(this.dbContext.Roles, arg => arg.ru.RoleId, role => role.Id, (arg, role) => new {arg.user, role})
+//                .Where(p => p.user.InstanceId == currentUser.InstanceId && p.role.Id == this.roleCache.Performer.Id)
+//                .Select(p => p.user)
+//                .Skip(offset)
+//                .Take(limit);
+//            
+//            return new ServiceResult<List<UserModel>>(users.ToList());
         }
 
         #endregion

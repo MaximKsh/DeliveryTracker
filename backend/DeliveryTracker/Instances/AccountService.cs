@@ -65,6 +65,22 @@ namespace DeliveryTracker.Instances
 
         #region public
 
+        public async Task<ServiceResult<UserModel>> FindUser(string a)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<ServiceResult<string>> GetUserRole(UserModel user)
+        {
+           throw new NotImplementedException();
+        }
+        public async Task<bool> IsInRole(UserModel user, params string[] expected)
+        {
+          throw new NotImplementedException();
+        }
+        
+        
+        /*
         
 
         /// <summary>
@@ -552,7 +568,7 @@ namespace DeliveryTracker.Instances
                 signingCredentials: new SigningCredentials(
                     this.authInfo.GetSymmetricSecurityKey(),
                     SecurityAlgorithms.HmacSha256));
-            return new JwtSecurityTokenHandler().WriteToken(jwt);*/
+            return new JwtSecurityTokenHandler().WriteToken(jwt);
             throw new NotImplementedException();
         }
         
@@ -568,7 +584,7 @@ namespace DeliveryTracker.Instances
             return role == this.roleCache.Creator.Name
                    || role == this.roleCache.Manager.Name && invitationRole == this.roleCache.Performer;
         }
-
+    */
         /// <summary>
         /// Загрузить пользователя по имени.
         /// </summary>
@@ -602,7 +618,7 @@ namespace DeliveryTracker.Instances
         /// <param name="invitationCode"></param>
         /// <param name="invitation"></param>
         /// <returns></returns>
-        public bool TryGetInvitaiton(string invitationCode, out InvitationModel invitation)
+        private bool TryGetInvitaiton(string invitationCode, out InvitationModel invitation)
         {
             invitation = this.dbContext
                 .Invitations
@@ -745,7 +761,7 @@ namespace DeliveryTracker.Instances
 
                     this.dbContext.Invitations.Remove(invitation);
                     var registrationResult = await this.RegisterAsync(newUser, usernamePassword);
-                    if (!registrationResult.Success)
+                    if (registrationResult.Success)
                     {
                         await this.dbContext.SaveChangesAsync();
                         transaction.Commit();
@@ -767,9 +783,29 @@ namespace DeliveryTracker.Instances
         }
         
         /// <inheritdoc />
-        public ServiceResult Edit(string userName, User newData)
+        public async Task<ServiceResult> EditAsync(string username, User newData)
         {
-            throw new NotImplementedException();
+            var userResult = await this.FindUserAsync(username);
+            if (!userResult.Success)
+            {
+                return new ServiceResult(userResult.Errors);
+            }
+
+            var user = userResult.Result;
+            if (!string.IsNullOrWhiteSpace(newData.Surname))
+            {
+                user.Surname = newData.Surname;
+            }
+            if (!string.IsNullOrWhiteSpace(newData.Name))
+            {
+                user.Name = newData.Name;
+            }
+            if (!string.IsNullOrWhiteSpace(newData.PhoneNumber))
+            {
+                user.PhoneNumber = newData.PhoneNumber;
+            }
+
+            return new ServiceResult();
         }
 
         /// <inheritdoc />
