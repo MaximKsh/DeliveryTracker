@@ -3,13 +3,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.DbModels;
+using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.Localization;
 using DeliveryTracker.Services;
 using DeliveryTracker.Tasks;
 using DeliveryTracker.Validation;
 using DeliveryTracker.ViewModels;
-using DeliveryTrackerWeb.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -17,7 +17,7 @@ using Microsoft.Extensions.Logging;
 namespace DeliveryTrackerWeb.Controllers
 {
     
-    [Authorize(Policy = AuthPolicies.CreatorOrManager)]
+    [Authorize(Policy = AuthorizationPolicies.CreatorOrManager)]
     [Route("api/manager")]
     public class ManagerController: Controller
     {

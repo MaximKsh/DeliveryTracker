@@ -1,27 +1,32 @@
 ﻿using System;
 
-namespace DeliveryTracker.Instances
+namespace DeliveryTracker.Identification
 {
     public sealed class UserCredentials
     {
         public UserCredentials(
-            string userName,
+            Guid id,
+            string code,
             string role,
             Guid instanceId)
         {
-            this.UserName = userName;
+            this.Id = id;
+            this.Code = code;
             this.Role = role;
             this.InstanceId = instanceId;
         }
         
-        public string UserName { get; }
+        public Guid Id { get; }
+
+        public string Code { get; }
         
         public string Role { get; }
         
         public Guid InstanceId { get; }
 
         public bool Valid =>
-            !string.IsNullOrWhiteSpace(this.UserName)
+            this.Id != Guid.Empty
+            && !string.IsNullOrWhiteSpace(this.Code)
             && !string.IsNullOrWhiteSpace(this.Role)
             && this.InstanceId != Guid.Empty;
     }

@@ -6,7 +6,6 @@ using DeliveryTracker.DbModels;
 using DeliveryTracker.Instances;
 using DeliveryTracker.Validation;
 using DeliveryTracker.ViewModels;
-using DeliveryTrackerWeb.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;

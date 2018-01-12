@@ -1,19 +1,19 @@
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
-namespace DeliveryTrackerWeb.Auth
+namespace DeliveryTracker.Identification
 {
     /// <summary>
     /// Информация для JWT-токенов
     /// </summary>
-    public class AuthInfo
+    public class TokenSettings
     {
         /// <summary>
         /// Приватный ключ для токена.
         /// </summary>
         private readonly string key;
         
-        public AuthInfo(
+        public TokenSettings(
             string key,
             string issuer,
             string audience,
@@ -28,7 +28,6 @@ namespace DeliveryTrackerWeb.Auth
             this.ClockCkew = clockCkew;
             this.RequireHttps = requireHttps;
         }
-        
 
         /// <summary>
         /// Издатель токена.

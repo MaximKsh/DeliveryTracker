@@ -3,49 +3,22 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using DeliveryTracker.Common;
 using DeliveryTracker.DbModels;
+using DeliveryTracker.Instances;
 
-namespace DeliveryTracker.Instances
+namespace DeliveryTracker.Identification
 {
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public class User : DictionarySerializableBase
     {
-        public User()
-        {
-
-        }
-
-        public User(UserModel userModel)
-        {
-            if (userModel == null)
-            {
-                throw new ArgumentNullException();
-            }
-
-            this.Username = userModel.UserName;
-            this.Surname = userModel.Surname;
-            this.Name = userModel.Name;
-            this.PhoneNumber = userModel.PhoneNumber;
-
-            if (userModel.Instance != null)
-            {
-                this.Instance = new Instance(userModel.Instance);
-            }
-
-            if (userModel.Latitude != null 
-                && userModel.Longitude != null)
-            {
-                this.Position = new Geoposition
-                {
-                    Latitude = userModel.Latitude.Value,
-                    Longitude = userModel.Longitude.Value,
-                };
-            }
-        }
+        /// <summary>
+        /// ID пользователя.
+        /// </summary>
+        public Guid Id { get; set; }
 
         /// <summary>
-        /// Уникальное имя пользователя(код приглашения).
+        /// Код пользователя.
         /// </summary>
-        public string Username { get; set; }
+        public string Code { get; set; }
         
         /// <summary>
         /// Фамилия.
@@ -82,7 +55,8 @@ namespace DeliveryTracker.Instances
         {
             return new Dictionary<string, object>
             {
-                [nameof(this.Username)] = this.Username,
+                [nameof(this.Id)] = this.Id,
+                [nameof(this.Code)] = this.Code,
                 [nameof(this.Surname)] = this.Surname,
                 [nameof(this.Name)] = this.Name,
                 [nameof(this.PhoneNumber)] = this.PhoneNumber,
@@ -95,7 +69,8 @@ namespace DeliveryTracker.Instances
         /// <inheritdoc />
         public override void Deserialize(IDictionary<string, object> dict)
         {
-            this.Username = GetPlain<string>(dict, nameof(this.Username));
+            this.Id = GetPlain<Guid>(dict, nameof(this.Id));
+            this.Code = GetPlain<string>(dict, nameof(this.Code));
             this.Surname = GetPlain<string>(dict, nameof(this.Surname));
             this.Name = GetPlain<string>(dict, nameof(this.Name));
             this.PhoneNumber = GetPlain<string>(dict, nameof(this.PhoneNumber));

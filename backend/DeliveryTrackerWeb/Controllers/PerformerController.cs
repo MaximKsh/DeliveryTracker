@@ -8,14 +8,13 @@ using DeliveryTracker.Services;
 using DeliveryTracker.Tasks;
 using DeliveryTracker.Validation;
 using DeliveryTracker.ViewModels;
-using DeliveryTrackerWeb.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace DeliveryTrackerWeb.Controllers
 {
-    [Authorize(Policy = AuthPolicies.Performer)]
+    //[Authorize(Policy = AuthorizationPolicies.Performer)]
     [Route("api/performer")]
     public class PerformerController: Controller
     {

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using DeliveryTracker.DbModels;
+using DeliveryTracker.Identification;
 using DeliveryTracker.Services;
-using DeliveryTrackerWeb.Auth;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -68,11 +68,11 @@ namespace DeliveryTrackerTest
             
             services.AddAuthorization(options =>
             {
-                options.DefaultPolicy = AuthPolicies.DefaultPolicy;
-                options.AddPolicy(AuthPolicies.Creator, AuthPolicies.CreatorPolicy);
-                options.AddPolicy(AuthPolicies.Manager, AuthPolicies.ManagerPolicy);
-                options.AddPolicy(AuthPolicies.CreatorOrManager, AuthPolicies.CreatorOrManagerPolicy);
-                options.AddPolicy(AuthPolicies.Performer, AuthPolicies.PerformerPolicy);
+                options.DefaultPolicy = AuthorizationPolicies.DefaultPolicy;
+                options.AddPolicy(AuthorizationPolicies.Creator, AuthorizationPolicies.CreatorPolicy);
+                options.AddPolicy(AuthorizationPolicies.Manager, AuthorizationPolicies.ManagerPolicy);
+                options.AddPolicy(AuthorizationPolicies.CreatorOrManager, AuthorizationPolicies.CreatorOrManagerPolicy);
+                options.AddPolicy(AuthorizationPolicies.Performer, AuthorizationPolicies.PerformerPolicy);
             });
             
             this.ConfigureAuthorization(services);
@@ -91,7 +91,7 @@ namespace DeliveryTrackerTest
         
         private void ConfigureAuthorization(IServiceCollection services)
         {
-            var authInfo = new AuthInfo(
+            var authInfo = new TokenSettings(
                 this.configuration.GetValue<string>("AuthInfo:Key", null) ?? throw new NullReferenceException("specify secret key"),
                 this.configuration.GetValue<string>("AuthInfo:Issuer", null) ?? throw new NullReferenceException("specify issuer"),
                 this.configuration.GetValue<string>("AuthInfo:Audience", null) ?? throw new NullReferenceException("specify audience"),

@@ -2,12 +2,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 
-namespace DeliveryTrackerWeb.Auth
+namespace DeliveryTracker.Identification
 {
     /// <summary>
     /// Класс представляет политики для доступа к определенным методам API
     /// </summary>
-    public static class AuthPolicies
+    public static class AuthorizationPolicies
     {
         public const string Creator = "CreatorPolicy";
 

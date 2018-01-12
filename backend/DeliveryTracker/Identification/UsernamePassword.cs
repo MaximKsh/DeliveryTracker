@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using DeliveryTracker.Common;
 
-namespace DeliveryTracker.Instances
+namespace DeliveryTracker.Identification
 {
     // ReSharper disable once ClassNeverInstantiated.Global
     public class UsernamePassword : DictionarySerializableBase

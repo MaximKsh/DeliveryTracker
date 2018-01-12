@@ -5,6 +5,7 @@ using System.Security;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.DbModels;
+using DeliveryTracker.Identification;
 using DeliveryTracker.Services;
 using DeliveryTracker.Validation;
 using DeliveryTracker.ViewModels;
@@ -670,11 +671,12 @@ namespace DeliveryTracker.Instances
                     result.Errors.Select(ErrorFactory.IdentityError));
             }
 
-            var registeredUser = new User(newUser);
-            var userCredentials = new UserCredentials(newUser.UserName, user.Role, newUser.InstanceId);
+            throw new NotImplementedException();
+           // var registeredUser = new User(newUser);
+           // var userCredentials = new UserCredentials(newUser.UserName, user.Role, newUser.InstanceId);
 
-            return new ServiceResult<Tuple<User, UserCredentials>>(
-                new Tuple<User, UserCredentials>(registeredUser, userCredentials));
+            //return new ServiceResult<Tuple<User, UserCredentials>>(
+            //    new Tuple<User, UserCredentials>(registeredUser, userCredentials));
         }
 
         /// <inheritdoc />
@@ -700,12 +702,12 @@ namespace DeliveryTracker.Instances
             {
                 return new ServiceResult<Tuple<User, UserCredentials>>(ErrorFactory.UserWithoutRole(user.UserName));
             }
-
-            var role = roleResult.Result;
-            var registeredUser = new User(user);
-            var userCredentials = new UserCredentials(user.UserName, role, user.InstanceId);
-            return new ServiceResult<Tuple<User, UserCredentials>>(
-                new Tuple<User, UserCredentials>(registeredUser, userCredentials));
+            throw new NotImplementedException();
+            //var role = roleResult.Result;
+            //var registeredUser = new User(user);
+            //var userCredentials = new UserCredentials(user.UserName, role, user.InstanceId);
+            //return new ServiceResult<Tuple<User, UserCredentials>>(
+            //    new Tuple<User, UserCredentials>(registeredUser, userCredentials));
         }
 
         /// <inheritdoc />
@@ -751,7 +753,7 @@ namespace DeliveryTracker.Instances
 
                     var newUser = new User
                     {
-                        Username = usernamePassword.Username,
+                        //InvitationCode = usernamePassword.Username,
                         Surname = invitation.Surname,
                         Name = invitation.Name,
                         PhoneNumber = invitation.PhoneNumber,
