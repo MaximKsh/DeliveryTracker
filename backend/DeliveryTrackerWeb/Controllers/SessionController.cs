@@ -24,8 +24,8 @@ namespace DeliveryTrackerWeb.Controllers
         #region fields
 
         private readonly IUserManager userManager;
-        
-        private readonly IRoleManager roleManager;
+
+        private readonly IInvitationManager invitationManager;
         
         private readonly ISecurityManager securityManager;
 
@@ -41,15 +41,15 @@ namespace DeliveryTrackerWeb.Controllers
         
         public SessionController(
             IUserManager userManager,
-            IRoleManager roleManager,
             ISecurityManager securityManager,
+            IInvitationManager invitationManager,
             ILogger<SessionController> logger, 
             IPostgresConnectionProvider connectionProvider, 
             IInstanceService instanceService)
         {
             this.userManager = userManager;
-            this.roleManager = roleManager;
             this.securityManager = securityManager;
+            this.invitationManager = invitationManager;
             this.logger = logger;
             this.connectionProvider = connectionProvider;
             this.instanceService = instanceService;
@@ -64,15 +64,15 @@ namespace DeliveryTrackerWeb.Controllers
             {
                 Surname = "asf",
                 Name = "sdf",
-                Patronymic = "saa",
-                PhoneNumber = "sadfas"
+                Role = "CreatorRole",
+                InstanceId = Guid.Parse("e8d34e3b-d58a-4686-8131-b479e70ba9e4"),
             };
             var pass = new CodePassword()
             {
                 Code = "aaaaa",
                 Password = "abc",
             };
-            var result = await this.instanceService.CreateAsync("asdasd", user, pass);
+            var result = await this.invitationManager.DeleteAsync("Rspf");
             return this.Ok();
         }
 

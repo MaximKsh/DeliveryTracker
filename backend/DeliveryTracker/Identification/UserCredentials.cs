@@ -9,12 +9,12 @@ namespace DeliveryTracker.Identification
         public UserCredentials(
             Guid id,
             string code,
-            IEnumerable<Role> roles,
+            string role,
             Guid instanceId)
         {
             this.Id = id;
             this.Code = code;
-            this.Roles = roles.ToList().AsReadOnly();
+            this.Role = role;
             this.InstanceId = instanceId;
         }
         
@@ -22,7 +22,7 @@ namespace DeliveryTracker.Identification
 
         public string Code { get; }
         
-        public IReadOnlyList<Role> Roles { get; }
+        public string Role { get; }
         
         public Guid InstanceId { get; }
 

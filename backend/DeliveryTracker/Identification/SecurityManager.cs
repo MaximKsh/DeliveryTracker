@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
@@ -21,6 +20,7 @@ namespace DeliveryTracker.Identification
 select
     id,
     instance_id,
+    role,
     password_hash
 from users
 where code = @code
@@ -30,7 +30,7 @@ where code = @code
 update users
 set password_hash = @password
 where id = @id
-returning code, instance_id
+returning code, role, instance_id
 ;";
 
         #endregion
@@ -41,8 +41,6 @@ returning code, instance_id
 
         private readonly IPostgresConnectionProvider cp;
 
-        private readonly IRoleManager roleManager;
-        
         private readonly TokenSettings tokenSettings;
 
         private readonly PasswordSettings passwordSettings;
@@ -55,12 +53,10 @@ returning code, instance_id
         
         public SecurityManager(
             IPostgresConnectionProvider cp,
-            IRoleManager roleManager,
             TokenSettings tokenSettings,
             PasswordSettings passwordSettings)
         {
             this.cp = cp;
-            this.roleManager = roleManager;
             this.tokenSettings = tokenSettings;
             this.passwordSettings = passwordSettings;
         }
@@ -81,6 +77,7 @@ returning code, instance_id
                 
                 Guid id;
                 Guid instanceId;
+                var role = string.Empty;
                 var passwordHash = string.Empty;
                 using (var command = connWrapper.CreateCommand())
                 {
@@ -92,15 +89,15 @@ returning code, instance_id
                         {
                             id = reader.GetGuid(0);
                             instanceId = reader.GetGuid(1);
-                            passwordHash = reader.GetString(2);
+                            role = reader.GetString(2);
+                            passwordHash = reader.GetString(3);
                         }
                     }
                 }
                 if (id != Guid.Empty
                     && this.ComparePasswords(passwordHash, password))
                 {
-                    var roles = await this.roleManager.GetUserRolesAsync(id, oc: connWrapper);
-                    var credentials = new UserCredentials(id, code, roles.Result, instanceId);
+                    var credentials = new UserCredentials(id, code, role, instanceId);
                     return new ServiceResult<UserCredentials>(credentials);
                 }
 
@@ -123,6 +120,7 @@ returning code, instance_id
             {
                 Guid instanceId;
                 string code;
+                string role;
                 
                 using (var command = connWrapper.CreateCommand())
                 {
@@ -134,7 +132,8 @@ returning code, instance_id
                         if (await reader.ReadAsync())
                         {
                             code = reader.GetString(0);
-                            instanceId = reader.GetGuid(1);
+                            role = reader.GetString(1);
+                            instanceId = reader.GetGuid(2);
                         }
                         else
                         {
@@ -142,8 +141,7 @@ returning code, instance_id
                         }
                     }
                 }
-                var roles = await this.roleManager.GetUserRolesAsync(userId, oc: connWrapper);
-                var credentials = new UserCredentials(userId, code, roles.Result, instanceId);
+                var credentials = new UserCredentials(userId, code, role, instanceId);
                 return new ServiceResult<UserCredentials>(credentials);
             }
         }
@@ -155,9 +153,9 @@ returning code, instance_id
             {
                 new Claim(DeliveryTrackerClaims.Id, credentials.Id.ToString()),
                 new Claim(DeliveryTrackerClaims.Code, credentials.Code),
+                new Claim(DeliveryTrackerClaims.Roles, credentials.Role),
                 new Claim(DeliveryTrackerClaims.InstanceId, credentials.InstanceId.ToString()),
             };
-            claims.AddRange(credentials.Roles.Select(p => new Claim(DeliveryTrackerClaims.Roles, p.Name)));
 
             var identity = new ClaimsIdentity(
                 claims,

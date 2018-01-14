@@ -19,18 +19,16 @@ namespace DeliveryTracker.Instances
         /// </summary>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<string> GenerateUniqueCode(NpgsqlConnectionWrapper oc = null);
+        Task<string> GenerateUniqueCodeAsync(NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
         /// Создать новое приглашение
         /// </summary>
-        /// <param name="roleId">ID роли, на которую создается приглашение.</param>
         /// <param name="preliminaryUserData">Предварительные данные о пользователе</param>
         /// <param name="oc">Открытое подключение к бд</param>
         /// <returns></returns>
-        Task<ServiceResult<Invitation>> Create(
-            Guid roleId,
-            User preliminaryUserData, 
+        Task<ServiceResult<Invitation>> CreateAsync(
+            User preliminaryUserData,
             NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
@@ -39,7 +37,7 @@ namespace DeliveryTracker.Instances
         /// <param name="invitationCode"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<Invitation>> Get(
+        Task<ServiceResult<Invitation>> GetAsync(
             string invitationCode,
             NpgsqlConnectionWrapper oc = null);
         
@@ -49,7 +47,7 @@ namespace DeliveryTracker.Instances
         /// <param name="invitationCode">Код приглашения, которое необходимо удалить</param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult> Delete(
+        Task<ServiceResult> DeleteAsync(
             string invitationCode, 
             NpgsqlConnectionWrapper oc = null);
 
@@ -59,6 +57,6 @@ namespace DeliveryTracker.Instances
         /// </summary>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult> DeleteAllExpired(NpgsqlConnectionWrapper oc = null);
+        Task<ServiceResult> DeleteAllExpiredAsync(NpgsqlConnectionWrapper oc = null);
     }
 }

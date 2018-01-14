@@ -54,7 +54,18 @@
         /// </summary>
         public const string IncorrectPassword = "IncorrectPassword";
         
+        
+        /// <summary>
+        /// Код ошибки: приглашение не существует.
+        /// </summary>
+        public const string InvitationNotFound = "InvitationNotFound";
+        
 
+        
+        
+        
+        
+        
 
         /// <summary>
         /// Код ошибки: пользователь не входит ни в одну роль.
@@ -71,10 +82,6 @@
         /// </summary>
         public const string IdentityError = "IdentityError";
 
-        /// <summary>
-        /// Код ошибки: приглашение не существует.
-        /// </summary>
-        public const string InvitationDoesnotExist = "InvitationDoesnotExist";
 
         /// <summary>
         /// Код ошибки: приглашение просрочено.

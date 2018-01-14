@@ -15,22 +15,20 @@ namespace DeliveryTracker.Instances
     {
         #region sql
 
-        private const string SqlInsertInstance = @"
-insert into instances(id, name, creator_id)
-values (@id, @name, @creator_id)
+        private static readonly string SqlInsertInstance = $@"
+insert into instances({InstanceHelper.GetInstanceColumns()})
+values ({InstanceHelper.GetInstanceColumns("@")})
 ;";
-        
+
         private const string SqlSetInstanceCreator = @"
 update instances
 set creator_id = @creator_id
 where id = @id
 ;";
-        
-        private const string SqlGetInstance = @"
+
+        private static readonly string SqlGetInstance = $@"
 select
-    id,
-    name
-    creator_id
+{InstanceHelper.GetInstanceColumns()}
 from instances
 where id = @id
 ;";
@@ -42,6 +40,8 @@ where id = @id
         private readonly IPostgresConnectionProvider cp;
 
         private readonly IAccountService accountService;
+
+        private readonly IInvitationManager invitationManager;
         
         private readonly ILogger<InstanceService> logger;
         
@@ -51,9 +51,11 @@ where id = @id
         
         public InstanceService(
             IPostgresConnectionProvider cp,
+            IInvitationManager invitationManager,
             IAccountService accountService)
         {
             this.cp = cp;
+            this.invitationManager = invitationManager;
             this.accountService = accountService;
         }
         
@@ -124,11 +126,13 @@ where id = @id
                 {
                     var instanceId = await InsertNewInstance(instanceName, connWrapper);
                     creatorInfo.InstanceId = instanceId;
-                    var registrationResult = await this.accountService.RegisterAsync(codePassword,
-                        DefaultRoles.CreatorRole,
+                    var code = await this.invitationManager.GenerateUniqueCodeAsync(oc);
+                    var registrationResult = await this.accountService.RegisterAsync(
+                        codePassword,
                         u =>
                         {
-                            u.Code = "1";
+                            u.Code = code;
+                            u.Role = DefaultRoles.CreatorRole;
                             u.Surname = creatorInfo.Surname;
                             u.Name = creatorInfo.Name;
                             u.Patronymic = creatorInfo.Patronymic;
@@ -145,7 +149,12 @@ where id = @id
                     var user = registrationResult.Result.Item1;
                     var credentials = registrationResult.Result.Item2;
                     await SetInstanceCreator(instanceId, user.Id, connWrapper);
-                    var createdInstance = new Instance(instanceId, instanceName, user.Id);
+                    var createdInstance = new Instance
+                    {
+                        Id = instanceId,
+                        Name = instanceName, 
+                        CreatorId = user.Id
+                    };
                     transaction.Commit();
                     return new ServiceResult<Tuple<Instance, User, UserCredentials>>(
                         new Tuple<Instance, User, UserCredentials>(createdInstance, user, credentials));

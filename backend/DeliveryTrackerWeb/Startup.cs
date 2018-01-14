@@ -1,24 +1,14 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Threading.Tasks;
-using DeliveryTracker.Common;
 using DeliveryTracker.Database;
-using DeliveryTracker.DbModels;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using DeliveryTracker.Services;
 using DeliveryTracker.Validation;
-using DeliveryTracker.Views;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Newtonsoft.Json;
 
 namespace DeliveryTrackerWeb
@@ -36,34 +26,13 @@ namespace DeliveryTrackerWeb
         // ReSharper disable once UnusedMember.Global
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddDbContext<DeliveryTrackerDbContext>(options =>
-            //    options.UseInMemoryDatabase("TestDB"));
-            /*services.AddIdentity<UserModel, RoleModel>(o =>
-                {
-                    o.Password.RequiredLength = 1;
-                    o.Password.RequireUppercase = false;
-                    o.Password.RequireLowercase = false;
-                    o.Password.RequireNonAlphanumeric = false;
-                    o.Password.RequireDigit = false;
-                    o.Password.RequiredUniqueChars = 0;
-
-                })
-                .AddEntityFrameworkStores<DeliveryTrackerDbContext>()
-                .AddDefaultTokenProviders()
-                .AddUserStore<UserStore<UserModel, RoleModel, DeliveryTrackerDbContext, Guid>>()
-                .AddRoleStore<RoleStore<RoleModel, DeliveryTrackerDbContext, Guid>>();
-            */
-            //var connectionString = this.configuration.GetConnectionString("DefaultConnection");
-            //services.AddDbContext<DeliveryTrackerDbContext>(
-            //    options => options.UseNpgsql(connectionString));
- 
             Configure4xx(services);
             ConfigureJson(services);
 
             services
                 .AddDeliveryTrackerDatabase()
                 .AddDeliveryTrackerIdentification(this.configuration)
-                .AddDeliveryTrackerInstances()
+                .AddDeliveryTrackerInstances(this.configuration)
                 ;
         }
 

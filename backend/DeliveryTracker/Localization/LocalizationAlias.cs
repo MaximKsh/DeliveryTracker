@@ -26,6 +26,7 @@
             public const string UserNotFound = Pref + "UserNotFound";
             public const string AccessDenied = Pref + "AccessDenied";
             public const string IncorrectPassword = Pref + "IncorrectPassword";
+            public const string InvitationNotFound = Pref + "InvitationNotFound";
 
             
             
@@ -35,7 +36,6 @@
         
             public const string IdentityError = Pref + "IdentityError";
             
-            public const string InvitationDoesnotExist = Pref + "InvitationDoesnotExist";
             
             public const string InvitationExpired = Pref + "InvitationExpired";
             

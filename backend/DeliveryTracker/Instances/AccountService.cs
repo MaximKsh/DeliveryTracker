@@ -22,12 +22,7 @@ namespace DeliveryTracker.Instances
     {
         #region constants
 
-        private const int InvitationExpirationPeriodInDays = 3;
-
-        private const int InvitationCodeLength = 10;
-
-        private static readonly char[] InvitationCodeAlphabet =
-            "23456789qwertyupasdfghkzxbnmQWERTYUPASDFGHKZXVBNM".ToCharArray();
+        
 
         private static readonly Random Random = new Random();
 
@@ -39,8 +34,6 @@ namespace DeliveryTracker.Instances
 
         private readonly IUserManager userManager;
 
-        private readonly IRoleManager roleManager;
-        
         private readonly ISecurityManager securityManager;
 
         private readonly ILogger<AccountService> logger;
@@ -52,13 +45,11 @@ namespace DeliveryTracker.Instances
         public AccountService(
             IPostgresConnectionProvider cp, 
             IUserManager userManager,
-            IRoleManager roleManager,
             ISecurityManager securityManager,
             ILogger<AccountService> logger)
         {
             this.cp = cp;
             this.userManager = userManager;
-            this.roleManager = roleManager;
             this.securityManager = securityManager;
             this.logger = logger;
         }
@@ -93,7 +84,6 @@ namespace DeliveryTracker.Instances
         /// <inheritdoc />
         public async Task<ServiceResult<Tuple<User, UserCredentials>>> RegisterAsync(
             CodePassword codePassword,
-            Guid roleId,
             Action<User> userModificationAction = null,
             NpgsqlConnectionWrapper oc = null)
         {
@@ -105,6 +95,7 @@ namespace DeliveryTracker.Instances
                 .AddRule("CodePassword.Password", codePassword.Password, x => !string.IsNullOrEmpty(x))
                 .AddRule("User.Surname", userInfo.Surname, x => x != null && !string.IsNullOrEmpty(x))
                 .AddRule("User.Name", userInfo.Surname, x => x != null && !string.IsNullOrEmpty(x))
+                .AddRule("User.Role", userInfo.Role, x => x != null && !string.IsNullOrEmpty(x))
                 .AddRule("User.InstanceId", userInfo.InstanceId, x => x != Guid.Empty)
                 .Validate();
             if (!validationResult.Success)
@@ -125,12 +116,6 @@ namespace DeliveryTracker.Instances
                     }
 
                     var newUser = createUserResult.Result;
-                    var addToRoleResult = await this.roleManager.AddToRoleAsync(newUser.Id, roleId, oc);
-                    if (!addToRoleResult.Success)
-                    {
-                        transaction.Rollback();
-                        return new ServiceResult<Tuple<User, UserCredentials>>(addToRoleResult.Errors);
-                    }
 
                     var setPasswordResult = 
                         await this.securityManager.SetPasswordAsync(newUser.Id, codePassword.Password, conn);
@@ -141,7 +126,6 @@ namespace DeliveryTracker.Instances
                     }
 
                     var credentials = setPasswordResult.Result;
-                    newUser.Roles = credentials.Roles;                    
                     transaction.Commit();
                     
                     return new ServiceResult<Tuple<User, UserCredentials>>(

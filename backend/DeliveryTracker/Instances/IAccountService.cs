@@ -8,8 +8,8 @@ namespace DeliveryTracker.Instances
 {
     public interface IAccountService
     {
-        Task<ServiceResult<Tuple<User, UserCredentials>>> RegisterAsync(CodePassword codePassword,
-            Guid role,
+        Task<ServiceResult<Tuple<User, UserCredentials>>> RegisterAsync(
+            CodePassword codePassword,
             Action<User> userModificationAction = null,
             NpgsqlConnectionWrapper oc = null);
 

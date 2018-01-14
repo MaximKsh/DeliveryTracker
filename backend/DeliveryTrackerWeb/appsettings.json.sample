@@ -27,5 +27,11 @@
     "AtLeastOneDigit": false,
     "Alphabet": "qwertyuioplkjhgfdsazxcvbbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890!@#$%^&*()-=!~",
     "SameCharactersInARow": 20
+  },
+  
+  "InvitationSettings": {
+    "ExpiresInDays": 3,
+    "CodeLength" : 6,
+    "Alphabet": "23456789qwertyupasdfghkzxbnmQWERTYUPASDFGHKZXVBNM"
   }
 }

@@ -7,27 +7,20 @@ namespace DeliveryTracker.Instances
     // ReSharper disable once ClassNeverInstantiated.Global
     public class Instance : IDictionarySerializable
     {
-        public Instance(Guid id, string name, Guid creatorId)
-        {
-            this.Id = id;
-            this.Name = name;
-            this.CreatorId = creatorId;
-        }
-        
         /// <summary>
         /// Id группы.
         /// </summary>
-        public Guid Id { get; private set; }
+        public Guid Id { get; set; }
 
         /// <summary>
         /// Имя группы.
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; set; }
         
         /// <summary>
         /// Имя группы.
         /// </summary>
-        public Guid CreatorId { get; private set; }
+        public Guid CreatorId { get; set; }
 
         /// <inheritdoc />
         public IDictionary<string, object> Serialize()

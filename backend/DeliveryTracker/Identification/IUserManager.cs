@@ -9,7 +9,6 @@ namespace DeliveryTracker.Identification
     {
         /// <summary>
         /// Создать нового пользователя с указанными данными.
-        /// Список ролей игнорируется.
         /// </summary>
         /// <param name="user">Данные о добавляемом пользователе</param>
         /// <param name="oc">Открытое соединение с базой. Может быть null</param>
@@ -21,8 +20,7 @@ namespace DeliveryTracker.Identification
         /// </summary>
         /// <param name="user">
         /// Данные для изменения.
-        /// Поля Id, Code, InstanceId игнорируются
-        /// Список ролей игнорируется.
+        /// Учитываются только Surname, Name, Patronymic, PhoneNumber
         /// </param>
         /// <param name="oc">Открытое соединение с базой. Может быть null.</param>
         /// <returns></returns>

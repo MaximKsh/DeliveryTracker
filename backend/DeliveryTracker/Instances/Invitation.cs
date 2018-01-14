@@ -7,54 +7,52 @@ namespace DeliveryTracker.Instances
 {
     public class Invitation : IDictionarySerializable
     {
-        public Invitation()
-        {
-        }
-
-        public Invitation(
-            Guid id,
-            string invitationCode,
-            DateTime expirationDate,
-            Guid instanceId,
-            Guid roleId)
-        {
-            this.Id = id;
-        }
-
-        public Guid Id { get; private set; }
+        /// <summary>
+        /// ID приглашения.
+        /// </summary>
+        public Guid Id { get; set; }
         
         /// <summary>
         /// Код приглашения.
         /// </summary>
-        public string InvitationCode { get; private set; }
+        public string InvitationCode { get; set; }
 
+        /// <summary>
+        /// Дата создания приглашения.
+        /// </summary>
+        public DateTime Created { get; set; }
+        
         /// <summary>
         /// Дата истечения кода.
         /// </summary>
-        public DateTime ExpirationDate { get; private set; }
+        public DateTime Expires { get; set; }
         
         /// <summary>
         /// ID инстанса, к которому относится приглашение.
         /// </summary>
-        public Guid InstanceId { get; private set; }
+        public Guid InstanceId { get; set; }
         
         /// <summary>
         /// Роль, на которую назначено приглашение.
         /// </summary>
-        public Guid RoleId { get; private set; }
+        public string Role { get; set; }
 
         /// <summary>
         /// Предварительные данные о пользователе, указанные при создании приглашения.
         /// </summary>
-        public User PreliminaryUser { get; private set; }
+        public User PreliminaryUser { get; set; }
 
         /// <inheritdoc />
         public IDictionary<string, object> Serialize()
         {
             return new Dictionary<string, object>
             {
+                [nameof(this.Id)] = this.Id,
                 [nameof(this.InvitationCode)] = this.InvitationCode,
-                [nameof(this.ExpirationDate)] = this.ExpirationDate,
+                [nameof(this.Created)] = this.Created,
+                [nameof(this.Expires)] = this.Expires,
+                [nameof(this.InstanceId)] = this.InstanceId,
+                [nameof(this.Role)] = this.Role,
                 [nameof(this.PreliminaryUser)] = this.PreliminaryUser.Serialize(),
             };
         }
@@ -62,8 +60,12 @@ namespace DeliveryTracker.Instances
         /// <inheritdoc />
         public void Deserialize(IDictionary<string, object> dict)
         {
+            this.Id = dict.GetPlain<Guid>(nameof(this.Id));
             this.InvitationCode = dict.GetPlain<string>(nameof(this.InvitationCode));
-            this.ExpirationDate = dict.GetPlain<DateTime>(nameof(this.ExpirationDate));
+            this.Created = dict.GetPlain<DateTime>(nameof(this.Created));
+            this.Expires = dict.GetPlain<DateTime>(nameof(this.Expires));
+            this.InstanceId = dict.GetPlain<Guid>(nameof(this.InstanceId));
+            this.Role = dict.GetPlain<string>(nameof(this.Role));
             this.PreliminaryUser = dict.GetObject<User>(nameof(this.PreliminaryUser));
         }
     }

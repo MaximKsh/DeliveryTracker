@@ -1,34 +1,29 @@
-﻿namespace DeliveryTracker.Identification
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Npgsql;
+
+namespace DeliveryTracker.Identification
 {
     public static class IdentificationHelper
     {
-        public const string UserColumnList = @"
-id, 
-code, 
-surname, 
-name, 
-patronymic, 
-phone_number, 
-instance_id
-";
+        public static readonly IReadOnlyList<string> UserColumnList = new List<string>
+        {
+            "id", 
+            "code", 
+            "role",
+            "surname", 
+            "name", 
+            "patronymic", 
+            "phone_number", 
+            "instance_id"
+        }.AsReadOnly();
         
-        public const string UserColumnListWithTableAlias = @"
-u.id, 
-u.code, 
-u.surname, 
-u.name, 
-u.patronymic, 
-u.phone_number, 
-u.instance_id
-";
+        public static string GetUserColumns(string prefix = null)
+        {
+            prefix = prefix ?? string.Empty;
+            return string.Join("," + Environment.NewLine, UserColumnList.Select(p => prefix + p));
+        }
         
-        public const string RoleColumnList = @"
-id, 
-name
-";
-        public const string RoleColumnListWithTableAlias = @"
-r.id, 
-r.name
-";
     }
 }

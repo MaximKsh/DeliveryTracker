@@ -151,10 +151,23 @@ namespace DeliveryTracker.Validation
             }
             return new Error(
                 ErrorCode.IncorrectPassword,
-                LocalizationAlias.Error.AccessDenied,
+                LocalizationAlias.Error.IncorrectPassword,
                 formatErrors);
         }
             
+        /// <summary>
+        /// Указанное приглашение не существует.
+        /// </summary>
+        /// <param name="invitationCode"></param>
+        /// <returns></returns>
+        public static IError InvitationNotFound(string invitationCode) =>
+            new Error(
+                ErrorCode.InvitationNotFound,
+                LocalizationAlias.Error.InvitationNotFound,
+                new Dictionary<string, string>
+                {
+                    ["invitationCode"] = invitationCode,
+                });
         
        
         
@@ -202,21 +215,7 @@ namespace DeliveryTracker.Validation
                     ["details"] = error.Description,
                 });
         
-        /// <summary>
-        /// Указанное приглашение не существует.
-        /// </summary>
-        /// <param name="invitationCode"></param>
-        /// <param name="role"></param>
-        /// <returns></returns>
-        public static IError InvitationDoesNotExist(string invitationCode, string role) =>
-            new Error(
-                ErrorCode.InvitationDoesnotExist,
-                LocalizationAlias.Error.InvitationDoesnotExist,
-                new Dictionary<string, string>
-                {
-                    ["invitationCode"] = invitationCode,
-                    ["role"] = role
-                });
+        
 
         /// <summary>
         /// Указанное приглашение просрочено.

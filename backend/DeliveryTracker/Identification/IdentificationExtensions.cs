@@ -15,7 +15,6 @@ namespace DeliveryTracker.Identification
         {
             services
                 .AddSingleton<IUserManager, UserManager>()
-                .AddSingleton<IRoleManager, RoleManager>()
                 .AddSingleton<ISecurityManager, SecurityManager>()
                 ;
 
@@ -77,17 +76,6 @@ namespace DeliveryTracker.Identification
             return services;
         }
 
-        public static Role GetRole(this IDataReader reader)
-        {
-            var idx = 0;
-            return reader.GetRole(ref idx);
-        }
-        
-        public static Role GetRole(this IDataReader reader, ref int idx)
-        {
-            return new Role(reader.GetGuid(idx++), reader.GetString(idx++));
-        }
-        
         public static User GetUser(this IDataReader reader)
         {
             var idx = 0;
@@ -100,6 +88,7 @@ namespace DeliveryTracker.Identification
             {
                 Id = reader.GetGuid(idx++),
                 Code = reader.GetString(idx++),
+                Role = reader.GetString(idx++),
                 Surname = reader.GetString(idx++),
                 Name = reader.GetString(idx++),
                 Patronymic = reader.GetString(idx++),

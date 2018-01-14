@@ -20,6 +20,11 @@ namespace DeliveryTracker.Identification
         public string Code { get; set; }
         
         /// <summary>
+        /// Роль пользователя.
+        /// </summary>
+        public string Role { get; set; }
+        
+        /// <summary>
         /// Фамилия.
         /// </summary>
         public string Surname { get; set; }
@@ -40,11 +45,6 @@ namespace DeliveryTracker.Identification
         public string PhoneNumber { get; set; }
 
         /// <summary>
-        /// Роли пользователя.
-        /// </summary>
-        public IReadOnlyList<Role> Roles { get; set; }
-
-        /// <summary>
         /// Инстанс пользователя.
         /// </summary>
         public Guid InstanceId { get; set; }
@@ -61,11 +61,11 @@ namespace DeliveryTracker.Identification
             {
                 [nameof(this.Id)] = this.Id,
                 [nameof(this.Code)] = this.Code,
+                [nameof(this.Role)] = this.Role,
                 [nameof(this.Surname)] = this.Surname,
                 [nameof(this.Name)] = this.Name,
                 [nameof(this.Patronymic)] = this.Patronymic,
                 [nameof(this.PhoneNumber)] = this.PhoneNumber,
-                [nameof(this.Roles)] = this.Roles.SerializeObjectList(),
                 [nameof(this.Position)] = this.Position?.Serialize(),
             };
         }
@@ -75,14 +75,11 @@ namespace DeliveryTracker.Identification
         {
             this.Id = dict.GetPlain<Guid>(nameof(this.Id));
             this.Code = dict.GetPlain<string>(nameof(this.Code));
+            this.Role = dict.GetPlain<string>(nameof(this.Role));
             this.Surname = dict.GetPlain<string>(nameof(this.Surname));
             this.Name = dict.GetPlain<string>(nameof(this.Name));
             this.Patronymic = dict.GetPlain<string>(nameof(this.Patronymic));
             this.PhoneNumber = dict.GetPlain<string>(nameof(this.PhoneNumber));
-            var mutableRoles = dict.GetObjectList<Role>(nameof(this.Roles));
-            this.Roles = mutableRoles != null 
-                ? new ReadOnlyCollection<Role>(mutableRoles)
-                : null;
             this.Position = dict.GetObject<Geoposition>(nameof(this.Position));
         }
     }

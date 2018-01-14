@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
@@ -12,25 +13,25 @@ namespace DeliveryTracker.Identification
     {
         #region sql
         
-        private const string SqlCreate = @"
-insert into users (id, code, surname, name, patronymic, phone_number, instance_id)
-values(@id, @code, @surname, @name, @patronymic, @phone_number, @instance_id)
-returning " + IdentificationHelper.UserColumnList + ";";
+        private static readonly string SqlCreate = @"
+insert into users (" + IdentificationHelper.GetUserColumns() + @")
+values (" + IdentificationHelper.GetUserColumns("@") + @")
+returning " + IdentificationHelper.GetUserColumns() + ";";
 
-        private const string SqlUpdate = @"
+        private static readonly string SqlUpdate = @"
 update users
 set
 {0}
 where id = @id
-returning " + IdentificationHelper.UserColumnList + ";";
+returning " + IdentificationHelper.GetUserColumns() + ";";
 
-        private const string SqlGet = @"
-select " + IdentificationHelper.UserColumnList + @"
+        private static readonly string SqlGet = @"
+select " + IdentificationHelper.GetUserColumns() + @"
 from users
 where id = @id;";
         
-        private const string SqlGetByCode = @"
-select " + IdentificationHelper.UserColumnList + @"
+        private static readonly string SqlGetByCode = @"
+select " + IdentificationHelper.GetUserColumns() + @"
 from users
 where code = @code
 ;";
@@ -69,6 +70,11 @@ where id = @id
         /// <inheritdoc />
         public async Task<ServiceResult<User>> CreateAsync(User user, NpgsqlConnectionWrapper oc = null)
         {
+            if (!DefaultRoles.AllRoles.Contains(user.Role))
+            {
+                return new ServiceResult<User>(ErrorFactory.RoleNotFound());
+            }
+            
             User newUser = null;
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {
@@ -77,6 +83,7 @@ where id = @id
                     command.CommandText = SqlCreate;
                     command.Parameters.Add(new NpgsqlParameter("id", user.Id));
                     command.Parameters.Add(new NpgsqlParameter("code", user.Code));
+                    command.Parameters.Add(new NpgsqlParameter("role", user.Role));
                     command.Parameters.Add(new NpgsqlParameter("surname", user.Surname));
                     command.Parameters.Add(new NpgsqlParameter("name", user.Name));
                     command.Parameters.Add(new NpgsqlParameter("patronymic", user.Patronymic));
@@ -100,7 +107,7 @@ where id = @id
         public async Task<ServiceResult<User>> UpdateAsync(User user, NpgsqlConnectionWrapper oc = null)
         {
             User updatedUser = null;
-            Guid userId = user.Id;
+            var userId = user.Id;
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {
                 using (var command = connWrapper.CreateCommand())
