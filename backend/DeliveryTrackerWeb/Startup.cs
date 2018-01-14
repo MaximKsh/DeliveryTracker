@@ -75,7 +75,7 @@ namespace DeliveryTrackerWeb
                     context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
                     context.Response.ContentType = "application/json";
                     var responseString = JsonConvert
-                        .SerializeObject(ErrorFactory.ServerError().ToErrorListViewModel());
+                        .SerializeObject(ErrorFactory.ServerError());
                     await context.Response.WriteAsync(responseString).ConfigureAwait(false);
                 });
             });

@@ -20,6 +20,17 @@ namespace DeliveryTracker.Validation
                 LocalizationAlias.Error.ServerError);
         
         /// <summary>
+        /// Неправильный входные параметры.
+        /// </summary>
+        /// <param name="invalidValues"></param>
+        /// <returns></returns>
+        public static IError ValidationError(IList<KeyValuePair<string, object>> invalidValues) =>
+            new Error(
+                ErrorCode.ValidationError,
+                LocalizationAlias.Error.ValidationError,
+                invalidValues.ToDictionary(k => k.Key, v => v.Value?.ToString() ?? "null"));
+        
+        /// <summary>
         /// Инстанс не найден.
         /// </summary>
         /// <returns></returns>
@@ -86,24 +97,6 @@ namespace DeliveryTracker.Validation
                 });
         
         
-        
-        
-        
-        
-        
-        
-
-
-        /// <summary>
-        /// Неправильный входные параметры.
-        /// </summary>
-        /// <param name="invalidParameters"></param>
-        /// <returns></returns>
-        public static IError InvalidInputParameters(IEnumerable<KeyValuePair<string, object>> invalidParameters) =>
-            new Error(
-                ErrorCode.InvalidInputParameter,
-                LocalizationAlias.Error.InvalidInputParameter,
-                invalidParameters.ToDictionary(k => k.Key, v => v.Value?.ToString() ?? "null"));
       
        
         

@@ -2,6 +2,17 @@
 {
     public static class ErrorCode
     {
+        
+        /// <summary>
+        /// Код внутренней серверной ошибки.
+        /// </summary>
+        public const string ServerError = "ServerError";
+        
+        /// <summary>
+        /// Код ошибки неправильных входных параметров.
+        /// </summary>
+        public const string ValidationError = "ValidationError";
+        
         /// <summary>
         /// Код ошибки: инстанс не найден.
         /// </summary>
@@ -20,27 +31,22 @@
         public const string RoleNameConflict = "RoleNameConflict";
 
 
-
         /// <summary>
         /// Код ошибки: пользователь уже в роли.
         /// </summary>
         public const string UserAlreadyInRole = "UserAlreadyInRole";
 
-
-        /// <summary>
-        /// Код внутренней серверной ошибки.
-        /// </summary>
-        public const string ServerError = "ServerError";
-
-        /// <summary>
-        /// Код ошибки неправильных входных параметров.
-        /// </summary>
-        public const string InvalidInputParameter = "InvalidQueryParameter";
-
+        
         /// <summary>
         /// Код ошибки: пользователь не найден.
         /// </summary>
         public const string UserNotFound = "UserNotFound";
+        
+
+
+        
+        
+
 
         /// <summary>
         /// Код ошибки: пользователь не входит ни в одну роль.

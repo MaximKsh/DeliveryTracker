@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 
 namespace DeliveryTracker.Validation
 {
-    
+    /// <inheritdoc />
     public class Error: IError
     {
         private static readonly IReadOnlyDictionary<string, string> EmptyInfo = 

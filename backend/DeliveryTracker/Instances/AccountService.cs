@@ -84,7 +84,7 @@ namespace DeliveryTracker.Instances
             CodePassword codePassword,
             NpgsqlConnectionWrapper oc = null)
         {
-            // Делаем копию, т.к. меняем 
+            // Делаем копию, т.к. меняем и возвращаем новый.
             var userInfoCopied = new User();
             userInfoCopied.Deserialize(userInfo.Serialize());
 

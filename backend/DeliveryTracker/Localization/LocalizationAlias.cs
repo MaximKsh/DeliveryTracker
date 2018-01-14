@@ -17,17 +17,16 @@
             private const string Pref = LocalizationStringPrefix + "_" + ErrorGroup + "_";
             
             
+            public const string ServerError = Pref + "ServerError";
+            public const string ValidationError = Pref + "ValidationError";
             public const string InstanceNotFound = Pref + "InstanceNotFound";
             public const string RoleNotFound = Pref + "RoleNotFound";
             public const string RoleNameConflict = Pref + "RoleNameConflict";
             public const string UserAlreadyInRole = Pref + "UserAlreadyInRole";
             public const string UserNotFound = Pref + "UserNotFound";
-            
 
-            public const string ServerError = Pref + "ServerError";
-        
-            public const string InvalidInputParameter = Pref + "InvalidInputParameter";
-        
+            
+            
             public const string UserWithoutRole = Pref + "UserWithoutRole";
             
             public const string UserNotInRole = Pref + "UserNotInRole";

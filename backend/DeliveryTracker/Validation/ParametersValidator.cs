@@ -44,7 +44,7 @@ namespace DeliveryTracker.Validation
                 .Select(p => new KeyValuePair<string, object>(p.VariableName, p.Value))
                 .ToList();
             return negativeRules.Any()
-                ? new ParametersValidationResult(ErrorFactory.InvalidInputParameters(negativeRules)) 
+                ? new ParametersValidationResult(ErrorFactory.ValidationError(negativeRules)) 
                 : new ParametersValidationResult();
         }
         
