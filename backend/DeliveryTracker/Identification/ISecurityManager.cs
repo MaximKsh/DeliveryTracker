@@ -12,6 +12,11 @@ namespace DeliveryTracker.Identification
             string password, 
             NpgsqlConnectionWrapper outerConnection = null);
 
+        Task<ServiceResult<UserCredentials>> ValidatePasswordAsync(
+            Guid userId,
+            string password, 
+            NpgsqlConnectionWrapper outerConnection = null);
+        
         Task<ServiceResult<UserCredentials>> SetPasswordAsync(
             Guid userId, 
             string newPassword,

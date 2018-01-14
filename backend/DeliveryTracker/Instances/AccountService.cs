@@ -1,17 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
-using DeliveryTracker.DbModels;
 using DeliveryTracker.Identification;
-using DeliveryTracker.Services;
 using DeliveryTracker.Validation;
-using DeliveryTracker.ViewModels;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 //using DeliveryTracker.Auth;
@@ -20,14 +12,6 @@ namespace DeliveryTracker.Instances
 {
     public class AccountService : IAccountService
     {
-        #region constants
-
-        
-
-        private static readonly Random Random = new Random();
-
-        #endregion
-
         #region field
         
         private readonly IPostgresConnectionProvider cp;
@@ -35,6 +19,8 @@ namespace DeliveryTracker.Instances
         private readonly IUserManager userManager;
 
         private readonly ISecurityManager securityManager;
+
+        private readonly IInvitationManager invitationManager;
 
         private readonly ILogger<AccountService> logger;
 
@@ -46,40 +32,19 @@ namespace DeliveryTracker.Instances
             IPostgresConnectionProvider cp, 
             IUserManager userManager,
             ISecurityManager securityManager,
+            IInvitationManager invitationManager,
             ILogger<AccountService> logger)
         {
             this.cp = cp;
             this.userManager = userManager;
             this.securityManager = securityManager;
+            this.invitationManager = invitationManager;
             this.logger = logger;
         }
 
         #endregion
 
         #region public
-
-        public async Task<ServiceResult<string>> GetUserRole(UserModel user)
-        {
-           throw new NotImplementedException();
-        }
-    
-        private async Task<ServiceResult<UserModel>> FindUserAsync(string username)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Попытаться получить пришлашение по коду.
-        /// </summary>
-        /// <param name="invitationCode"></param>
-        /// <param name="invitation"></param>
-        /// <returns></returns>
-        private bool TryGetInvitaiton(string invitationCode, out InvitationModel invitation)
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
 
         /// <inheritdoc />
         public async Task<ServiceResult<Tuple<User, UserCredentials>>> RegisterAsync(
@@ -108,7 +73,7 @@ namespace DeliveryTracker.Instances
                 conn.Connect();
                 using (var transaction = conn.BeginTransaction())
                 {
-                    var createUserResult = await this.userManager.CreateAsync(userInfo, oc);
+                    var createUserResult = await this.userManager.CreateAsync(userInfo, conn);
                     if (!createUserResult.Success)
                     {
                         transaction.Rollback();
@@ -135,165 +100,130 @@ namespace DeliveryTracker.Instances
         }
 
         /// <inheritdoc />
-        public async Task<ServiceResult<Tuple<User, UserCredentials>>> LoginAsync(CodePassword codePassword,
+        public async Task<ServiceResult<Tuple<User, UserCredentials>>> LoginAsync(
+            CodePassword codePassword,
             NpgsqlConnectionWrapper oc = null)
         {
             var username = codePassword.Code;
             var password = codePassword.Password;
-/*
-            var userResult = await this.FindUserAsync(username);
+
+            var validateResult = await this.securityManager.ValidatePasswordAsync(username, password, oc);
+            if (!validateResult.Success)
+            {
+                return new ServiceResult<Tuple<User, UserCredentials>>(validateResult.Errors);
+            }
+
+            var credentials = validateResult.Result;
+
+            var userResult = await this.userManager.GetAsync(credentials.Id, oc);
             if (!userResult.Success)
             {
                 return new ServiceResult<Tuple<User, UserCredentials>>(userResult.Errors);
             }
-            if (!await this.userManager.CheckPasswordAsync(userResult.Result, password))
-            {
-                return new ServiceResult<Tuple<User, UserCredentials>>(ErrorFactory.AccessDenied());
-            }
-
-            var user = userResult.Result;
-            var roleResult = await this.GetUserRole(user);
-            if (!roleResult.Success)
-            {
-                return new ServiceResult<Tuple<User, UserCredentials>>(ErrorFactory.UserWithoutRole(user.UserName));
-            }*/
-            throw new NotImplementedException();
-            //var role = roleResult.Result;
-            //var registeredUser = new User(user);
-            //var userCredentials = new UserCredentials(user.UserName, role, user.InstanceId);
-            //return new ServiceResult<Tuple<User, UserCredentials>>(
-            //    new Tuple<User, UserCredentials>(registeredUser, userCredentials));
+            return new ServiceResult<Tuple<User, UserCredentials>>(
+                new Tuple<User, UserCredentials>(userResult.Result, credentials));
         }
 
         /// <inheritdoc />
         public async Task<ServiceResult<Tuple<User, UserCredentials>>> LoginWithRegistrationAsync(
-            CodePassword codePassword, NpgsqlConnectionWrapper oc = null)
+            CodePassword codePassword, 
+            NpgsqlConnectionWrapper oc = null)
         {
-            /*using (var transaction = this.dbContext.Database.BeginTransaction())
+            using (var conn = oc ?? this.cp.Create())
             {
-                try
+                conn.Connect();
+                using (var transaction = conn.BeginTransaction())
                 {
-                    var loginResult = await this.LoginAsync(codePassword);
+                    var loginResult = await this.LoginAsync(codePassword, conn);
                     if (loginResult.Success)
                     {
                         transaction.Commit();
                         return loginResult;
                     }
                     
-                    InvitationModel invitationModel = null;
+                    Invitation invitation = null;
                     foreach (var error in loginResult.Errors)
                     {
-                        if (error.Code == ErrorCode.UserNotFound
-                            && this.TryGetInvitaiton(codePassword.Username, out invitationModel))
+                        if (error.Code != ErrorCode.UserNotFound)
                         {
-                            break;
+                            continue;
                         }
+                        var getResult = await this.invitationManager.GetAsync(codePassword.Code, conn);
+                        if (!getResult.Success)
+                        {
+                            continue;
+                        }
+                        invitation = getResult.Result;
+                        break;
                     }
-
-                    if (invitationModel == null)
+                    if (invitation == null)
                     {
                         // Несмотря на ошибку, никаких изменений не произведено.
                         transaction.Commit();
                         return loginResult;
                     }
 
-                    if (loginResult.Errors.All(p => p.Code != ErrorCode.UserNotFound)
-                        || !this.TryGetInvitaiton(codePassword.Username, out var invitation))
+                    var newUser = new User()
                     {
-                        // Несмотря на ошибку, никаких изменений не произведено.
-                        transaction.Commit();
-                        return new ServiceResult<Tuple<User, UserCredentials>>(
-                            ErrorFactory.UserNotFound(codePassword.Username));
-                    }
-
-                    var newUser = new User
-                    {
-                        //InvitationCode = usernamePassword.Username,
-                        Surname = invitation.Surname,
-                        Name = invitation.Name,
-                        PhoneNumber = invitation.PhoneNumber,
-                        InstanceIf = new Instance(invitation.Instance),
-                        Role = invitation.Role.Name,
+                        Id = Guid.NewGuid(),
+                        Code = invitation.InvitationCode,
+                        Role = invitation.Role,
+                        InstanceId = invitation.InstanceId,
+                        Surname = invitation.PreliminaryUser.Surname,
+                        Name = invitation.PreliminaryUser.Name,
+                        Patronymic = invitation.PreliminaryUser.Patronymic,
+                        PhoneNumber = invitation.PreliminaryUser.PhoneNumber,
                     };
 
-                    this.dbContext.Invitations.Remove(invitation);
-                    var registrationResult = await this.RegisterAsync(newUser, codePassword);
-                    if (registrationResult.Success)
+                    var creationResult = await this.userManager.CreateAsync(newUser, conn);
+                    if (!creationResult.Success)
                     {
-                        await this.dbContext.SaveChangesAsync();
-                        transaction.Commit();
-                    }
-                    else
-                    {
-                        transaction.Rollback();
+                        return new ServiceResult<Tuple<User, UserCredentials>>(creationResult.Errors);
                     }
 
-                    return registrationResult;
+                    var createdUser = creationResult.Result;
+                    var userCredentials = new UserCredentials(
+                        createdUser.Id,
+                        createdUser.Code,
+                        createdUser.Role,
+                        createdUser.InstanceId);
+                    return new ServiceResult<Tuple<User, UserCredentials>>(
+                        new Tuple<User, UserCredentials> (createdUser, userCredentials));
                 }
-                catch (Exception e)
-                {
-                    transaction.Rollback();
-                    this.logger.LogError(e, "LoginWithRegistrationAsync");
-                }
-            }*/
-            return new ServiceResult<Tuple<User, UserCredentials>>(ErrorFactory.ServerError());
+            }
         }
         
         /// <inheritdoc />
-        public async Task<ServiceResult> EditAsync(Guid userId, User newData, NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult<User>> EditAsync(User newData, NpgsqlConnectionWrapper oc = null)
         {
-            /*
-            var userResult = await this.FindUserAsync(username);
-            if (!userResult.Success)
-            {
-                return new ServiceResult(userResult.Errors);
-            }
-
-            var user = userResult.Result;
-            if (!string.IsNullOrWhiteSpace(newData.Surname))
-            {
-                user.Surname = newData.Surname;
-            }
-            if (!string.IsNullOrWhiteSpace(newData.Name))
-            {
-                user.Name = newData.Name;
-            }
-            if (!string.IsNullOrWhiteSpace(newData.PhoneNumber))
-            {
-                user.PhoneNumber = newData.PhoneNumber;
-            }*/
-
-            return new ServiceResult();
+            return await this.userManager.EditAsync(newData, oc);
         }
 
-        /// <inheritdoc />
-        public async Task<ServiceResult> ValidatePasswordAsync(CodePassword codePassword,
+        public async Task<ServiceResult> ChangePasswordAsync(
+            Guid userId, 
+            string oldPassword, 
+            string newPassword, 
             NpgsqlConnectionWrapper oc = null)
         {
-            var userResult = await this.FindUserAsync(codePassword.Code);
-            
-            return new ServiceResult();
-        }
-
-        public Task<ServiceResult> ChangePasswordAsync(Guid userId, string oldPassword, string newPassword, NpgsqlConnectionWrapper oc = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc />
-        public async Task<ServiceResult> ChangePasswordAsync(string username,
-            string oldPassword,
-            string newPassword, NpgsqlConnectionWrapper oc = null)
-        {
-            var userResult = await this.FindUserAsync(username);
-            if (!userResult.Success)
+            var verificationResult = await this.securityManager.ValidatePasswordAsync(userId, oldPassword, oc);
+            if (!verificationResult.Success)
             {
-                return new ServiceResult(userResult.Errors);
+                return new ServiceResult(verificationResult.Errors);
             }
 
-            var user = userResult.Result;
-
-            throw new NotImplementedException();
+            var changePasswordResult = await this.securityManager.SetPasswordAsync(userId, newPassword, oc);
+            return changePasswordResult.Success 
+                ?  new ServiceResult(changePasswordResult.Errors) 
+                :  new ServiceResult();
         }
+
+        
+        #endregion
+        
+        #region private
+
+        
+        
+        #endregion
     }
 }

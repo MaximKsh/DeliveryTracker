@@ -24,7 +24,7 @@ namespace DeliveryTracker.Identification
         /// </param>
         /// <param name="oc">Открытое соединение с базой. Может быть null.</param>
         /// <returns></returns>
-        Task<ServiceResult<User>> UpdateAsync(User user, NpgsqlConnectionWrapper oc = null);
+        Task<ServiceResult<User>> EditAsync(User user, NpgsqlConnectionWrapper oc = null);
 
         Task<ServiceResult<User>> GetAsync(Guid userId, NpgsqlConnectionWrapper oc = null);
         

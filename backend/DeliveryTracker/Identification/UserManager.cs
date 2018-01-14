@@ -104,7 +104,7 @@ where id = @id
 
         
         /// <inheritdoc />
-        public async Task<ServiceResult<User>> UpdateAsync(User user, NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult<User>> EditAsync(User user, NpgsqlConnectionWrapper oc = null)
         {
             User updatedUser = null;
             var userId = user.Id;

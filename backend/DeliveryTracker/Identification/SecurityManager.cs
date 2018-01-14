@@ -19,12 +19,16 @@ namespace DeliveryTracker.Identification
         private const string SqlSelectPassword = @"
 select
     id,
+    code
     instance_id,
     role,
     password_hash
 from users
-where code = @code
-;";
+";
+
+        private const string SqlSelectPasswordById = SqlSelectPassword + "where id = @id";
+        
+        private const string SqlSelectPasswordByCode = SqlSelectPassword + "where code = @code";
 
         private const string SqlUpdatePassword = @"
 update users
@@ -71,39 +75,26 @@ returning code, role, instance_id
             string password,
             NpgsqlConnectionWrapper outerConnection = null)
         {
-            using (var connWrapper = outerConnection ?? this.cp.Create())
-            {
-                connWrapper.Connect();
-                
-                Guid id;
-                Guid instanceId;
-                var role = string.Empty;
-                var passwordHash = string.Empty;
-                using (var command = connWrapper.CreateCommand())
-                {
-                    command.CommandText = SqlSelectPassword;
-                    command.Parameters.Add(new NpgsqlParameter("code", code));
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        if (await reader.ReadAsync())
-                        {
-                            id = reader.GetGuid(0);
-                            instanceId = reader.GetGuid(1);
-                            role = reader.GetString(2);
-                            passwordHash = reader.GetString(3);
-                        }
-                    }
-                }
-                if (id != Guid.Empty
-                    && this.ComparePasswords(passwordHash, password))
-                {
-                    var credentials = new UserCredentials(id, code, role, instanceId);
-                    return new ServiceResult<UserCredentials>(credentials);
-                }
-
-                return new ServiceResult<UserCredentials>(ErrorFactory.AccessDenied());
-            }
+            return await this.ValidatePasswordInternalAsync(
+                SqlSelectPasswordByCode,
+                new NpgsqlParameter("code", code),
+                password,
+                outerConnection);
         }
+
+        /// <inheritdoc />
+        public async Task<ServiceResult<UserCredentials>> ValidatePasswordAsync(
+            Guid userId,
+            string password,
+            NpgsqlConnectionWrapper outerConnection = null)
+        {
+            return await this.ValidatePasswordInternalAsync(
+                SqlSelectPasswordById,
+                new NpgsqlParameter("id", userId),
+                password,
+                outerConnection);
+        }
+        
 
         /// <inheritdoc />
         public async Task<ServiceResult<UserCredentials>> SetPasswordAsync(
@@ -263,6 +254,48 @@ returning code, role, instance_id
             error = internalError;
             return false;
 
+        }
+
+        private async Task<ServiceResult<UserCredentials>> ValidatePasswordInternalAsync(
+            string sqlScript,
+            NpgsqlParameter parameter,
+            string password,
+            NpgsqlConnectionWrapper outerConnection = null)
+        {
+            using (var connWrapper = outerConnection ?? this.cp.Create())
+            {
+                connWrapper.Connect();
+                
+                Guid id;
+                Guid instanceId;
+                var role = string.Empty;
+                var code = string.Empty;
+                var passwordHash = string.Empty;
+                using (var command = connWrapper.CreateCommand())
+                {
+                    command.CommandText = sqlScript;
+                    command.Parameters.Add(parameter);
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            id = reader.GetGuid(0);
+                            code = reader.GetString(1);
+                            instanceId = reader.GetGuid(2);
+                            role = reader.GetString(3);
+                            passwordHash = reader.GetString(4);
+                        }
+                    }
+                }
+                if (id != Guid.Empty
+                    && this.ComparePasswords(passwordHash, password))
+                {
+                    var credentials = new UserCredentials(id, code, role, instanceId);
+                    return new ServiceResult<UserCredentials>(credentials);
+                }
+
+                return new ServiceResult<UserCredentials>(ErrorFactory.AccessDenied());
+            }
         }
 
         #endregion
