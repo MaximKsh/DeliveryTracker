@@ -97,7 +97,65 @@ namespace DeliveryTracker.Validation
                 });
         
         
-      
+        /// <summary>
+        /// Доступ запрещен.
+        /// </summary>
+        /// <returns></returns>
+        public static IError AccessDenied() =>
+            new Error(
+                ErrorCode.TaskIsForbidden,
+                LocalizationAlias.Error.AccessDenied);
+
+
+        /// <summary>
+        /// Неверный формат пароля.
+        /// </summary>
+        /// <returns></returns>
+        public static IError IncorrectPassword(
+            int? minLen = null,
+            int? maxLen = null,
+            bool atLeastOneUpperCase = false,
+            bool atLeastOneLowerCase = false,
+            bool atLeastOneDigit = false,
+            string forbiddenCharacters = null,
+            int? sameCharactersInARow = null)
+        {
+            var formatErrors = new Dictionary<string, string>();
+            if (minLen.HasValue)
+            {
+                formatErrors.Add(nameof(minLen), minLen.Value.ToString());
+            }
+            if (maxLen.HasValue)
+            {
+                formatErrors.Add(nameof(maxLen), maxLen.Value.ToString());
+            }
+            if (atLeastOneUpperCase)
+            {
+                formatErrors.Add(nameof(atLeastOneUpperCase), "true");
+            }
+            if (atLeastOneLowerCase)
+            {
+                formatErrors.Add(nameof(atLeastOneLowerCase), "true");
+            }
+            if (atLeastOneDigit)
+            {
+                formatErrors.Add(nameof(atLeastOneDigit), "true");
+            }
+            if (forbiddenCharacters != null)
+            {
+                formatErrors.Add(nameof(forbiddenCharacters), forbiddenCharacters);
+            }
+            if (sameCharactersInARow.HasValue)
+            {
+                formatErrors.Add(nameof(sameCharactersInARow), sameCharactersInARow.Value.ToString());
+            }
+            return new Error(
+                ErrorCode.IncorrectPassword,
+                LocalizationAlias.Error.AccessDenied,
+                formatErrors);
+        }
+            
+        
        
         
         /// <summary>
@@ -249,14 +307,6 @@ namespace DeliveryTracker.Validation
                 ErrorCode.TaskIsForbidden,
                 LocalizationAlias.Error.TaskIsForbidden);
         
-        /// <summary>
-        /// Доступ запрещен.
-        /// </summary>
-        /// <returns></returns>
-        public static IError AccessDenied() =>
-            new Error(
-                ErrorCode.TaskIsForbidden,
-                LocalizationAlias.Error.AccessDenied);
         
         /// <summary>
         /// Пользователь удален.

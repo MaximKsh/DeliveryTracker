@@ -109,6 +109,11 @@ namespace DeliveryTracker.Common
 
         public static object SerializeObjectList<T>(this IEnumerable<T> list) where T : IDictionarySerializable
         {
+            if (list == null)
+            {
+                return null;
+            }
+            
             var serialized = new List<IDictionary<string, object>>();
             foreach (var item in list)
             {

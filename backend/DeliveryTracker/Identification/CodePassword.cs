@@ -8,7 +8,7 @@ namespace DeliveryTracker.Identification
         /// <summary>
         /// Имя пользователя.
         /// </summary>
-        public string Username { get; set; }
+        public string Code { get; set; }
         
         /// <summary>
         /// Пароль.
@@ -20,7 +20,7 @@ namespace DeliveryTracker.Identification
         {
             return new Dictionary<string, object>
             {
-                [nameof(this.Username)] = this.Username,
+                [nameof(this.Code)] = this.Code,
                 [nameof(this.Password)] = this.Password,
             };
         }
@@ -28,7 +28,7 @@ namespace DeliveryTracker.Identification
         /// <inheritdoc />
         public void Deserialize(IDictionary<string, object> dict)
         {
-            this.Username = dict.GetPlain<string>(nameof(this.Username));
+            this.Code = dict.GetPlain<string>(nameof(this.Code));
             this.Password = dict.GetPlain<string>(nameof(this.Password));
         }
     }

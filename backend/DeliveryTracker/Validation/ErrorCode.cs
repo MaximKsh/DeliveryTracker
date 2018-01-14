@@ -43,8 +43,16 @@
         public const string UserNotFound = "UserNotFound";
         
 
+        /// <summary>
+        /// Код ошибки: доступ запрещен.
+        /// </summary>
+        public const string AccessDenied = "AccessDenied";
 
         
+        /// <summary>
+        /// Код ошибки: неверный формат пароля.
+        /// </summary>
+        public const string IncorrectPassword = "IncorrectPassword";
         
 
 
@@ -103,10 +111,6 @@
         /// </summary>
         public const string TaskIsForbidden = "TaskIsForbidden";
 
-        /// <summary>
-        /// Код ошибки: доступ запрещен.
-        /// </summary>
-        public const string AccessDenied = "AccessDenied";
 
         /// <summary>
         /// Код ошибки: пользователь удален.

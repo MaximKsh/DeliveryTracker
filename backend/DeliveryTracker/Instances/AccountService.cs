@@ -37,6 +37,12 @@ namespace DeliveryTracker.Instances
         
         private readonly IPostgresConnectionProvider cp;
 
+        private readonly IUserManager userManager;
+
+        private readonly IRoleManager roleManager;
+        
+        private readonly ISecurityManager securityManager;
+
         private readonly ILogger<AccountService> logger;
 
         #endregion
@@ -45,9 +51,15 @@ namespace DeliveryTracker.Instances
 
         public AccountService(
             IPostgresConnectionProvider cp, 
+            IUserManager userManager,
+            IRoleManager roleManager,
+            ISecurityManager securityManager,
             ILogger<AccountService> logger)
         {
             this.cp = cp;
+            this.userManager = userManager;
+            this.roleManager = roleManager;
+            this.securityManager = securityManager;
             this.logger = logger;
         }
 
@@ -80,70 +92,69 @@ namespace DeliveryTracker.Instances
 
         /// <inheritdoc />
         public async Task<ServiceResult<Tuple<User, UserCredentials>>> RegisterAsync(
-            User userInfo,
             CodePassword codePassword,
+            Guid roleId,
+            Action<User> userModificationAction = null,
             NpgsqlConnectionWrapper oc = null)
         {
-            // Делаем копию, т.к. меняем и возвращаем новый.
-            var userInfoCopied = new User();
-            userInfoCopied.Deserialize(userInfo.Serialize());
-
-            userInfoCopied.Id = Guid.NewGuid();
+            var userInfo = new User { Id = Guid.NewGuid() };
+            userModificationAction?.Invoke(userInfo);
+            
+            var validationResult = new ParametersValidator()
+                .AddRule("CodePassword.Code", codePassword.Code, x => !string.IsNullOrEmpty(x))
+                .AddRule("CodePassword.Password", codePassword.Password, x => !string.IsNullOrEmpty(x))
+                .AddRule("User.Surname", userInfo.Surname, x => x != null && !string.IsNullOrEmpty(x))
+                .AddRule("User.Name", userInfo.Surname, x => x != null && !string.IsNullOrEmpty(x))
+                .AddRule("User.InstanceId", userInfo.InstanceId, x => x != Guid.Empty)
+                .Validate();
+            if (!validationResult.Success)
+            {
+                return new ServiceResult<Tuple<User, UserCredentials>>(validationResult.Error);
+            }
             
             using (var conn = oc ?? this.cp.Create())
             {
-                
-            }
-            
-            /*
-            var newUser = new UserModel
-            {
-                Id = Guid.NewGuid(),
-                InstanceId = userInfo.Instance.Id,
-                UserName = codePassword.Username,
-                Surname = userInfo.Surname,
-                Name = userInfo.Name,
-                PhoneNumber = userInfo.PhoneNumber,
-            };
+                conn.Connect();
+                using (var transaction = conn.BeginTransaction())
+                {
+                    var createUserResult = await this.userManager.CreateAsync(userInfo, oc);
+                    if (!createUserResult.Success)
+                    {
+                        transaction.Rollback();
+                        return new ServiceResult<Tuple<User, UserCredentials>>(createUserResult.Errors);
+                    }
 
-            var result = await this.userManager.CreateAsync(newUser);
-            if (!result.Succeeded)
-            {
-                // TODO: разбор ошибок.
-                return new ServiceResult<Tuple<User, UserCredentials>>(
-                    null,
-                    result.Errors.Select(ErrorFactory.IdentityError));
-            }
-            result = await this.userManager.AddPasswordAsync(newUser, codePassword.Password);
-            if (!result.Succeeded)
-            {
-                // TODO: разбор ошибок.
-                return new ServiceResult<Tuple<User, UserCredentials>>(
-                    null,
-                    result.Errors.Select(ErrorFactory.IdentityError));
-            }
-            result = await this.userManager.AddToRoleAsync(newUser, userInfo.Role);
-            if (!result.Succeeded)
-            {
-                // TODO: разбор ошибок.
-                return new ServiceResult<Tuple<User, UserCredentials>>(
-                    null,
-                    result.Errors.Select(ErrorFactory.IdentityError));
-            }
-*/
-            throw new NotImplementedException();
-           // var registeredUser = new User(newUser);
-           // var userCredentials = new UserCredentials(newUser.UserName, user.Role, newUser.InstanceId);
+                    var newUser = createUserResult.Result;
+                    var addToRoleResult = await this.roleManager.AddToRoleAsync(newUser.Id, roleId, oc);
+                    if (!addToRoleResult.Success)
+                    {
+                        transaction.Rollback();
+                        return new ServiceResult<Tuple<User, UserCredentials>>(addToRoleResult.Errors);
+                    }
 
-            //return new ServiceResult<Tuple<User, UserCredentials>>(
-            //    new Tuple<User, UserCredentials>(registeredUser, userCredentials));
+                    var setPasswordResult = 
+                        await this.securityManager.SetPasswordAsync(newUser.Id, codePassword.Password, conn);
+                    if (!setPasswordResult.Success)
+                    {
+                        transaction.Rollback();
+                        return new ServiceResult<Tuple<User, UserCredentials>>(setPasswordResult.Errors);
+                    }
+
+                    var credentials = setPasswordResult.Result;
+                    newUser.Roles = credentials.Roles;                    
+                    transaction.Commit();
+                    
+                    return new ServiceResult<Tuple<User, UserCredentials>>(
+                        new Tuple<User, UserCredentials>(newUser, credentials));
+                }
+            }
         }
 
         /// <inheritdoc />
         public async Task<ServiceResult<Tuple<User, UserCredentials>>> LoginAsync(CodePassword codePassword,
             NpgsqlConnectionWrapper oc = null)
         {
-            var username = codePassword.Username;
+            var username = codePassword.Code;
             var password = codePassword.Password;
 /*
             var userResult = await this.FindUserAsync(username);
@@ -275,7 +286,7 @@ namespace DeliveryTracker.Instances
         public async Task<ServiceResult> ValidatePasswordAsync(CodePassword codePassword,
             NpgsqlConnectionWrapper oc = null)
         {
-            var userResult = await this.FindUserAsync(codePassword.Username);
+            var userResult = await this.FindUserAsync(codePassword.Code);
             
             return new ServiceResult();
         }

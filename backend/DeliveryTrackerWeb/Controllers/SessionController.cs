@@ -26,10 +26,13 @@ namespace DeliveryTrackerWeb.Controllers
         private readonly IUserManager userManager;
         
         private readonly IRoleManager roleManager;
+        
         private readonly ISecurityManager securityManager;
 
         private readonly IPostgresConnectionProvider connectionProvider;
 
+        private readonly IInstanceService instanceService;
+        
         private readonly ILogger<SessionController> logger;
         
         #endregion
@@ -41,13 +44,15 @@ namespace DeliveryTrackerWeb.Controllers
             IRoleManager roleManager,
             ISecurityManager securityManager,
             ILogger<SessionController> logger, 
-            IPostgresConnectionProvider connectionProvider)
+            IPostgresConnectionProvider connectionProvider, 
+            IInstanceService instanceService)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
             this.securityManager = securityManager;
             this.logger = logger;
             this.connectionProvider = connectionProvider;
+            this.instanceService = instanceService;
         }
 
         #endregion
@@ -55,24 +60,19 @@ namespace DeliveryTrackerWeb.Controllers
         [HttpGet("cc")]
         public async Task<IActionResult> MethodC()
         {
-            var roles = new List<Role>();
-            roles.Add(new Role(DefaultRoles.CreatorRole, DefaultRoles.CreatorRoleName));
-            roles.Add(new Role(DefaultRoles.ManagerRole, DefaultRoles.ManagerRoleName));
-
             var user = new User()
             {
-                Id = Guid.NewGuid(),
-                Code = "abc",
-                Position = new Geoposition()
-                {
-                    Latitude = 1,
-                    Longitude = 2,
-                },
-                Roles = roles.AsReadOnly(),
+                Surname = "asf",
+                Name = "sdf",
+                Patronymic = "saa",
+                PhoneNumber = "sadfas"
             };
-            var user2 = new User();
-            var userSerialized = user.Serialize();
-            user2.Deserialize(userSerialized);
+            var pass = new CodePassword()
+            {
+                Code = "aaaaa",
+                Password = "abc",
+            };
+            var result = await this.instanceService.CreateAsync("asdasd", user, pass);
             return this.Ok();
         }
 

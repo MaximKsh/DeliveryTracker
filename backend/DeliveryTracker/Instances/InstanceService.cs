@@ -5,6 +5,7 @@ using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Validation;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 
 namespace DeliveryTracker.Instances
@@ -59,27 +60,27 @@ where id = @id
         #endregion
 
         #region public
-        
-        public async Task<ServiceResult<Instance>> CreateAsync(
-            Instance instance, 
+
+        public async Task<ServiceResult<Tuple<Instance, User, UserCredentials>>> CreateAsync(
+            string instanceName, 
             User creatorInfo, 
             CodePassword codePassword, 
             NpgsqlConnectionWrapper oc = null)
         {
-            if (instance == null)
+            var validationResult = new ParametersValidator()
+                .AddRule("InstanceName", instanceName, x => x != null && !string.IsNullOrWhiteSpace(x))
+                .AddRule("creatorInfo.Surname", creatorInfo?.Surname, x => x != null && !string.IsNullOrWhiteSpace(x))
+                .AddRule("creatorInfo.Name", creatorInfo?.Name, x => x != null && !string.IsNullOrWhiteSpace(x))
+                .AddRule("creatorInfo.PhoneNumber", creatorInfo?.PhoneNumber, x => x != null && !string.IsNullOrWhiteSpace(x))
+                .AddRule("codePassword.Password", codePassword?.Password, x => x != null && !string.IsNullOrWhiteSpace(x))
+                .Validate();
+            
+            if (!validationResult.Success)
             {
-                throw new ArgumentNullException(nameof(instance));
-            }
-            if (creatorInfo == null)
-            {
-                throw new ArgumentNullException(nameof(creatorInfo));
-            }
-            if (codePassword == null)
-            {
-                throw new ArgumentNullException(nameof(codePassword));
+                return new ServiceResult<Tuple<Instance, User, UserCredentials>>(validationResult.Error);
             }
             
-            return await this.CreateInternalAsync(instance, creatorInfo, codePassword, oc);
+            return await this.CreateInternalAsync(instanceName, creatorInfo, codePassword, oc);
         }
 
         public async Task<ServiceResult<Instance>> GetAsync(Guid instanceId, NpgsqlConnectionWrapper oc = null)
@@ -90,7 +91,6 @@ where id = @id
 
                 using (var command = connWrapper.CreateCommand())
                 {
-                    var id = Guid.NewGuid();
                     command.CommandText = SqlGetInstance;
                     command.Parameters.Add(new NpgsqlParameter("id", instanceId));
 
@@ -110,8 +110,8 @@ where id = @id
         
         #region private
 
-        private async Task<ServiceResult<Instance>> CreateInternalAsync(
-            Instance instance,
+        private async Task<ServiceResult<Tuple<Instance, User, UserCredentials>>> CreateInternalAsync(
+            string instanceName,
             User creatorInfo,
             CodePassword codePassword, 
             NpgsqlConnectionWrapper oc = null)
@@ -122,37 +122,48 @@ where id = @id
 
                 using (var transaction = connWrapper.BeginTransaction())
                 {
-                    var instanceId = await InsertNewInstance(instance, connWrapper);
-                    
-                    var registrationResult = await this.accountService.RegisterAsync(
-                        creatorInfo, 
-                        codePassword,
+                    var instanceId = await InsertNewInstance(instanceName, connWrapper);
+                    creatorInfo.InstanceId = instanceId;
+                    var registrationResult = await this.accountService.RegisterAsync(codePassword,
+                        DefaultRoles.CreatorRole,
+                        u =>
+                        {
+                            u.Code = "1";
+                            u.Surname = creatorInfo.Surname;
+                            u.Name = creatorInfo.Name;
+                            u.Patronymic = creatorInfo.Patronymic;
+                            u.PhoneNumber = creatorInfo.PhoneNumber;
+                            u.InstanceId = instanceId;
+                        },
                         connWrapper);
                     if (!registrationResult.Success)
                     {
                         transaction.Rollback();
-                        return new ServiceResult<Instance>(registrationResult.Errors);
+                        return new ServiceResult<Tuple<Instance, User, UserCredentials>>(registrationResult.Errors);
                     }
 
                     var user = registrationResult.Result.Item1;
                     var credentials = registrationResult.Result.Item2;
                     await SetInstanceCreator(instanceId, user.Id, connWrapper);
+                    var createdInstance = new Instance(instanceId, instanceName, user.Id);
                     transaction.Commit();
+                    return new ServiceResult<Tuple<Instance, User, UserCredentials>>(
+                        new Tuple<Instance, User, UserCredentials>(createdInstance, user, credentials));
                 }
             }
-            return new ServiceResult<Instance>(ErrorFactory.ServerError());
+            
         }
         
         private static async Task<Guid> InsertNewInstance(
-            Instance instance,
+            string instanceName,
             NpgsqlConnectionWrapper oc)
         {
             using (var command = oc.CreateCommand())
             {
                 var id = Guid.NewGuid();
                 command.CommandText = SqlInsertInstance;
-                command.Parameters.Add(new NpgsqlParameter("id", Guid.NewGuid()));
-                command.Parameters.Add(new NpgsqlParameter("name", instance.Name));
+                command.Parameters.Add(new NpgsqlParameter("id", id));
+                command.Parameters.Add(new NpgsqlParameter("name", instanceName));
                 command.Parameters.Add(new NpgsqlParameter("creator_id", Guid.Empty));
                 await command.ExecuteNonQueryAsync();
                 return id;

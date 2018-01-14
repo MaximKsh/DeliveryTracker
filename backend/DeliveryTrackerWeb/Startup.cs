@@ -5,6 +5,7 @@ using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.DbModels;
 using DeliveryTracker.Identification;
+using DeliveryTracker.Instances;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -32,7 +33,7 @@ namespace DeliveryTrackerWeb
             this.configuration = configuration;
         }
         
-
+        // ReSharper disable once UnusedMember.Global
         public void ConfigureServices(IServiceCollection services)
         {
             //services.AddDbContext<DeliveryTrackerDbContext>(options =>
@@ -61,10 +62,12 @@ namespace DeliveryTrackerWeb
 
             services
                 .AddDeliveryTrackerDatabase()
-                .AddDeliveryTrackerIdentifiaction(this.configuration)
+                .AddDeliveryTrackerIdentification(this.configuration)
+                .AddDeliveryTrackerInstances()
                 ;
         }
 
+        // ReSharper disable once UnusedMember.Global
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             app.UseExceptionHandler(conf =>

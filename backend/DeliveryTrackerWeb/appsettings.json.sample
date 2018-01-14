@@ -17,5 +17,15 @@
     "Lifetime": 1,
     "ClockCkew": 1,
     "RequireHttps": false
+  },
+  
+  "PasswordSettings": {
+    "MinLength": 4,
+    "MaxLength": 20,
+    "AtLeastOneUpperCase": false,
+    "AtLeastOneLowerCase": false,
+    "AtLeastOneDigit": false,
+    "Alphabet": "qwertyuioplkjhgfdsazxcvbbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890!@#$%^&*()-=!~",
+    "SameCharactersInARow": 20
   }
 }

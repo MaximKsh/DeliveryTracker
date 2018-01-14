@@ -66,7 +66,7 @@ namespace DeliveryTracker.Identification
                 [nameof(this.Patronymic)] = this.Patronymic,
                 [nameof(this.PhoneNumber)] = this.PhoneNumber,
                 [nameof(this.Roles)] = this.Roles.SerializeObjectList(),
-                [nameof(this.Position)] = this.Position.Serialize(),
+                [nameof(this.Position)] = this.Position?.Serialize(),
             };
         }
 
@@ -79,7 +79,10 @@ namespace DeliveryTracker.Identification
             this.Name = dict.GetPlain<string>(nameof(this.Name));
             this.Patronymic = dict.GetPlain<string>(nameof(this.Patronymic));
             this.PhoneNumber = dict.GetPlain<string>(nameof(this.PhoneNumber));
-            this.Roles = new ReadOnlyCollection<Role>(dict.GetObjectList<Role>(nameof(this.Roles)));
+            var mutableRoles = dict.GetObjectList<Role>(nameof(this.Roles));
+            this.Roles = mutableRoles != null 
+                ? new ReadOnlyCollection<Role>(mutableRoles)
+                : null;
             this.Position = dict.GetObject<Geoposition>(nameof(this.Position));
         }
     }

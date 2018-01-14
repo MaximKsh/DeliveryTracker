@@ -42,7 +42,8 @@ select 1 from roles where id = @role_id;
 
 insert into role_users(id, user_id, role_id)
 values(@id, @user_id, @role_id)
-on conlict do nothing;
+on conflict do nothing
+returning 1;
 ";
         private const string SqlSelectRoles = @"
 select 1 from users where id = @user_id;
@@ -147,7 +148,9 @@ where user_id = @user_id and role_id = @role_id'
         }
 
         /// <inheritdoc />
-        public async Task<ServiceResult<Role>> GetAsync(Guid roleId, NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult<Role>> GetAsync(
+            Guid roleId, 
+            NpgsqlConnectionWrapper oc = null)
         {
             using (var conn = oc ?? this.cp.Create())
             {
@@ -169,7 +172,9 @@ where user_id = @user_id and role_id = @role_id'
         }
 
         /// <inheritdoc />
-        public async Task<ServiceResult> DeleteAsync(Guid roleId, NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult> DeleteAsync(
+            Guid roleId, 
+            NpgsqlConnectionWrapper oc = null)
         {
             using (var conn = oc ?? this.cp.Create())
             {
@@ -185,7 +190,10 @@ where user_id = @user_id and role_id = @role_id'
         }
 
         /// <inheritdoc />
-        public async Task<ServiceResult> AddToRoleAsync(Guid userId, Guid roleId, NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult> AddToRoleAsync(
+            Guid userId,
+            Guid roleId,
+            NpgsqlConnectionWrapper oc = null)
         {
             using (var conn = oc ?? this.cp.Create())
             {
@@ -297,7 +305,10 @@ where user_id = @user_id and role_id = @role_id'
         }
 
         /// <inheritdoc />
-        public async Task<ServiceResult> RemoveFromRoleAsync(Guid userId, Guid roleId, NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult> RemoveFromRoleAsync(
+            Guid userId,
+            Guid roleId,
+            NpgsqlConnectionWrapper oc = null)
         {
             using (var conn = oc ?? this.cp.Create())
             {

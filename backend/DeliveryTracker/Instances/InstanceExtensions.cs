@@ -6,11 +6,11 @@ namespace DeliveryTracker.Instances
 {
     public static class InstanceExtensions
     {
-        public static IServiceCollection AddInstances(this IServiceCollection services)
+        public static IServiceCollection AddDeliveryTrackerInstances(this IServiceCollection services)
         {
             services
-                .AddScoped<AccountService>()
-                .AddScoped<InstanceService>();
+                .AddSingleton<IAccountService, AccountService>()
+                .AddSingleton<IInstanceService, InstanceService>();
             
             return services;
         }

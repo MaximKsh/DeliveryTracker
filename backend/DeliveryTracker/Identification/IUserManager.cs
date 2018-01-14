@@ -19,7 +19,6 @@ namespace DeliveryTracker.Identification
         /// <summary>
         /// Обновить данные о пользователе с указанным id.
         /// </summary>
-        /// <param name="userId">id пользователя</param>
         /// <param name="user">
         /// Данные для изменения.
         /// Поля Id, Code, InstanceId игнорируются
@@ -27,7 +26,7 @@ namespace DeliveryTracker.Identification
         /// </param>
         /// <param name="oc">Открытое соединение с базой. Может быть null.</param>
         /// <returns></returns>
-        Task<ServiceResult<User>> UpdateAsync(Guid userId, User user, NpgsqlConnectionWrapper oc = null);
+        Task<ServiceResult<User>> UpdateAsync(User user, NpgsqlConnectionWrapper oc = null);
 
         Task<ServiceResult<User>> GetAsync(Guid userId, NpgsqlConnectionWrapper oc = null);
         

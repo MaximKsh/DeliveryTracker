@@ -9,7 +9,7 @@ namespace DeliveryTracker.Identification
 {
     public static class IdentifiactionExtensions
     {
-        public static IServiceCollection AddDeliveryTrackerIdentifiaction(
+        public static IServiceCollection AddDeliveryTrackerIdentification(
             this IServiceCollection services, 
             IConfiguration configuration)
         {
@@ -27,6 +27,17 @@ namespace DeliveryTracker.Identification
                 configuration.GetValue("AuthInfo:ClockCkew", 1),
                 configuration.GetValue("AuthInfo:RequireHttps", true));
             services.AddSingleton(tokenSettings);
+            
+            var passwordSettings = new PasswordSettings(
+                configuration.GetValue("PasswordSettings:MinLength", 6),
+                configuration.GetValue("PasswordSettings:MaxLength", 20),
+                configuration.GetValue("PasswordSettings:AtLeastOneUpperCase", false),
+                configuration.GetValue("PasswordSettings:AtLeastOneLowerCase", false),
+                configuration.GetValue("PasswordSettings:AtLeastOneDigit", false),
+                configuration.GetValue("PasswordSettings:Alphabet", string.Empty),
+                configuration.GetValue("PasswordSettings:SameCharactersInARow", 20)
+                );
+            services.AddSingleton(passwordSettings);
 
             services.AddAuthorization(options =>
             {

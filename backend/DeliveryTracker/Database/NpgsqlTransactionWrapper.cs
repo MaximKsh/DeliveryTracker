@@ -63,12 +63,12 @@ namespace DeliveryTracker.Database
         /// Запланировать принятие транзакции на верхнем уровне вложенности.
         /// Транзакция будет принята в Dispose верхнего блока using.
         /// </summary>
-        /// <exception cref="SimultaneouslyCommitAndRollbackException"></exception>
+        /// <exception cref="CommitAfterRollbackException"></exception>
         public void Commit()
         {
             if (this.DefferedRollback)
             {
-                throw new SimultaneouslyCommitAndRollbackException();
+                throw new CommitAfterRollbackException();
             }
             
             if (!this.DefferedCommit)
@@ -81,14 +81,9 @@ namespace DeliveryTracker.Database
         /// Запланировать откат транзакции на верхнем уровне вложенности.
         /// Транзакция будет отменена в Dispose верхнего блока using.
         /// </summary>
-        /// <exception cref="SimultaneouslyCommitAndRollbackException"></exception>
+        /// <exception cref="CommitAfterRollbackException"></exception>
         public void Rollback()
         {
-            if (this.DefferedRollback)
-            {
-                throw new SimultaneouslyCommitAndRollbackException();
-            }
-            
             if (!this.DefferedRollback)
             {
                 this.DefferedRollback = true;
@@ -103,24 +98,25 @@ namespace DeliveryTracker.Database
         public void Dispose()
         {
             this.level--;
-            if (this.level == 0)
+            if (this.level != 0)
             {
-                if (this.DefferedRollback)
-                {
-                    this.Transaction.Rollback();
-                }
-                else if (this.DefferedCommit || this.autoCommit)
-                {
-                    this.Transaction.Commit();
-                }
-                else if (!this.autoCommit)
-                {
-                    this.Transaction.Rollback();
-                }
-                
-                this.Transaction.Dispose();
-                this.Transaction = null;
+                return;
             }
+            if (this.DefferedRollback)
+            {
+                this.Transaction.Rollback();
+            }
+            else if (this.DefferedCommit || this.autoCommit)
+            {
+                this.Transaction.Commit();
+            }
+            else if (!this.autoCommit)
+            {
+                this.Transaction.Rollback();
+            }
+                
+            this.Transaction.Dispose();
+            this.Transaction = null;
         }
         
         #endregion

@@ -24,6 +24,8 @@
             public const string RoleNameConflict = Pref + "RoleNameConflict";
             public const string UserAlreadyInRole = Pref + "UserAlreadyInRole";
             public const string UserNotFound = Pref + "UserNotFound";
+            public const string AccessDenied = Pref + "AccessDenied";
+            public const string IncorrectPassword = Pref + "IncorrectPassword";
 
             
             
@@ -49,8 +51,6 @@
             
             public const string TaskIsForbidden = Pref + "TaskIsForbidden";
             
-            public const string AccessDenied = Pref + "AccessDenied";
-
             public const string UserDeleted = Pref + "UserDeleted";
             
             public const string RoleRange= Pref + "RoleRange";

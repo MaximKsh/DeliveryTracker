@@ -75,12 +75,12 @@ where id = @id
                 using (var command = connWrapper.CreateCommand())
                 {
                     command.CommandText = SqlCreate;
-                    command.Parameters.Add(new NpgsqlParameter("id", Guid.NewGuid()));
+                    command.Parameters.Add(new NpgsqlParameter("id", user.Id));
                     command.Parameters.Add(new NpgsqlParameter("code", user.Code));
                     command.Parameters.Add(new NpgsqlParameter("surname", user.Surname));
                     command.Parameters.Add(new NpgsqlParameter("name", user.Name));
                     command.Parameters.Add(new NpgsqlParameter("patronymic", user.Patronymic));
-                    command.Parameters.Add(new NpgsqlParameter("phone_number", user.Patronymic));
+                    command.Parameters.Add(new NpgsqlParameter("phone_number", user.PhoneNumber));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", user.InstanceId));
                     using (var reader = await command.ExecuteReaderAsync())
                     {
@@ -97,9 +97,10 @@ where id = @id
 
         
         /// <inheritdoc />
-        public async Task<ServiceResult<User>> UpdateAsync(Guid userId, User user, NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult<User>> UpdateAsync(User user, NpgsqlConnectionWrapper oc = null)
         {
             User updatedUser = null;
+            Guid userId = user.Id;
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {
                 using (var command = connWrapper.CreateCommand())

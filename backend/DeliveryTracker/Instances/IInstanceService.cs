@@ -8,8 +8,7 @@ namespace DeliveryTracker.Instances
 {
     public interface IInstanceService
     {
-        Task<ServiceResult<Instance>> CreateAsync(
-            Instance instance,
+        Task<ServiceResult<Tuple<Instance, User, UserCredentials>>> CreateAsync(string instance,
             User creatorInfo,
             CodePassword codePassword,
             NpgsqlConnectionWrapper oc = null);
