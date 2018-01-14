@@ -2,7 +2,7 @@
 
 namespace DeliveryTracker.Common
 {
-    public sealed class Geoposition : DictionarySerializableBase
+    public sealed class Geoposition : IDictionarySerializable
     {
         /// <summary>
         /// Долгота.
@@ -15,7 +15,7 @@ namespace DeliveryTracker.Common
         public double Latitude { get; set; }
 
         /// <inheritdoc />
-        public override IDictionary<string, object> Serialize()
+        public IDictionary<string, object> Serialize()
         {
             return new Dictionary<string, object>
             {
@@ -25,10 +25,10 @@ namespace DeliveryTracker.Common
         }
 
         /// <inheritdoc />
-        public override void Deserialize(IDictionary<string, object> dict)
+        public void Deserialize(IDictionary<string, object> dict)
         {
-            this.Longitude = GetPlain<double>(dict, nameof(this.Longitude));
-            this.Latitude = GetPlain<double>(dict, nameof(this.Latitude));
+            this.Longitude = dict.GetPlain<double>(nameof(this.Longitude));
+            this.Latitude = dict.GetPlain<double>(nameof(this.Latitude));
         }
     }
 }

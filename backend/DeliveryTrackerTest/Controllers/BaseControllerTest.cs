@@ -17,6 +17,7 @@ namespace DeliveryTrackerTest.Controllers
 {
     public abstract class BaseControllerTest
     {
+        /*
         protected readonly TestServer Server = new TestServer(new WebHostBuilder()
             .UseStartup<TestStartup>());
 
@@ -185,6 +186,6 @@ namespace DeliveryTrackerTest.Controllers
             }
             return strs;
         }
-        
+        */
     }
 }

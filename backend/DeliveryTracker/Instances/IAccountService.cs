@@ -1,25 +1,39 @@
 ﻿using System;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
+using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 
 namespace DeliveryTracker.Instances
 {
     public interface IAccountService
     {
-        Task<ServiceResult<Tuple<User, UserCredentials>>> RegisterAsync(User user, UsernamePassword usernamePassword);
+        Task<ServiceResult<Tuple<User, UserCredentials>>> RegisterAsync(
+            User userInfo, 
+            CodePassword codePassword,
+            NpgsqlConnectionWrapper oc = null);
 
-        Task<ServiceResult<Tuple<User, UserCredentials>>> LoginAsync(UsernamePassword usernamePassword);
+        Task<ServiceResult<Tuple<User, UserCredentials>>> LoginAsync(
+            CodePassword codePassword,
+            NpgsqlConnectionWrapper oc = null);
 
-        Task<ServiceResult<Tuple<User, UserCredentials>>> LoginWithRegistrationAsync(UsernamePassword usernamePassword);
+        Task<ServiceResult<Tuple<User, UserCredentials>>> LoginWithRegistrationAsync(
+            CodePassword codePassword,
+            NpgsqlConnectionWrapper oc = null);
 
-        Task<ServiceResult> EditAsync(string username, User newData);
+        Task<ServiceResult> EditAsync(
+            Guid userId,
+            User newData,
+            NpgsqlConnectionWrapper oc = null);
 
-        Task<ServiceResult> ValidatePasswordAsync(UsernamePassword usernamePassword);
+        Task<ServiceResult> ValidatePasswordAsync(
+            CodePassword codePassword,
+            NpgsqlConnectionWrapper oc = null);
         
         Task<ServiceResult> ChangePasswordAsync(
-            string userName,
+            Guid userId,
             string oldPassword,
-            string newPassword);
+            string newPassword,
+            NpgsqlConnectionWrapper oc = null);
     }
 }

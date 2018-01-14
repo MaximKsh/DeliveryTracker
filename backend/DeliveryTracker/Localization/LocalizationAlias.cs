@@ -15,12 +15,18 @@
         public static class Error
         {
             private const string Pref = LocalizationStringPrefix + "_" + ErrorGroup + "_";
-        
+            
+            
+            public const string InstanceNotFound = Pref + "InstanceNotFound";
+            public const string RoleNotFound = Pref + "RoleNotFound";
+            public const string RoleNameConflict = Pref + "RoleNameConflict";
+            public const string UserAlreadyInRole = Pref + "UserAlreadyInRole";
+            public const string UserNotFound = Pref + "UserNotFound";
+            
+
             public const string ServerError = Pref + "ServerError";
         
             public const string InvalidInputParameter = Pref + "InvalidInputParameter";
-        
-            public const string UserNotFound = Pref + "UserNotFound";
         
             public const string UserWithoutRole = Pref + "UserWithoutRole";
             
@@ -77,6 +83,21 @@
             public const string CompleteTask = Pref + "CompleteTask";
             public const string CancelTask = Pref + "CancelTask";
             public const string TaskCancelledByManager = Pref + "TaskCancelledByManager";
+        }
+        
+        #endregion
+        
+        #region Roles
+        
+        private const string RolesGroup = "Roles";
+        
+        public static class Roles
+        {
+            private const string Pref = LocalizationStringPrefix + "_" + RolesGroup + "_";
+                    
+            public const string CreatorRole = Pref + "CreatorRole";
+            public const string ManagerRole = Pref + "ManagerRole";
+            public const string PerformerRole = Pref + "PerformerRole";
         }
         
         #endregion

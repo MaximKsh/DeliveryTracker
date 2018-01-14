@@ -21,7 +21,6 @@ namespace DeliveryTrackerWeb.Controllers
         
         private readonly AccountService accountService;
         
-        private readonly RoleCache roleCache;
         
         private readonly InstanceService instanceService;
         
@@ -34,13 +33,11 @@ namespace DeliveryTrackerWeb.Controllers
         public InstanceController(
             DeliveryTrackerDbContext dbContext, 
             AccountService accountService,
-            RoleCache roleCache,
             InstanceService instanceService, 
             ILogger<InstanceController> logger)
         {
             this.dbContext = dbContext;
             this.accountService = accountService;
-            this.roleCache = roleCache;
             this.instanceService = instanceService;
             this.logger = logger;
         }

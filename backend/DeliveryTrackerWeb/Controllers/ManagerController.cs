@@ -21,6 +21,7 @@ namespace DeliveryTrackerWeb.Controllers
     [Route("api/manager")]
     public class ManagerController: Controller
     {
+        /*
         #region fields
 
         private readonly TaskService taskService;
@@ -414,6 +415,6 @@ namespace DeliveryTrackerWeb.Controllers
         }
         
         #endregion
-        
+        */
     }
 }

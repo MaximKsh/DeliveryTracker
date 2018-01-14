@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DeliveryTracker.Identification
 {
@@ -7,12 +9,12 @@ namespace DeliveryTracker.Identification
         public UserCredentials(
             Guid id,
             string code,
-            string role,
+            IEnumerable<Role> roles,
             Guid instanceId)
         {
             this.Id = id;
             this.Code = code;
-            this.Role = role;
+            this.Roles = roles.ToList().AsReadOnly();
             this.InstanceId = instanceId;
         }
         
@@ -20,14 +22,13 @@ namespace DeliveryTracker.Identification
 
         public string Code { get; }
         
-        public string Role { get; }
+        public IReadOnlyList<Role> Roles { get; }
         
         public Guid InstanceId { get; }
 
         public bool Valid =>
             this.Id != Guid.Empty
             && !string.IsNullOrWhiteSpace(this.Code)
-            && !string.IsNullOrWhiteSpace(this.Role)
             && this.InstanceId != Guid.Empty;
     }
 }

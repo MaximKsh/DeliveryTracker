@@ -12,6 +12,7 @@ namespace DeliveryTrackerTest.Controllers
 {
     public class UserControllerTest: BaseControllerTest
     {
+        /*
         [Fact]
         public async Task IsServerAvailable()
         {
@@ -122,5 +123,6 @@ namespace DeliveryTrackerTest.Controllers
                 new StringContent(obj2, Encoding.UTF8, ContentType));
             Assert.False(response2.IsSuccessStatusCode);
         }
+        */
     }
 }

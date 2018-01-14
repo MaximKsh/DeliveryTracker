@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,8 +14,7 @@ namespace DeliveryTracker.Identification
             IConfiguration configuration)
         {
             services
-                .AddSingleton<IUserRepository, UserRepository>()
-                .AddSingleton<IRoleRepository, RoleRepository>()
+                .AddSingleton<IUserManager, UserManager>()
                 .AddSingleton<IRoleManager, RoleManager>()
                 .AddSingleton<ISecurityManager, SecurityManager>()
                 ;
@@ -64,6 +64,37 @@ namespace DeliveryTracker.Identification
 
 
             return services;
+        }
+
+        public static Role GetRole(this IDataReader reader)
+        {
+            var idx = 0;
+            return reader.GetRole(ref idx);
+        }
+        
+        public static Role GetRole(this IDataReader reader, ref int idx)
+        {
+            return new Role(reader.GetGuid(idx++), reader.GetString(idx++));
+        }
+        
+        public static User GetUser(this IDataReader reader)
+        {
+            var idx = 0;
+            return reader.GetUser(ref idx);
+        }
+        
+        public static User GetUser(this IDataReader reader, ref int idx)
+        {
+            return new User
+            {
+                Id = reader.GetGuid(idx++),
+                Code = reader.GetString(idx++),
+                Surname = reader.GetString(idx++),
+                Name = reader.GetString(idx++),
+                Patronymic = reader.GetString(idx++),
+                PhoneNumber = reader.GetString(idx++),
+                InstanceId = reader.GetGuid(idx++),
+            };
         }
     }
 }

@@ -3,8 +3,7 @@ using DeliveryTracker.Common;
 
 namespace DeliveryTracker.Identification
 {
-    // ReSharper disable once ClassNeverInstantiated.Global
-    public class UsernamePassword : DictionarySerializableBase
+    public class CodePassword : IDictionarySerializable
     {
         /// <summary>
         /// Имя пользователя.
@@ -17,7 +16,7 @@ namespace DeliveryTracker.Identification
         public string Password { get; set; }
 
         /// <inheritdoc />
-        public override IDictionary<string, object> Serialize()
+        public IDictionary<string, object> Serialize()
         {
             return new Dictionary<string, object>
             {
@@ -27,10 +26,10 @@ namespace DeliveryTracker.Identification
         }
 
         /// <inheritdoc />
-        public override void Deserialize(IDictionary<string, object> dict)
+        public void Deserialize(IDictionary<string, object> dict)
         {
-            this.Username = GetPlain<string>(dict, nameof(this.Username));
-            this.Password = GetPlain<string>(dict, nameof(this.Password));
+            this.Username = dict.GetPlain<string>(nameof(this.Username));
+            this.Password = dict.GetPlain<string>(nameof(this.Password));
         }
     }
 }

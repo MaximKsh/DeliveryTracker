@@ -7,6 +7,7 @@ namespace DeliveryTrackerTest.Controllers
 {
     public class SessionControllerTest: BaseControllerTest
     {
+        /*
         [Fact]
         public async Task IsServerAvailable()
         {
@@ -115,5 +116,7 @@ namespace DeliveryTrackerTest.Controllers
             var session = await CheckSession(client, token.Token.ToLowerInvariant());
             Assert.Null(session);
         }
+    */
     }
+    
 }

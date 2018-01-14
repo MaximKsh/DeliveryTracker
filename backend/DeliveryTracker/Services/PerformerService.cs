@@ -11,6 +11,7 @@ namespace DeliveryTracker.Services
 {
     public class PerformerService
     {
+        /*
         private readonly DeliveryTrackerDbContext dbContext;
 
         private readonly AccountService accountService;
@@ -172,5 +173,6 @@ namespace DeliveryTracker.Services
         }
         
         #endregion
+        */
     }
 }

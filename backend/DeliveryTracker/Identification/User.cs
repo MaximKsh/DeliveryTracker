@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using DeliveryTracker.Common;
-using DeliveryTracker.DbModels;
-using DeliveryTracker.Instances;
 
 namespace DeliveryTracker.Identification
 {
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-    public class User : DictionarySerializableBase
+    public class User : IDictionarySerializable
     {
         /// <summary>
         /// ID пользователя.
@@ -31,19 +30,24 @@ namespace DeliveryTracker.Identification
         public string Name { get; set; }
         
         /// <summary>
+        /// Отчество.
+        /// </summary>
+        public string Patronymic { get; set; }
+        
+        /// <summary>
         /// Телефон пользователя.
         /// </summary>
         public string PhoneNumber { get; set; }
 
         /// <summary>
-        /// Роль пользователя.
+        /// Роли пользователя.
         /// </summary>
-        public string Role { get; set; }
+        public IReadOnlyList<Role> Roles { get; set; }
 
         /// <summary>
         /// Инстанс пользователя.
         /// </summary>
-        public Instance Instance { get; set; }
+        public Guid InstanceId { get; set; }
         
         /// <summary>
         /// Текущая позиция. Актуально только для исполнителя.
@@ -51,7 +55,7 @@ namespace DeliveryTracker.Identification
         public Geoposition Position { get; set; }
 
         /// <inheritdoc />
-        public override IDictionary<string, object> Serialize()
+        public IDictionary<string, object> Serialize()
         {
             return new Dictionary<string, object>
             {
@@ -59,24 +63,24 @@ namespace DeliveryTracker.Identification
                 [nameof(this.Code)] = this.Code,
                 [nameof(this.Surname)] = this.Surname,
                 [nameof(this.Name)] = this.Name,
+                [nameof(this.Patronymic)] = this.Patronymic,
                 [nameof(this.PhoneNumber)] = this.PhoneNumber,
-                [nameof(this.Role)] = this.Role,
-                [nameof(this.Instance)] = this.Instance,
+                [nameof(this.Roles)] = this.Roles.SerializeObjectList(),
                 [nameof(this.Position)] = this.Position.Serialize(),
             };
         }
 
         /// <inheritdoc />
-        public override void Deserialize(IDictionary<string, object> dict)
+        public void Deserialize(IDictionary<string, object> dict)
         {
-            this.Id = GetPlain<Guid>(dict, nameof(this.Id));
-            this.Code = GetPlain<string>(dict, nameof(this.Code));
-            this.Surname = GetPlain<string>(dict, nameof(this.Surname));
-            this.Name = GetPlain<string>(dict, nameof(this.Name));
-            this.PhoneNumber = GetPlain<string>(dict, nameof(this.PhoneNumber));
-            this.Role = GetPlain<string>(dict, nameof(this.Role));
-            this.Instance = GetObject(this.Instance, dict, nameof(this.Instance));
-            this.Position = GetObject(this.Position, dict, nameof(this.Position));
+            this.Id = dict.GetPlain<Guid>(nameof(this.Id));
+            this.Code = dict.GetPlain<string>(nameof(this.Code));
+            this.Surname = dict.GetPlain<string>(nameof(this.Surname));
+            this.Name = dict.GetPlain<string>(nameof(this.Name));
+            this.Patronymic = dict.GetPlain<string>(nameof(this.Patronymic));
+            this.PhoneNumber = dict.GetPlain<string>(nameof(this.PhoneNumber));
+            this.Roles = new ReadOnlyCollection<Role>(dict.GetObjectList<Role>(nameof(this.Roles)));
+            this.Position = dict.GetObject<Geoposition>(nameof(this.Position));
         }
     }
 }

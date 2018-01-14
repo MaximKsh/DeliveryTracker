@@ -18,6 +18,7 @@ namespace DeliveryTrackerWeb.Controllers
     [Route("api/performer")]
     public class PerformerController: Controller
     {
+        /*
         #region fields
         
         private readonly PerformerService performerService;
@@ -452,6 +453,6 @@ namespace DeliveryTrackerWeb.Controllers
         }
         
         #endregion
-        
+        */
     }
 }

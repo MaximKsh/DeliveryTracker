@@ -14,6 +14,7 @@ namespace DeliveryTracker.Tasks
 {
     public class TaskService
     {
+        /*
         #region fields
 
         private readonly TaskStateCache taskStateCache;
@@ -746,5 +747,6 @@ namespace DeliveryTracker.Tasks
         }
         
         #endregion
+        */
     }
 }

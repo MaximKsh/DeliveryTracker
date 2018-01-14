@@ -16,7 +16,7 @@ namespace DeliveryTrackerTest.Controllers
 {
     public class WorkflowTest: BaseControllerTest
     {
-        
+        /*
         /// <summary>
         /// Создаются 10 исполнителей.
         /// Смотрим что они возвращаются в списке
@@ -875,6 +875,6 @@ namespace DeliveryTrackerTest.Controllers
         }
 
         #endregion
-        
+        */
     }
 }

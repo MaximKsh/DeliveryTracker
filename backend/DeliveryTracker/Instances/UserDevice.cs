@@ -3,8 +3,9 @@ using DeliveryTracker.Common;
 
 namespace DeliveryTracker.Instances
 {
-    public class UserDevice : DictionarySerializableBase
+    public class UserDevice 
     {
+        /*
         /// <summary>
         /// Id устройства в Google Firebase.
         /// </summary>
@@ -23,6 +24,6 @@ namespace DeliveryTracker.Instances
         public override void Deserialize(IDictionary<string, object> dict)
         {
             this.FirebaseId = GetPlain<string>(dict, nameof(this.FirebaseId));
-        }
+        }*/
     }
 }

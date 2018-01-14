@@ -7,7 +7,7 @@ namespace DeliveryTrackerTest.Controllers
 {
     public class InstanceControllerTest: BaseControllerTest
     {
-        
+        /*
         [Fact]
         public async Task IsServerAvailable()
         {
@@ -165,6 +165,6 @@ namespace DeliveryTrackerTest.Controllers
             
             await Invite(client, RoleAlias.Performer, performerToken.Token, HttpStatusCode.Forbidden);
         }
-        
+        */
     }
 }

@@ -1,28 +1,47 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
-using DeliveryTracker.DbModels;
+using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
-using DeliveryTracker.Services;
 using DeliveryTracker.Validation;
-using DeliveryTracker.ViewModels;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace DeliveryTracker.Instances
 {
     // ReSharper disable once ClassNeverInstantiated.Global
     public class InstanceService : IInstanceService
     {
+        #region sql
+
+        private const string SqlInsertInstance = @"
+insert into instances(id, name, creator_id)
+values (@id, @name, @creator_id)
+;";
+        
+        private const string SqlSetInstanceCreator = @"
+update instances
+set creator_id = @creator_id
+where id = @id
+;";
+        
+        private const string SqlGetInstance = @"
+select
+    id,
+    name
+    creator_id
+from instances
+where id = @id
+;";
+        
+        #endregion
+        
         #region fields
         
-        private readonly DeliveryTrackerDbContext dbContext;
+        private readonly IPostgresConnectionProvider cp;
 
         private readonly IAccountService accountService;
         
-        private readonly RoleCache roleCache;
-
         private readonly ILogger<InstanceService> logger;
         
         #endregion
@@ -30,289 +49,130 @@ namespace DeliveryTracker.Instances
         #region constructor
         
         public InstanceService(
-            DeliveryTrackerDbContext dbContext,
-            IAccountService accountService, 
-            RoleCache roleCache)
+            IPostgresConnectionProvider cp,
+            IAccountService accountService)
         {
-            this.dbContext = dbContext;
+            this.cp = cp;
             this.accountService = accountService;
-            this.roleCache = roleCache;
         }
         
         #endregion
 
         #region public
-
-        /// <summary>
-        /// Создать группу.
-        /// </summary>
-        /// <param name="instance"></param>
-        /// <returns></returns>
-        public ServiceResult<InstanceModel> CreateInstance(InstanceViewModel instance)
+        
+        public async Task<ServiceResult<Instance>> CreateAsync(
+            Instance instance, 
+            User creatorInfo, 
+            CodePassword codePassword, 
+            NpgsqlConnectionWrapper oc = null)
         {
-            var group = new InstanceModel
+            if (instance == null)
             {
-                Id = Guid.NewGuid(),
-                InstanceName = instance.InstanceName,
-            };
-            var creatingResult = this.dbContext.Instances.Add(group);
-            
-            return new ServiceResult<InstanceModel>(creatingResult.Entity);
-        }
-
-        /// <summary>
-        /// Установить создателя инстанса.
-        /// </summary>
-        /// <param name="instance"></param>
-        /// <param name="creatorId"></param>
-        public ServiceResult<InstanceModel> SetCreator(InstanceModel instance, Guid creatorId)
-        {
-            if (instance.CreatorId.HasValue)
+                throw new ArgumentNullException(nameof(instance));
+            }
+            if (creatorInfo == null)
             {
-                return new ServiceResult<InstanceModel>(
-                    instance,
-                    ErrorFactory.InstanceAlreadyHasCreator(instance.InstanceName));
+                throw new ArgumentNullException(nameof(creatorInfo));
+            }
+            if (codePassword == null)
+            {
+                throw new ArgumentNullException(nameof(codePassword));
             }
             
-            instance.CreatorId = creatorId;
-            var entityEntry = this.dbContext.Instances.Update(instance);
-            return new ServiceResult<InstanceModel>(entityEntry.Entity);
-        }
-        
-        /// <summary>
-        /// Получить создателя указанного инстанса.
-        /// </summary>
-        /// <param name="instance"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<UserModel>> GetCreator(InstanceModel instance)
-        {
-            await this.dbContext.Entry(instance).Reference(p => p.Creator).LoadAsync();
-            return new ServiceResult<UserModel>(instance.Creator);
+            return await this.CreateInternalAsync(instance, creatorInfo, codePassword, oc);
         }
 
-        /// <summary>
-        /// Получить список исполнетелей в инстансе.
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="offset"></param>
-        /// <param name="limit"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<List<UserModel>>> GetPerformers(
-            string username,
-            int limit,
-            int offset)
+        public async Task<ServiceResult<Instance>> GetAsync(Guid instanceId, NpgsqlConnectionWrapper oc = null)
         {
-            throw new NotImplementedException();
-//            var currentUserResult = await this.accountService.FindUser(username);
-//            if (!currentUserResult.Success)
-//            {
-//                return new ServiceResult<List<UserModel>>(ErrorFactory.UserNotFound(username));
-//            }
-//            var user = currentUserResult.Result;
-//            return this.GetPerformers(user, limit, offset);
-        }
+            using (var connWrapper = oc ?? this.cp.Create())
+            {
+                connWrapper.Connect();
 
-        /// <summary>
-        /// Получить список исполнителей в инстансе.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <param name="offset"></param>
-        /// <param name="limit"></param>
-        /// <returns></returns>
-        public ServiceResult<List<UserModel>> GetPerformers(
-            UserModel user,
-            int limit,
-            int offset)
-        {
-            return this.GetUsers(user.InstanceId, this.roleCache.Performer.Id, limit, offset);
-        }
-        
-        /// <summary>
-        /// Получить управляющих инстанса.
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="offset"></param>
-        /// <param name="limit"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<List<UserModel>>> GetManagers(
-            string username,
-            int limit,
-            int offset)
-        {
-            throw new NotImplementedException();
-//            var currentUserResult = await this.accountService.FindUser(username);
-//            if (!currentUserResult.Success)
-//            {
-//                return new ServiceResult<List<UserModel>>(
-//                    ErrorFactory.UserNotFound(username));
-//            }
-//            var user = currentUserResult.Result;
-//            return this.GetManagers(user, limit, offset);
-        }
+                using (var command = connWrapper.CreateCommand())
+                {
+                    var id = Guid.NewGuid();
+                    command.CommandText = SqlGetInstance;
+                    command.Parameters.Add(new NpgsqlParameter("id", instanceId));
 
-        /// <summary>
-        /// Получить управляющих инстанса.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <param name="offset"></param>
-        /// <param name="limit"></param>
-        /// <returns></returns>
-        public ServiceResult<List<UserModel>> GetManagers(
-            UserModel user,
-            int limit,
-            int offset)
-        {
-            return this.GetUsers(user.InstanceId, this.roleCache.Manager.Id, limit, offset);
-        }
-
-        /// <summary>
-        /// Отметить исполнителя удаленным.
-        /// </summary>
-        /// <param name="currentUsername"></param>
-        /// <param name="deletingUsername"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<UserModel>> DeletePerformer(
-            string currentUsername,
-            string deletingUsername)
-        {
-            throw new NotImplementedException();
-//            var currentUserResult = await this.accountService.FindUser(currentUsername);
-//            if (!currentUserResult.Success)
-//            {
-//                return new ServiceResult<UserModel>(ErrorFactory.UserNotFound(currentUsername));
-//            }
-//            var currentUser = currentUserResult.Result;
-//            if (!await this.accountService.IsInRole(currentUser, this.roleCache.Creator, this.roleCache.Manager))
-//            {
-//                return new ServiceResult<UserModel>(ErrorFactory.AccessDenied());
-//            }
-//            var deletingUserResult = await this.accountService.FindUser(deletingUsername);
-//            if (!deletingUserResult.Success)
-//            {
-//                return new ServiceResult<UserModel>(ErrorFactory.UserNotFound(deletingUsername));
-//            }
-//            var deletingUser = deletingUserResult.Result;
-//            if (!await this.accountService.IsInRole(deletingUser, this.roleCache.Performer))
-//            {
-//                return new ServiceResult<UserModel>(ErrorFactory.AccessDenied());
-//            }
-//            var result = await this.accountService.MarkUserAsDeleted(deletingUser);
-//            return result.Success
-//                ? new ServiceResult<UserModel>(result.Result)
-//                : new ServiceResult<UserModel>(result.Errors);
-        }
-        
-        /// <summary>
-        /// Отметить менеджера удаленным.
-        /// </summary>
-        /// <param name="currentUsername"></param>
-        /// <param name="deletingUsername"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<UserModel>> DeleteManager(
-            string currentUsername,
-            string deletingUsername)
-        {
-            throw new NotImplementedException();
-//            var currentUserResult = await this.accountService.FindUser(currentUsername);
-//            if (!currentUserResult.Success)
-//            {
-//                return new ServiceResult<UserModel>(ErrorFactory.UserNotFound(currentUsername));
-//            }
-//            var currentUser = currentUserResult.Result;
-//            if (!await this.accountService.IsInRole(currentUser, this.roleCache.Creator))
-//            {
-//                return new ServiceResult<UserModel>(ErrorFactory.AccessDenied());
-//            }
-//            var deletingUserResult = await this.accountService.FindUser(deletingUsername);
-//            if (!deletingUserResult.Success)
-//            {
-//                return new ServiceResult<UserModel>(ErrorFactory.UserNotFound(deletingUsername));
-//            }
-//            var deletingUser = deletingUserResult.Result;
-//            if (!await this.accountService.IsInRole(deletingUser, this.roleCache.Manager))
-//            {
-//                return new ServiceResult<UserModel>(ErrorFactory.AccessDenied());
-//            }
-//            var result = await this.accountService.MarkUserAsDeleted(deletingUser);
-//            return result.Success
-//                ? new ServiceResult<UserModel>(result.Result)
-//                : new ServiceResult<UserModel>(result.Errors);
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return new ServiceResult<Instance>(reader.GetInstance());
+                        }
+                        return new ServiceResult<Instance>(ErrorFactory.InstanceNotFound());
+                    }
+                }
+            }
         }
         
         #endregion
         
         #region private
 
-        private ServiceResult<List<UserModel>> GetUsers(
-            Guid instanceId,
-            Guid roleId,
-            int limit,
-            int offset)
-        {
-            IQueryable<UserModel> users = this.dbContext.Users
-                .Join(this.dbContext.UserRoles, user => user.Id, ru => ru.UserId, (user, ru) => new {user, ru})
-                .Join(this.dbContext.Roles, arg => arg.ru.RoleId, role => role.Id, (arg, role) => new {arg.user, role})
-                .Where(p => p.user.InstanceId == instanceId && p.role.Id == roleId)
-                .OrderBy(p => p.user.Surname)
-                .ThenBy(p => p.user.Name)
-                .Skip(offset)
-                .Take(limit)
-                .Select(p => p.user);
-
-            return new ServiceResult<List<UserModel>>(users.ToList());
-        }
-
         private async Task<ServiceResult<Instance>> CreateInternalAsync(
             Instance instance,
-            User creator,
-            UsernamePassword usernamePassword)
+            User creatorInfo,
+            CodePassword codePassword, 
+            NpgsqlConnectionWrapper oc = null)
         {
-            using (var transaction = this.dbContext.Database.BeginTransaction())
+            using (var connWrapper = oc ?? this.cp.Create())
             {
-                try
+                connWrapper.Connect();
+
+                using (var transaction = connWrapper.BeginTransaction())
                 {
-                    var registrationResult = await this.accountService.RegisterAsync(creator, usernamePassword);
+                    var instanceId = await InsertNewInstance(instance, connWrapper);
+                    
+                    var registrationResult = await this.accountService.RegisterAsync(
+                        creatorInfo, 
+                        codePassword,
+                        connWrapper);
                     if (!registrationResult.Success)
                     {
                         transaction.Rollback();
                         return new ServiceResult<Instance>(registrationResult.Errors);
                     }
 
-                    
-                    
-                    this.dbContext.SaveChanges();
+                    var user = registrationResult.Result.Item1;
+                    var credentials = registrationResult.Result.Item2;
+                    await SetInstanceCreator(instanceId, user.Id, connWrapper);
                     transaction.Commit();
-                }
-                catch (Exception e)
-                {
-                    transaction.Rollback();
-                    this.logger.LogError(e, "CreateInternal");
                 }
             }
             return new ServiceResult<Instance>(ErrorFactory.ServerError());
         }
         
-        #endregion
-
-        public async Task<ServiceResult<Instance>> CreateAsync(
-            Instance instance, 
-            User creator,
-            UsernamePassword usernamePassword)
+        private static async Task<Guid> InsertNewInstance(
+            Instance instance,
+            NpgsqlConnectionWrapper oc)
         {
-            if (instance == null)
+            using (var command = oc.CreateCommand())
             {
-                throw new ArgumentNullException(nameof(instance));
+                var id = Guid.NewGuid();
+                command.CommandText = SqlInsertInstance;
+                command.Parameters.Add(new NpgsqlParameter("id", Guid.NewGuid()));
+                command.Parameters.Add(new NpgsqlParameter("name", instance.Name));
+                command.Parameters.Add(new NpgsqlParameter("creator_id", Guid.Empty));
+                await command.ExecuteNonQueryAsync();
+                return id;
             }
-            if (creator == null)
-            {
-                throw new ArgumentNullException(nameof(creator));
-            }
-            if (usernamePassword == null)
-            {
-                throw new ArgumentNullException(nameof(usernamePassword));
-            }
-            
-            return await this.CreateInternalAsync(instance, creator, usernamePassword);
         }
+        
+        private static async Task SetInstanceCreator(
+            Guid instanceId,
+            Guid creatorId,
+            NpgsqlConnectionWrapper oc)
+        {
+            using (var command = oc.CreateCommand())
+            {
+                command.CommandText = SqlSetInstanceCreator;
+                command.Parameters.Add(new NpgsqlParameter("id", instanceId));
+                command.Parameters.Add(new NpgsqlParameter("creator_id", creatorId));
+                await command.ExecuteNonQueryAsync();
+            }
+        }
+        
+        #endregion
     }
 }

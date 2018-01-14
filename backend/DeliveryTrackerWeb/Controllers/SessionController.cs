@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
@@ -22,8 +23,9 @@ namespace DeliveryTrackerWeb.Controllers
     {
         #region fields
 
-        private readonly IUserRepository userRepository;
+        private readonly IUserManager userManager;
         
+        private readonly IRoleManager roleManager;
         private readonly ISecurityManager securityManager;
 
         private readonly IPostgresConnectionProvider connectionProvider;
@@ -35,12 +37,14 @@ namespace DeliveryTrackerWeb.Controllers
         #region constuctor
         
         public SessionController(
-            IUserRepository userRepository,
+            IUserManager userManager,
+            IRoleManager roleManager,
             ISecurityManager securityManager,
             ILogger<SessionController> logger, 
             IPostgresConnectionProvider connectionProvider)
         {
-            this.userRepository = userRepository;
+            this.userManager = userManager;
+            this.roleManager = roleManager;
             this.securityManager = securityManager;
             this.logger = logger;
             this.connectionProvider = connectionProvider;
@@ -51,31 +55,32 @@ namespace DeliveryTrackerWeb.Controllers
         [HttpGet("cc")]
         public async Task<IActionResult> MethodC()
         {
+            var roles = new List<Role>();
+            roles.Add(new Role(DefaultRoles.CreatorRole, DefaultRoles.CreatorRoleName));
+            roles.Add(new Role(DefaultRoles.ManagerRole, DefaultRoles.ManagerRoleName));
 
-            using (var conn = this.connectionProvider.Create().Connect())
+            var user = new User()
             {
-                using (var conn2 = conn?.Connect() ?? this.connectionProvider.Create().Connect())
+                Id = Guid.NewGuid(),
+                Code = "abc",
+                Position = new Geoposition()
                 {
-                    
-
-                }
-
-            }
-
+                    Latitude = 1,
+                    Longitude = 2,
+                },
+                Roles = roles.AsReadOnly(),
+            };
+            var user2 = new User();
+            var userSerialized = user.Serialize();
+            user2.Deserialize(userSerialized);
             return this.Ok();
         }
 
         [HttpGet("aa")]
         public async Task<IActionResult> MethodA(string username, string password)
         {
-            var newUser = this.userRepository.Create(new User
-            {
-                Id = Guid.NewGuid(),
-                Code = username,
-            });
-            var credentials = this.securityManager.ValidatePassword(username, password);
-            var token = this.securityManager.AcquireToken(credentials);
-            return this.Ok(token);
+           
+            return this.Ok();
         }
 
         [Authorize]

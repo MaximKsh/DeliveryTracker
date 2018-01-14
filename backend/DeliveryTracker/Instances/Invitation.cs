@@ -5,7 +5,7 @@ using DeliveryTracker.Identification;
 
 namespace DeliveryTracker.Instances
 {
-    public class Invitation : DictionarySerializableBase
+    public class Invitation : IDictionarySerializable
     {
         /// <summary>
         /// Код приглашения.
@@ -23,7 +23,7 @@ namespace DeliveryTracker.Instances
         public User PreliminaryUser { get; set; }
 
         /// <inheritdoc />
-        public override IDictionary<string, object> Serialize()
+        public IDictionary<string, object> Serialize()
         {
             return new Dictionary<string, object>
             {
@@ -34,11 +34,11 @@ namespace DeliveryTracker.Instances
         }
 
         /// <inheritdoc />
-        public override void Deserialize(IDictionary<string, object> dict)
+        public void Deserialize(IDictionary<string, object> dict)
         {
-            this.InvitationCode = GetPlain<string>(dict, nameof(this.InvitationCode));
-            this.ExpirationDate = GetPlain<DateTime>(dict, nameof(this.ExpirationDate));
-            this.PreliminaryUser = GetObject(this.PreliminaryUser, dict, nameof(this.InvitationCode));
+            this.InvitationCode = dict.GetPlain<string>(nameof(this.InvitationCode));
+            this.ExpirationDate = dict.GetPlain<DateTime>(nameof(this.ExpirationDate));
+            this.PreliminaryUser = dict.GetObject<User>(nameof(this.PreliminaryUser));
         }
     }
 }

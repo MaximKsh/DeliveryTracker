@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using DeliveryTracker.Database;
@@ -31,14 +32,20 @@ where id = @id
 
         private readonly IPostgresConnectionProvider cp;
 
+        private readonly IRoleManager roleManager;
+        
         private readonly TokenSettings tokenSettings;
 
         private readonly PasswordHasher<User> passwordHasher = new PasswordHasher<User>();
 
-        public SecurityManager(IPostgresConnectionProvider cp, TokenSettings tokenSettings)
+        public SecurityManager(
+            IPostgresConnectionProvider cp,
+            IRoleManager roleManager,
+            TokenSettings tokenSettings)
         {
-            this.tokenSettings = tokenSettings;
             this.cp = cp;
+            this.roleManager = roleManager;
+            this.tokenSettings = tokenSettings;
         }
 
         /// <inheritdoc />
@@ -49,11 +56,10 @@ where id = @id
         {
             using (var connWrapper = outerConnection?.Connect() ?? this.cp.Create().Connect())
             {
-                var conn = connWrapper.Connection;
                 Guid id;
                 Guid instanceId;
                 var passwordHash = string.Empty;
-                using (var command = conn.CreateCommand())
+                using (var command = connWrapper.CreateCommand())
                 {
                     command.CommandText = SqlSelectPassword;
                     command.Parameters.Add(new NpgsqlParameter("code", code));
@@ -70,7 +76,8 @@ where id = @id
                 if (id != Guid.Empty
                     && this.CheckPassword(passwordHash, password))
                 {
-                    return new UserCredentials(id, code, "", instanceId);
+                    var roles = await this.roleManager.GetUserRolesAsync(id, oc: connWrapper);
+                    return new UserCredentials(id, code, roles.Result, instanceId);
                 }
 
                 return null;
@@ -86,8 +93,7 @@ where id = @id
             var newHashedPassword = this.passwordHasher.HashPassword(null, newPassword);
             using (var connWrapper = outerConnection?.Connect() ?? this.cp.Create().Connect())
             {
-                var conn = connWrapper.Connection;
-                using (var command = conn.CreateCommand())
+                using (var command = connWrapper.CreateCommand())
                 {
                     command.CommandText = SqlUpdatePassword;
                     command.Parameters.Add(new NpgsqlParameter("password", newHashedPassword));
@@ -104,9 +110,9 @@ where id = @id
             {
                 new Claim(DeliveryTrackerClaims.Id, credentials.Id.ToString()),
                 new Claim(DeliveryTrackerClaims.Code, credentials.Code),
-                new Claim(DeliveryTrackerClaims.Roles, credentials.Role),
                 new Claim(DeliveryTrackerClaims.InstanceId, credentials.InstanceId.ToString()),
             };
+            claims.AddRange(credentials.Roles.Select(p => new Claim(DeliveryTrackerClaims.Roles, p.Name)));
 
             var identity = new ClaimsIdentity(
                 claims,
@@ -130,5 +136,6 @@ where id = @id
 
         private bool CheckPassword(string hash, string newPassword) =>
             this.passwordHasher.VerifyHashedPassword(null, hash, newPassword) == PasswordVerificationResult.Success;
+
     }
 }

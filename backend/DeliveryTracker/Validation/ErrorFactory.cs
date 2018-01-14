@@ -9,6 +9,7 @@ namespace DeliveryTracker.Validation
 {
     public static class ErrorFactory
     {
+        
         /// <summary>
         /// Ошибка сервера.
         /// </summary>
@@ -17,6 +18,80 @@ namespace DeliveryTracker.Validation
             new Error(
                 ErrorCode.ServerError,
                 LocalizationAlias.Error.ServerError);
+        
+        /// <summary>
+        /// Инстанс не найден.
+        /// </summary>
+        /// <returns></returns>
+        public static IError InstanceNotFound() =>
+            new Error(
+                ErrorCode.InstanceNotFound,
+                LocalizationAlias.Error.InstanceNotFound);
+        
+        
+        /// <summary>
+        /// Роль не найдена.
+        /// </summary>
+        /// <returns></returns>
+        public static IError RoleNotFound() =>
+            new Error(
+                ErrorCode.RoleNotFound,
+                LocalizationAlias.Error.RoleNotFound);
+        
+        /// <summary>
+        /// Роль с таким именем уже существует.
+        /// </summary>
+        /// <returns></returns>
+        public static IError RoleNameConflict() =>
+            new Error(
+                ErrorCode.RoleNameConflict,
+                LocalizationAlias.Error.RoleNameConflict);
+        
+        /// <summary>
+        /// Пользователь уже входит в роль.
+        /// </summary>
+        /// <returns></returns>
+        public static IError UserAlreadyInRole() =>
+            new Error(
+                ErrorCode.UserAlreadyInRole,
+                LocalizationAlias.Error.UserAlreadyInRole);
+        
+        
+        /// <summary>
+        /// Пользователь не найден.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public static IError UserNotFound(Guid userId) =>
+            new Error(
+                ErrorCode.UserNotFound,
+                LocalizationAlias.Error.UserNotFound,
+                new Dictionary<string, string>
+                {
+                    ["userId"] = userId.ToString(),
+                });
+        
+        /// <summary>
+        /// Пользователь не найден.
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        public static IError UserNotFound(string code) =>
+            new Error(
+                ErrorCode.UserNotFound,
+                LocalizationAlias.Error.UserNotFound,
+                new Dictionary<string, string>
+                {
+                    ["code"] = code,
+                });
+        
+        
+        
+        
+        
+        
+        
+        
 
 
         /// <summary>
@@ -30,19 +105,7 @@ namespace DeliveryTracker.Validation
                 LocalizationAlias.Error.InvalidInputParameter,
                 invalidParameters.ToDictionary(k => k.Key, v => v.Value?.ToString() ?? "null"));
       
-        /// <summary>
-        /// Пользователь не найден.
-        /// </summary>
-        /// <param name="username"></param>
-        /// <returns></returns>
-        public static IError UserNotFound(string username) =>
-            new Error(
-                ErrorCode.UserNotFound,
-                LocalizationAlias.Error.UserNotFound,
-                new Dictionary<string, string>
-                {
-                    ["username"] = username,
-                });
+       
         
         /// <summary>
         /// Для пользователя не найдена роль.
