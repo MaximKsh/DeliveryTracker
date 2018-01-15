@@ -4,17 +4,17 @@ namespace DeliveryTracker.Database
 {
     public class PostgresConnectionProvider : IPostgresConnectionProvider
     {
-        private readonly IConfiguration configuration;
+        private readonly string connectionString;
 
         public PostgresConnectionProvider(IConfiguration configuration)
         {
-            this.configuration = configuration;
+            this.connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
         /// <inheritdoc />
         public NpgsqlConnectionWrapper Create()
         {
-            return new NpgsqlConnectionWrapper(this.configuration.GetConnectionString("DefaultConnection"));
+            return new NpgsqlConnectionWrapper(this.connectionString);
         }
     }
 }

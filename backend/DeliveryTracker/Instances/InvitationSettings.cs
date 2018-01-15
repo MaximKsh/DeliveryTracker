@@ -1,6 +1,6 @@
 ﻿namespace DeliveryTracker.Instances
 {
-    public class InvitationSettings
+    public sealed class InvitationSettings
     {
         public InvitationSettings(
             int expiresInDays,

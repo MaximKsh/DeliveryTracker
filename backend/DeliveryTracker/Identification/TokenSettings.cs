@@ -6,7 +6,7 @@ namespace DeliveryTracker.Identification
     /// <summary>
     /// Информация для JWT-токенов
     /// </summary>
-    public class TokenSettings
+    public sealed class TokenSettings
     {
         /// <summary>
         /// Приватный ключ для токена.

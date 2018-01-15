@@ -4,7 +4,7 @@
     {
         public const string Id = "Id";
         public const string Code = "Code";
-        public const string Roles = "Role";
+        public const string Role = "Role";
         public const string InstanceId = "InstanceId";
     }
 }

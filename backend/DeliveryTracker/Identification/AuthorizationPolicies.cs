@@ -24,25 +24,25 @@ namespace DeliveryTracker.Identification
         public static readonly AuthorizationPolicy CreatorPolicy =
             new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
                 .RequireAuthenticatedUser()
-                .RequireClaim(DeliveryTrackerClaims.Roles, DefaultRoles.CreatorRole)
+                .RequireClaim(DeliveryTrackerClaims.Role, DefaultRoles.CreatorRole)
                 .Build();
         
         public static readonly AuthorizationPolicy ManagerPolicy =
             new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
                 .RequireAuthenticatedUser()
-                .RequireClaim(DeliveryTrackerClaims.Roles, DefaultRoles.ManagerRole)
+                .RequireClaim(DeliveryTrackerClaims.Role, DefaultRoles.ManagerRole)
                 .Build();
         
         public static readonly AuthorizationPolicy CreatorOrManagerPolicy =
             new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
                 .RequireAuthenticatedUser()
-                .RequireClaim(DeliveryTrackerClaims.Roles, DefaultRoles.CreatorRole, DefaultRoles.ManagerRole)
+                .RequireClaim(DeliveryTrackerClaims.Role, DefaultRoles.CreatorRole, DefaultRoles.ManagerRole)
                 .Build();
         
         public static readonly AuthorizationPolicy PerformerPolicy =
             new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
                 .RequireAuthenticatedUser()
-                .RequireClaim(DeliveryTrackerClaims.Roles, DefaultRoles.PerformerRole)
+                .RequireClaim(DeliveryTrackerClaims.Role, DefaultRoles.PerformerRole)
                 .Build();
 
     }

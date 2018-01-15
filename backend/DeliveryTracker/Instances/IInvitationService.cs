@@ -6,7 +6,7 @@ using DeliveryTracker.Identification;
 
 namespace DeliveryTracker.Instances
 {
-    public interface IInvitationManager
+    public interface IInvitationService
     {
         /// <summary>
         /// Сформировать код без проверки на повторения.

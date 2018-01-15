@@ -1,25 +1,21 @@
-﻿using System;
+using System;
+using System.Threading.Tasks;
 using DeliveryTracker.Common;
+using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 
 namespace DeliveryTracker.Instances
 {
     public interface IUserService
     {
-        ServiceResult<Invitation> CreateInvitation(User preliminaryUser);
+        Task<ServiceResult<User>> GetAsync(Guid userId, NpgsqlConnectionWrapper oc = null);
+               
+        Task<ServiceResult<User>> GetAsync(string code, NpgsqlConnectionWrapper oc = null);
+        
+        Task<ServiceResult<User>> EditAsync(User newData, NpgsqlConnectionWrapper oc = null);
 
-        ServiceResult<Invitation> GetInvitation(Guid invitationId);
-        
-        ServiceResult<Invitation> GetInvitation(string invitationCode);
-        
-        ServiceResult DeleteInvitation(Guid invitationId);
-        
-        ServiceResult DeleteInvitation(string invitationCode);
-        
-        ServiceResult<User> Get(string userName);
-        
-        ServiceResult Edit(User newData);
+        Task<ServiceResult> DeleteAsync(Guid userId, NpgsqlConnectionWrapper oc = null);
 
-        ServiceResult Delete(string userName);
+        Task<ServiceResult> UpdatePositionAsync(Guid userId, Geoposition position, NpgsqlConnectionWrapper oc = null);
     }
 }

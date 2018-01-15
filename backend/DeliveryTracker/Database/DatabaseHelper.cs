@@ -1,6 +1,6 @@
 ﻿namespace DeliveryTracker.Database
 {
-    public class DatabaseHelper
+    public static class DatabaseHelper
     {
         public const int DefaultLimit = 100;
 

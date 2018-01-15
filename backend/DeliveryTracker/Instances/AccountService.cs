@@ -20,7 +20,7 @@ namespace DeliveryTracker.Instances
 
         private readonly ISecurityManager securityManager;
 
-        private readonly IInvitationManager invitationManager;
+        private readonly IInvitationService invitationService;
 
         private readonly ILogger<AccountService> logger;
 
@@ -32,13 +32,13 @@ namespace DeliveryTracker.Instances
             IPostgresConnectionProvider cp, 
             IUserManager userManager,
             ISecurityManager securityManager,
-            IInvitationManager invitationManager,
+            IInvitationService invitationService,
             ILogger<AccountService> logger)
         {
             this.cp = cp;
             this.userManager = userManager;
             this.securityManager = securityManager;
-            this.invitationManager = invitationManager;
+            this.invitationService = invitationService;
             this.logger = logger;
         }
 
@@ -148,7 +148,7 @@ namespace DeliveryTracker.Instances
                         {
                             continue;
                         }
-                        var getResult = await this.invitationManager.GetAsync(codePassword.Code, conn);
+                        var getResult = await this.invitationService.GetAsync(codePassword.Code, conn);
                         if (!getResult.Success)
                         {
                             continue;
@@ -194,11 +194,14 @@ namespace DeliveryTracker.Instances
         }
         
         /// <inheritdoc />
-        public async Task<ServiceResult<User>> EditAsync(User newData, NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult<User>> EditAsync(
+            User newData, 
+            NpgsqlConnectionWrapper oc = null)
         {
             return await this.userManager.EditAsync(newData, oc);
         }
 
+        /// <inheritdoc />
         public async Task<ServiceResult> ChangePasswordAsync(
             Guid userId, 
             string oldPassword, 

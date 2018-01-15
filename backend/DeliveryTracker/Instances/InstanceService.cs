@@ -41,7 +41,7 @@ where id = @id
 
         private readonly IAccountService accountService;
 
-        private readonly IInvitationManager invitationManager;
+        private readonly IInvitationService invitationService;
         
         private readonly ILogger<InstanceService> logger;
         
@@ -51,11 +51,11 @@ where id = @id
         
         public InstanceService(
             IPostgresConnectionProvider cp,
-            IInvitationManager invitationManager,
+            IInvitationService invitationService,
             IAccountService accountService)
         {
             this.cp = cp;
-            this.invitationManager = invitationManager;
+            this.invitationService = invitationService;
             this.accountService = accountService;
         }
         
@@ -126,7 +126,7 @@ where id = @id
                 {
                     var instanceId = await InsertNewInstance(instanceName, connWrapper);
                     creatorInfo.InstanceId = instanceId;
-                    var code = await this.invitationManager.GenerateUniqueCodeAsync(oc);
+                    var code = await this.invitationService.GenerateUniqueCodeAsync(oc);
                     var registrationResult = await this.accountService.RegisterAsync(
                         codePassword,
                         u =>

@@ -11,7 +11,7 @@ using NpgsqlTypes;
 
 namespace DeliveryTracker.Instances
 {
-    public class InvitationManager : IInvitationManager
+    public class InvitationService : IInvitationService
     {
         #region sql
 
@@ -53,16 +53,16 @@ where expires < (now() AT TIME ZONE 'UTC');
 
         private readonly InvitationSettings invitationSettings;
         
-        private readonly ILogger<InvitationManager> logger;
+        private readonly ILogger<InvitationService> logger;
         
         #endregion
         
         #region constructor
         
-        public InvitationManager(
+        public InvitationService(
             IPostgresConnectionProvider cp,
             InvitationSettings invitationSettings,
-            ILogger<InvitationManager> logger)
+            ILogger<InvitationService> logger)
         {
             this.cp = cp;
             this.invitationSettings = invitationSettings;

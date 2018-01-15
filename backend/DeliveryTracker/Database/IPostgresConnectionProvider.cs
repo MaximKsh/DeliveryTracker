@@ -1,6 +1,4 @@
-﻿using Npgsql;
-
-namespace DeliveryTracker.Database
+﻿namespace DeliveryTracker.Database
 {
     public interface IPostgresConnectionProvider
     {

@@ -144,7 +144,7 @@ returning code, role, instance_id
             {
                 new Claim(DeliveryTrackerClaims.Id, credentials.Id.ToString()),
                 new Claim(DeliveryTrackerClaims.Code, credentials.Code),
-                new Claim(DeliveryTrackerClaims.Roles, credentials.Role),
+                new Claim(DeliveryTrackerClaims.Role, credentials.Role),
                 new Claim(DeliveryTrackerClaims.InstanceId, credentials.InstanceId.ToString()),
             };
 

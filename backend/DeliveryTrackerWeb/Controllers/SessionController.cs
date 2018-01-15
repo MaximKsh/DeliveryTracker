@@ -25,7 +25,7 @@ namespace DeliveryTrackerWeb.Controllers
 
         private readonly IUserManager userManager;
 
-        private readonly IInvitationManager invitationManager;
+        private readonly IInvitationService invitationService;
         
         private readonly ISecurityManager securityManager;
 
@@ -42,14 +42,14 @@ namespace DeliveryTrackerWeb.Controllers
         public SessionController(
             IUserManager userManager,
             ISecurityManager securityManager,
-            IInvitationManager invitationManager,
+            IInvitationService invitationService,
             ILogger<SessionController> logger, 
             IPostgresConnectionProvider connectionProvider, 
             IInstanceService instanceService)
         {
             this.userManager = userManager;
             this.securityManager = securityManager;
-            this.invitationManager = invitationManager;
+            this.invitationService = invitationService;
             this.logger = logger;
             this.connectionProvider = connectionProvider;
             this.instanceService = instanceService;
@@ -72,7 +72,7 @@ namespace DeliveryTrackerWeb.Controllers
                 Code = "aaaaa",
                 Password = "abc",
             };
-            var result = await this.invitationManager.DeleteAsync("Rspf");
+            var result = await this.invitationService.DeleteAsync("Rspf");
             return this.Ok();
         }
 

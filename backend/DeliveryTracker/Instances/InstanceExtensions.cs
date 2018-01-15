@@ -15,9 +15,10 @@ namespace DeliveryTracker.Instances
             IConfiguration configuration)
         {
             services
-                .AddSingleton<IInvitationManager, InvitationManager>()
+                .AddSingleton<IInvitationService, InvitationService>()
                 .AddSingleton<IAccountService, AccountService>()
-                .AddSingleton<IInstanceService, InstanceService>();
+                .AddSingleton<IInstanceService, InstanceService>()
+                .AddSingleton<IUserService, UserService>();
             
             var invitationSettings = new InvitationSettings(
                 configuration.GetValue("InvitationSettings:ExpiresInDays", 3),
