@@ -16,7 +16,7 @@ namespace DeliveryTracker.Instances
         public static string GetInstanceColumns(string prefix = null)
         {
             prefix = prefix ?? string.Empty;
-            return string.Join("," + Environment.NewLine, InvitationColumnList.Select(p => prefix + p));
+            return string.Join("," + Environment.NewLine, InstanceColumnList.Select(p => prefix + p));
         }
         
         public static readonly IReadOnlyList<string> InvitationColumnList = new List<string>

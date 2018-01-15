@@ -1,0 +1,16 @@
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/bin/Debug/netcoreapp2.0/xunit.runner.visualstudio.dotnetcore.testadapter.dll
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/bin/Debug/netcoreapp2.0/xunit.runner.reporters.netcoreapp10.dll
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/bin/Debug/netcoreapp2.0/xunit.runner.utility.netcoreapp10.dll
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/bin/Debug/netcoreapp2.0/DeliveryTracker.Tests.deps.json
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/bin/Debug/netcoreapp2.0/DeliveryTracker.Tests.runtimeconfig.json
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/bin/Debug/netcoreapp2.0/DeliveryTracker.Tests.runtimeconfig.dev.json
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/bin/Debug/netcoreapp2.0/DeliveryTracker.Tests.dll
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/bin/Debug/netcoreapp2.0/DeliveryTracker.Tests.pdb
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/bin/Debug/netcoreapp2.0/DeliveryTracker.dll
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/bin/Debug/netcoreapp2.0/DeliveryTracker.pdb
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/obj/Debug/netcoreapp2.0/DeliveryTracker.Tests.csproj.CoreCompileInputs.cache
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/obj/Debug/netcoreapp2.0/DeliveryTracker.Tests.AssemblyInfoInputs.cache
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/obj/Debug/netcoreapp2.0/DeliveryTracker.Tests.AssemblyInfo.cs
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/obj/Debug/netcoreapp2.0/DeliveryTracker.Tests.dll
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/obj/Debug/netcoreapp2.0/DeliveryTracker.Tests.pdb
+/home/maxim/KV_Team/DeliveryTracker/backend/Tests/DeliveryTracker.Tests/bin/Debug/netcoreapp2.0/appsettings.json

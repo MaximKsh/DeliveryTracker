@@ -86,8 +86,8 @@ where id = @id
                     command.Parameters.Add(new NpgsqlParameter("role", user.Role));
                     command.Parameters.Add(new NpgsqlParameter("surname", user.Surname));
                     command.Parameters.Add(new NpgsqlParameter("name", user.Name));
-                    command.Parameters.Add(new NpgsqlParameter("patronymic", user.Patronymic));
-                    command.Parameters.Add(new NpgsqlParameter("phone_number", user.PhoneNumber));
+                    command.Parameters.Add(new NpgsqlParameter("patronymic", user.Patronymic).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("phone_number", user.PhoneNumber).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("instance_id", user.InstanceId));
                     using (var reader = await command.ExecuteReaderAsync())
                     {

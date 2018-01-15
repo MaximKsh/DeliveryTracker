@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeliveryTrackerTest", "Deli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeliveryTrackerWeb", "DeliveryTrackerWeb\DeliveryTrackerWeb.csproj", "{4E48E3A8-0AB4-48CB-B51C-0704B49D1068}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{F04DE3D1-1E0F-43F8-8966-F19244003A16}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeliveryTracker.Tests", "Tests\DeliveryTracker.Tests\DeliveryTracker.Tests.csproj", "{6899D83C-E875-472D-8359-82545E1A55FF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,8 +31,15 @@ Global
 		{4E48E3A8-0AB4-48CB-B51C-0704B49D1068}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4E48E3A8-0AB4-48CB-B51C-0704B49D1068}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4E48E3A8-0AB4-48CB-B51C-0704B49D1068}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6899D83C-E875-472D-8359-82545E1A55FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6899D83C-E875-472D-8359-82545E1A55FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6899D83C-E875-472D-8359-82545E1A55FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6899D83C-E875-472D-8359-82545E1A55FF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6899D83C-E875-472D-8359-82545E1A55FF} = {F04DE3D1-1E0F-43F8-8966-F19244003A16}
 	EndGlobalSection
 EndGlobal

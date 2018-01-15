@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using DeliveryTracker.Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -91,8 +92,8 @@ namespace DeliveryTracker.Identification
                 Role = reader.GetString(idx++),
                 Surname = reader.GetString(idx++),
                 Name = reader.GetString(idx++),
-                Patronymic = reader.GetString(idx++),
-                PhoneNumber = reader.GetString(idx++),
+                Patronymic = reader.GetValueOrDefault<string>(idx++),
+                PhoneNumber = reader.GetValueOrDefault<string>(idx++),
                 InstanceId = reader.GetGuid(idx++),
             };
         }

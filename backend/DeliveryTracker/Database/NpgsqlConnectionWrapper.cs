@@ -100,7 +100,6 @@ namespace DeliveryTracker.Database
             if (this.level == 0)
             {
                 this.Connection.Dispose();
-                this.Connection = null;
             }
         }
         
