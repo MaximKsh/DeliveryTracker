@@ -1,4 +1,5 @@
-﻿using DeliveryTracker.ViewModels;
+﻿using System.Threading.Tasks;
+using DeliveryTracker.Identification;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DeliveryTracker.Views
@@ -8,8 +9,8 @@ namespace DeliveryTracker.Views
         public static IServiceCollection AddDeliveryTrackerViews(this IServiceCollection services)
         {
             services
-                .AddScoped<IViewService<UserViewModel>, UserViewService>()
-                .AddScoped<IViewService<TaskViewModel>, TaskViewService>()
+                .AddScoped<IViewService<User>, UserViewService>()
+                .AddScoped<IViewService<Task>, TaskViewService>()
                 ;
             
             return services;

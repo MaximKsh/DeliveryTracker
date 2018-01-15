@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using DeliveryTracker.DbModels;
 using DeliveryTracker.Localization;
 using Microsoft.AspNetCore.Identity;
 
@@ -271,30 +270,28 @@ namespace DeliveryTracker.Validation
         /// Некорректное состояние задания.
         /// </summary>
         /// <returns></returns>
-        public static IError IncorrectTaskState(TaskStateModel actual, params TaskStateModel[] expected) =>
+        public static IError IncorrectTaskState() =>
             new Error(
                 ErrorCode.IncorrectTaskState,
                 LocalizationAlias.Error.IncorrectTaskState,
                 new Dictionary<string, string>
                 {
-                    ["actual"] = actual?.Alias ?? "null",
-                    ["expected"] = string.Join(',', expected.Select(p => p.Alias)),
+                   // ["actual"] = actual?.Alias ?? "null",
+                   // ["expected"] = string.Join(',', expected.Select(p => p.Alias)),
                 });
         
         /// <summary>
         /// Некорректное переход между состояниями задания.
         /// </summary>
         /// <returns></returns>
-        public static IError IncorrectTaskStateTransition(
-            TaskStateModel newState,
-            TaskStateModel currentState) =>
+        public static IError IncorrectTaskStateTransition() =>
             new Error(
                 ErrorCode.IncorrectTaskStateTransition,
                 LocalizationAlias.Error.IncorrectTaskStateTransition,
                 new Dictionary<string, string>
                 {
-                    ["newState"] = newState?.Alias ?? "null",
-                    ["currentState"] = currentState?.Alias ?? "null",
+                   // ["newState"] = newState?.Alias ?? "null",
+                   // ["currentState"] = currentState?.Alias ?? "null",
                 });
         
         /// <summary>

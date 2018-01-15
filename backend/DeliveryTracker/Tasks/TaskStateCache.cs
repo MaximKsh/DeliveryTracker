@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Linq;
 using DeliveryTracker.Common;
-using DeliveryTracker.DbModels;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
@@ -10,6 +8,7 @@ namespace DeliveryTracker.Tasks
     // ReSharper disable once ClassNeverInstantiated.Global
     public class TaskStateCache
     {
+        /*
         #region constants
 
         private const int CacheEntryExpirationMinutes = 60;
@@ -42,7 +41,6 @@ namespace DeliveryTracker.Tasks
 
         #region fields
 
-        private readonly DeliveryTrackerDbContext dbContext;
 
         private readonly ILogger<TaskStateCache> logger;
 
@@ -53,11 +51,9 @@ namespace DeliveryTracker.Tasks
         #region constuctor
 
         public TaskStateCache(
-            DeliveryTrackerDbContext dbContext,
             ILogger<TaskStateCache> logger,
             IMemoryCache memoryCache)
         {
-            this.dbContext = dbContext;
             this.logger = logger;
             this.memoryCache = memoryCache;
         }
@@ -239,5 +235,6 @@ namespace DeliveryTracker.Tasks
         }
         
         #endregion
+        */
     }
 }

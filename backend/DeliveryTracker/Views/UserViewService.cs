@@ -1,17 +1,14 @@
 ﻿using System.Collections.Generic;
 using DeliveryTracker.Common;
 using DeliveryTracker.Identification;
-using DeliveryTracker.Instances;
-using DeliveryTracker.Services;
-using DeliveryTracker.ViewModels;
 
 namespace DeliveryTracker.Views
 {
-    public class UserViewService : IViewService<UserViewModel>
+    public class UserViewService : IViewService<User>
     {
         public string GroupName => ViewGroups.UserViewGroup;
         
-        public ServiceResult<IList<UserViewModel>> GetViewResult(UserCredentials userCredentials,
+        public ServiceResult<IList<User>> GetViewResult(UserCredentials userCredentials,
             string viewName,
             IReadOnlyDictionary<string, string[]> parameters)
         {

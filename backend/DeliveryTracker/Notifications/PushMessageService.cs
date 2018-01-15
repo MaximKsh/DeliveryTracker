@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
-using DeliveryTracker.DbModels;
-using DeliveryTracker.ViewModels;
 
-namespace DeliveryTracker.Services
+namespace DeliveryTracker.Notifications
 {
     public class PushMessageService
     {
@@ -24,14 +21,13 @@ namespace DeliveryTracker.Services
         }
 
         public async Task<ServiceResult> SendMessage(
-            UserModel user,
-            PushMessageViewModel pushMessage,
             Guid? taskId = null)
         {
+            /*
             var requestBody = $@"
 {{ 
     ""data"": {{
-        ""msg"": ""{pushMessage.Content}"",
+        ""msg"": {text} ,
         ""taskId"": ""{taskId?.ToString() ?? string.Empty}""
     }}, 
     ""to"": ""{user.Device.FirebaseId}""
@@ -50,7 +46,7 @@ namespace DeliveryTracker.Services
             catch(HttpRequestException)
             {
             }
-            
+            */
             return new ServiceResult();
         }
         

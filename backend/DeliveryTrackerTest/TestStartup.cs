@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
-using DeliveryTracker.DbModels;
 using DeliveryTracker.Identification;
-using DeliveryTracker.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -41,16 +36,6 @@ namespace DeliveryTrackerTest
             });*/
 
             
-            var connectionString = this.configuration.GetConnectionString("DefaultConnection");
-            services.AddDbContext<DeliveryTrackerDbContext>(
-                options => options.UseNpgsql(connectionString));
- 
-            
-            services.AddIdentity<UserModel, RoleModel>()
-                .AddEntityFrameworkStores<DeliveryTrackerDbContext>()
-                .AddDefaultTokenProviders()
-                .AddUserStore<UserStore<UserModel, RoleModel, DeliveryTrackerDbContext, Guid>>()
-                .AddRoleStore<RoleStore<RoleModel, DeliveryTrackerDbContext, Guid>>();
 
             services.ConfigureApplicationCookie(options =>
             {
@@ -79,8 +64,6 @@ namespace DeliveryTrackerTest
 
             services.AddMvc();
 
-            services
-                .AddDeliveryTrackerServices();
         }
 
         public void Configure(IApplicationBuilder app)

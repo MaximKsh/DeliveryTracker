@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using System.Threading;
-using DeliveryTracker.ViewModels;
+using System.Threading.Tasks;
+using DeliveryTracker.Identification;
 using DeliveryTracker.Views;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,17 +14,17 @@ namespace DeliveryTrackerWeb.Controllers
         // view/{groupName}/views
         // view/{groupName}/{viewName}
         
-        private readonly Lazy<IViewService<UserViewModel>> userViewService;
-        private readonly Lazy<IViewService<TaskViewModel>> taskViewService;
+        private readonly Lazy<IViewService<User>> userViewService;
+        private readonly Lazy<IViewService<Task>> taskViewService;
 
         public ViewController(
             IServiceProvider serviceProvider)
         {
-            this.userViewService = new Lazy<IViewService<UserViewModel>>(
-                () => (IViewService<UserViewModel>)serviceProvider.GetService(typeof(IViewService<UserViewModel>)),
+            this.userViewService = new Lazy<IViewService<User>>(
+                () => (IViewService<User>)serviceProvider.GetService(typeof(IViewService<User>)),
                 LazyThreadSafetyMode.ExecutionAndPublication);
-            this.taskViewService = new Lazy<IViewService<TaskViewModel>>(
-                () => (IViewService<TaskViewModel>)serviceProvider.GetService(typeof(IViewService<TaskViewModel>)),
+            this.taskViewService = new Lazy<IViewService<Task>>(
+                () => (IViewService<Task>)serviceProvider.GetService(typeof(IViewService<Task>)),
                 LazyThreadSafetyMode.ExecutionAndPublication);
         }
 

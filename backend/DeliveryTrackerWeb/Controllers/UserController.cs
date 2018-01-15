@@ -1,14 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using DeliveryTracker.Common;
-using DeliveryTracker.DbModels;
-using DeliveryTracker.Instances;
-using DeliveryTracker.Validation;
-using DeliveryTracker.ViewModels;
-using Microsoft.AspNetCore.Authorization;
+﻿using DeliveryTracker.Common;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace DeliveryTrackerWeb.Controllers
 {

@@ -2,7 +2,6 @@
 using DeliveryTracker.Common;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
-using DeliveryTracker.Services;
 
 namespace DeliveryTracker.Views
 {

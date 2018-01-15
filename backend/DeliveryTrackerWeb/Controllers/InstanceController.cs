@@ -1,12 +1,4 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using DeliveryTracker.Common;
-using DeliveryTracker.DbModels;
 using DeliveryTracker.Instances;
-using DeliveryTracker.Validation;
-using DeliveryTracker.ViewModels;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -17,7 +9,6 @@ namespace DeliveryTrackerWeb.Controllers
     {
         #region fields
         
-        private readonly DeliveryTrackerDbContext dbContext;
         
         private readonly AccountService accountService;
         
@@ -31,12 +22,10 @@ namespace DeliveryTrackerWeb.Controllers
         #region constructor
         
         public InstanceController(
-            DeliveryTrackerDbContext dbContext, 
             AccountService accountService,
             InstanceService instanceService, 
             ILogger<InstanceController> logger)
         {
-            this.dbContext = dbContext;
             this.accountService = accountService;
             this.instanceService = instanceService;
             this.logger = logger;

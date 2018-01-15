@@ -1,19 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
-using DeliveryTracker.Instances;
-using DeliveryTracker.ViewModels;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.TestHost;
-using Newtonsoft.Json;
-using Xunit;
-
-namespace DeliveryTrackerTest.Controllers
+﻿namespace DeliveryTrackerTest.Controllers
 {
     public abstract class BaseControllerTest
     {

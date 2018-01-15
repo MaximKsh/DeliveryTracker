@@ -1,14 +1,4 @@
-﻿using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
-using DeliveryTracker.Instances;
-using DeliveryTracker.ViewModels;
-using Newtonsoft.Json;
-using Xunit;
-
-namespace DeliveryTrackerTest.Controllers
+﻿namespace DeliveryTrackerTest.Controllers
 {
     public class UserControllerTest: BaseControllerTest
     {

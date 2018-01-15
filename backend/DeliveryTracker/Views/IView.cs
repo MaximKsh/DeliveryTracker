@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using DeliveryTracker.DbModels;
 using DeliveryTracker.Identification;
-using DeliveryTracker.Instances;
 
 namespace DeliveryTracker.Views
 {
@@ -10,7 +8,6 @@ namespace DeliveryTracker.Views
         string Name { get; }
         
         IList<T> GetViewResult(
-            DeliveryTrackerDbContext dbContext,
             UserCredentials userCredentials,
             Dictionary<string, string> parameters);
     }
