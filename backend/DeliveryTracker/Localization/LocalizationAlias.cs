@@ -17,16 +17,19 @@
             private const string Pref = LocalizationStringPrefix + "_" + ErrorGroup + "_";
             
             
-            public const string ServerError = Pref + "ServerError";
-            public const string ValidationError = Pref + "ValidationError";
-            public const string InstanceNotFound = Pref + "InstanceNotFound";
-            public const string RoleNotFound = Pref + "RoleNotFound";
-            public const string RoleNameConflict = Pref + "RoleNameConflict";
-            public const string UserAlreadyInRole = Pref + "UserAlreadyInRole";
-            public const string UserNotFound = Pref + "UserNotFound";
             public const string AccessDenied = Pref + "AccessDenied";
             public const string IncorrectPassword = Pref + "IncorrectPassword";
+            public const string InstanceNotFound = Pref + "InstanceNotFound";
+            public const string InvitationExpired = Pref + "InvitationExpired"; 
             public const string InvitationNotFound = Pref + "InvitationNotFound";
+            public const string RoleNotFound = Pref + "RoleNotFound";
+            public const string ServerError = Pref + "ServerError";
+            public const string UserCreationError = Pref + "UserCreationError";
+            public const string UserDeleted = Pref + "UserDeleted";
+            public const string UserEditError = Pref + "UserEditError";
+            public const string UserNotFound = Pref + "UserNotFound";
+            public const string ValidationError = Pref + "ValidationError";
+
 
             
             
@@ -37,7 +40,6 @@
             public const string IdentityError = Pref + "IdentityError";
             
             
-            public const string InvitationExpired = Pref + "InvitationExpired";
             
             public const string InstanceAlreadyHasCreator = Pref + "InstanceAlreadyHasCreator";
             
@@ -51,7 +53,6 @@
             
             public const string TaskIsForbidden = Pref + "TaskIsForbidden";
             
-            public const string UserDeleted = Pref + "UserDeleted";
             
             public const string RoleRange= Pref + "RoleRange";
 

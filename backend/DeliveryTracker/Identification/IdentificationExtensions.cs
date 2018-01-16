@@ -21,24 +21,10 @@ namespace DeliveryTracker.Identification
                 .AddSingleton<IUserCredentialsAccessor, UserCredentialsAccessor>()
                 ;
 
-            var tokenSettings = new TokenSettings(
-                configuration.GetValue<string>("AuthInfo:Key", null) ?? throw new NullReferenceException("specify secret key"),
-                configuration.GetValue<string>("AuthInfo:Issuer", null) ?? throw new NullReferenceException("specify issuer"),
-                configuration.GetValue<string>("AuthInfo:Audience", null) ?? throw new NullReferenceException("specify audience"),
-                configuration.GetValue("AuthInfo:Lifetime", 1),
-                configuration.GetValue("AuthInfo:ClockCkew", 1),
-                configuration.GetValue("AuthInfo:RequireHttps", true));
+            var tokenSettings = IdentificationHelper.ReadTokenSettingsFromConf(configuration);
             services.AddSingleton(tokenSettings);
-            
-            var passwordSettings = new PasswordSettings(
-                configuration.GetValue("PasswordSettings:MinLength", 6),
-                configuration.GetValue("PasswordSettings:MaxLength", 20),
-                configuration.GetValue("PasswordSettings:AtLeastOneUpperCase", false),
-                configuration.GetValue("PasswordSettings:AtLeastOneLowerCase", false),
-                configuration.GetValue("PasswordSettings:AtLeastOneDigit", false),
-                configuration.GetValue("PasswordSettings:Alphabet", string.Empty),
-                configuration.GetValue("PasswordSettings:SameCharactersInARow", 20)
-                );
+
+            var passwordSettings = IdentificationHelper.ReadPasswordSettingsFromConf(configuration);
             services.AddSingleton(passwordSettings);
 
             services.AddAuthorization(options =>

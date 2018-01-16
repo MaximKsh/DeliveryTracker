@@ -5202,6 +5202,19 @@
           "lib/netstandard1.1/xunit.assert.dll": {}
         }
       },
+      "Xunit.Combinatorial/1.2.7": {
+        "type": "package",
+        "dependencies": {
+          "NETStandard.Library": "1.6.1",
+          "xunit.extensibility.core": "2.2.0"
+        },
+        "compile": {
+          "lib/netstandard1.1/Xunit.Combinatorial.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.1/Xunit.Combinatorial.dll": {}
+        }
+      },
       "xunit.core/2.3.1": {
         "type": "package",
         "dependencies": {
@@ -13605,6 +13618,21 @@
         "xunit.assert.nuspec"
       ]
     },
+    "Xunit.Combinatorial/1.2.7": {
+      "sha512": "bAKnoYHfPRL5yB3r9n2snOhNjHnVv8TYm5bkvwelnJM6MZ0nQO7x/ZrfW0QFvfexgmOLKeAXjl0Iz7aYKhxfbw==",
+      "type": "package",
+      "path": "xunit.combinatorial/1.2.7",
+      "files": [
+        "lib/net45/Xunit.Combinatorial.dll",
+        "lib/net45/Xunit.Combinatorial.xml",
+        "lib/net452/Xunit.Combinatorial.dll",
+        "lib/net452/Xunit.Combinatorial.xml",
+        "lib/netstandard1.1/Xunit.Combinatorial.dll",
+        "lib/netstandard1.1/Xunit.Combinatorial.xml",
+        "xunit.combinatorial.1.2.7.nupkg.sha512",
+        "xunit.combinatorial.nuspec"
+      ]
+    },
     "xunit.core/2.3.1": {
       "sha512": "LOG4qOFuVQcjYcIuZbKeo03Uvng3lSb2gZJU9ANljwCf+PTd//iAMZS5qcJQZrjhndc4aOUlJGQy5wa0+/iZ6w==",
       "type": "package",
@@ -13684,6 +13712,7 @@
       "DeliveryTracker >= 1.0.0",
       "Microsoft.NET.Test.Sdk >= 15.5.0",
       "Microsoft.NETCore.App >= 2.0.0",
+      "Xunit.Combinatorial >= 1.2.7",
       "xunit >= 2.3.1",
       "xunit.runner.visualstudio >= 2.3.1"
     ]
@@ -13740,6 +13769,10 @@
             "target": "Package",
             "version": "[2.0.0, )",
             "autoReferenced": true
+          },
+          "Xunit.Combinatorial": {
+            "target": "Package",
+            "version": "[1.2.7, )"
           },
           "xunit": {
             "target": "Package",

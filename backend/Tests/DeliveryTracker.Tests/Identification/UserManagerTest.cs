@@ -8,8 +8,6 @@ namespace DeliveryTracker.Tests.Identification
 {
     public class UserManagerTest : DeliveryTrackerTestBase
     {
-        private readonly IPostgresConnectionProvider provider;
-
         private readonly IUserManager userManager;
         
         /// <summary>
@@ -19,9 +17,9 @@ namespace DeliveryTracker.Tests.Identification
         
         public UserManagerTest() : base()
         {
-            this.provider = new PostgresConnectionProvider(this.Configuration);
-            this.userManager = new UserManager(this.provider);
-            using (var conn = this.provider.Create())
+            var provider = new PostgresConnectionProvider(this.Configuration);
+            this.userManager = new UserManager(provider);
+            using (var conn = provider.Create())
             {
                 conn.Connect();
                 this.instance = TestHelper.CreateRandomInstance(conn);
@@ -76,6 +74,7 @@ namespace DeliveryTracker.Tests.Identification
         [InlineData(false, "Petrov", "Ivan", null, null, DefaultRoles.CreatorRole)]
         [InlineData(true, "Petrov", null, null, null, DefaultRoles.CreatorRole)]
         [InlineData(true, null, "Ivan", null, null, DefaultRoles.CreatorRole)]
+        [InlineData(true, "", "Ivan", null, null, DefaultRoles.CreatorRole)]
         [InlineData(false, null, null, "4231", "123", null)]
         public async void AddUserWrongData(
             bool useInstanceId, 
@@ -85,6 +84,7 @@ namespace DeliveryTracker.Tests.Identification
             string phoneNumber,
             string role)
         {
+            // Arrange
             var user = new User
             {
                 Id = Guid.NewGuid(),
@@ -96,8 +96,266 @@ namespace DeliveryTracker.Tests.Identification
                 PhoneNumber = phoneNumber,
                 Role = role,
             };
+            
+            // Act
             var result = await this.userManager.CreateAsync(user);
+            
+            // Assert
             Assert.False(result.Success);
+        }
+        
+        [Fact]
+        public async void EditUser()
+        {
+            // Arrange
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Code = Guid.NewGuid().ToString("N").Substring(0, 10),
+                InstanceId = this.instance.Id,
+                Surname = "Petrov",
+                Name = "Ivan",
+                Role = DefaultRoles.CreatorRole,
+            };
+            await this.userManager.CreateAsync(user);
+            var newData = new User
+            {
+                Id = user.Id,
+                InstanceId = this.instance.Id,
+                Surname = "Modified_Petrov",
+                Name = "Modified_Ivan",
+                Patronymic = "Alexeevich",
+                PhoneNumber = "9123",
+            };
+            
+            // Act
+            var result = await this.userManager.EditAsync(newData);
+            
+            // Arrange
+            Assert.True(result.Success);
+            Assert.Equal("Modified_Petrov", result.Result.Surname);
+            Assert.Equal("Modified_Ivan", result.Result.Name);
+            Assert.Equal("Alexeevich", result.Result.Patronymic);
+            Assert.Equal("9123", result.Result.PhoneNumber);
+        }
+        
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        public async void EditUserWrongData(byte mask)
+        {
+            var rightId = (mask & 1) != 0;
+            var rightInstanceId = (mask & 2) != 0;
+            
+            // Arrange
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Code = Guid.NewGuid().ToString("N").Substring(0, 10),
+                InstanceId = this.instance.Id,
+                Surname = "Petrov",
+                Name = "Ivan",
+                Role = DefaultRoles.CreatorRole,
+            };
+            await this.userManager.CreateAsync(user);
+            var newData = new User
+            {
+                Id = rightId ? user.Id : Guid.NewGuid(),
+                InstanceId = rightInstanceId ? this.instance.Id : Guid.Empty,
+                Surname = "New surname",
+            };
+            
+            // Act
+            var result = await this.userManager.EditAsync(newData);
+            
+            // Arrange
+            Assert.False(result.Success);
+        }
+
+        [Fact]
+        public async void GetUserById()
+        {
+            // Arrange
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Code = Guid.NewGuid().ToString("N").Substring(0, 10),
+                InstanceId = this.instance.Id,
+                Surname = "Petrov",
+                Name = "Ivan",
+                Role = DefaultRoles.CreatorRole,
+            };
+            var createUserResult = await this.userManager.CreateAsync(user);
+            
+            // Act
+            var getUserResult = await this.userManager.GetAsync(user.Id, this.instance.Id);
+            
+            // Assert
+            Assert.True(getUserResult.Success);
+            Assert.Equal(createUserResult.Result.Id, getUserResult.Result.Id);
+        }
+        
+        [Fact]
+        public async void GetUserByCode()
+        {
+            // Arrange
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Code = Guid.NewGuid().ToString("N").Substring(0, 10),
+                InstanceId = this.instance.Id,
+                Surname = "Petrov",
+                Name = "Ivan",
+                Role = DefaultRoles.CreatorRole,
+            };
+            var createUserResult = await this.userManager.CreateAsync(user);
+            
+            // Act
+            var getUserResult = await this.userManager.GetAsync(user.Code, this.instance.Id);
+            
+            // Assert
+            Assert.True(getUserResult.Success);
+            Assert.Equal(createUserResult.Result.Id, getUserResult.Result.Id);
+        }
+        
+        [Fact]
+        public async void GetUserId()
+        {
+            // Arrange
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Code = Guid.NewGuid().ToString("N").Substring(0, 10),
+                InstanceId = this.instance.Id,
+                Surname = "Petrov",
+                Name = "Ivan",
+                Role = DefaultRoles.CreatorRole,
+            };
+            var createUserResult = await this.userManager.CreateAsync(user);
+            
+            // Act
+            var id = await this.userManager.GetIdAsync(user.Code, this.instance.Id);
+            
+            // Assert
+            Assert.Equal(createUserResult.Result.Id, id);
+        }
+        
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        public async void GetUserByIdWrongData(byte mask)
+        {
+            var rightId = (mask & 1) != 0;
+            var rightInstanceId = (mask & 2) != 0;
+            
+            // Arrange
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Code = Guid.NewGuid().ToString("N").Substring(0, 10),
+                InstanceId = this.instance.Id,
+                Surname = "Petrov",
+                Name = "Ivan",
+                Role = DefaultRoles.CreatorRole,
+            };
+            await this.userManager.CreateAsync(user);
+            
+            // Act
+            var getUserResult = await this.userManager.GetAsync(
+                rightId ? user.Id : Guid.NewGuid(), 
+                rightInstanceId ? this.instance.Id : Guid.NewGuid());
+            
+            // Assert
+            Assert.False(getUserResult.Success);
+        }
+        
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        public async void GetUserByCodeWrongData(byte mask)
+        {
+            var rightCode = (mask & 1) != 0;
+            var rightInstanceId = (mask & 2) != 0;
+            
+            // Arrange
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Code = Guid.NewGuid().ToString("N").Substring(0, 10),
+                InstanceId = this.instance.Id,
+                Surname = "Petrov",
+                Name = "Ivan",
+                Role = DefaultRoles.CreatorRole,
+            };
+            await this.userManager.CreateAsync(user);
+            
+            // Act
+            var getUserResult = await this.userManager.GetAsync(
+                rightCode ? user.Code : Guid.NewGuid().ToString("N").Substring(0, 10), 
+                rightInstanceId ? this.instance.Id : Guid.NewGuid());
+            
+            // Assert
+            Assert.False(getUserResult.Success);
+        }
+        
+        
+        [Fact]
+        public async void DeleteUser()
+        {
+            // Arrange
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Code = Guid.NewGuid().ToString("N").Substring(0, 10),
+                InstanceId = this.instance.Id,
+                Surname = "Petrov",
+                Name = "Ivan",
+                Role = DefaultRoles.CreatorRole,
+            };
+            await this.userManager.CreateAsync(user);
+            
+            // Act
+            var getUserResult = await this.userManager.DeleteAsync(user.Id, this.instance.Id);
+            
+            // Assert
+            Assert.True(getUserResult.Success);
+            var id = await this.userManager.GetIdAsync(user.Code, this.instance.Id);
+            Assert.Null(id);
+        }
+        
+        [Theory]
+        [InlineData(0)]
+        [InlineData(1)]
+        [InlineData(2)]
+        public async void DeleteUserWrongData(byte mask)
+        {
+            var rightId = (mask & 1) != 0;
+            var rightInstanceId = (mask & 2) != 0;
+            
+            // Arrange
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Code = Guid.NewGuid().ToString("N").Substring(0, 10),
+                InstanceId = this.instance.Id,
+                Surname = "Petrov",
+                Name = "Ivan",
+                Role = DefaultRoles.CreatorRole,
+            };
+            await this.userManager.CreateAsync(user);
+            
+            // Act
+            var getUserResult = await this.userManager.DeleteAsync(
+                rightId ? user.Id : Guid.NewGuid(), 
+                rightInstanceId ? this.instance.Id : Guid.NewGuid());
+            
+            // Assert
+            Assert.False(getUserResult.Success);
+            var id = await this.userManager.GetIdAsync(user.Code, this.instance.Id);
+            Assert.NotNull(id);
         }
     }
 }

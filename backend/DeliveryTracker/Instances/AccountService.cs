@@ -115,7 +115,7 @@ namespace DeliveryTracker.Instances
 
             var credentials = validateResult.Result;
 
-            var userResult = await this.userManager.GetAsync(credentials.Id, oc);
+            var userResult = await this.userManager.GetAsync(credentials.Id, credentials.Id, oc);
             if (!userResult.Success)
             {
                 return new ServiceResult<Tuple<User, UserCredentials>>(userResult.Errors);

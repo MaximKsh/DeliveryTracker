@@ -26,12 +26,40 @@ namespace DeliveryTracker.Identification
         /// <returns></returns>
         Task<ServiceResult<User>> EditAsync(User user, NpgsqlConnectionWrapper oc = null);
 
-        Task<ServiceResult<User>> GetAsync(Guid userId, NpgsqlConnectionWrapper oc = null);
+        /// <summary>
+        /// Получить пользователя из инстанса по id.
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя.</param>
+        /// <param name="instanceId">Идентификатор инстанса.</param>
+        /// <param name="oc">Открытое соединение с базой</param>
+        /// <returns>Пользователь или список ошибок.</returns>
+        Task<ServiceResult<User>> GetAsync(Guid userId, Guid instanceId, NpgsqlConnectionWrapper oc = null);
         
-        Task<ServiceResult<User>> GetAsync(string code, NpgsqlConnectionWrapper oc = null);
+        /// <summary>
+        /// Получить пользователя из инстанса по коду.
+        /// </summary>
+        /// <param name="code">Код пользователя.</param>
+        /// <param name="instanceId">Идентификатор инстанса.</param>
+        /// <param name="oc">Открытое соединение с базой</param>
+        /// <returns>Пользователь или список ошибок.</returns>
+        Task<ServiceResult<User>> GetAsync(string code, Guid instanceId, NpgsqlConnectionWrapper oc = null);
         
-        Task<Guid> GetIdAsync(string code, NpgsqlConnectionWrapper oc = null);
+        /// <summary>
+        /// Получить ID пользователя по коду.
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="instanceId"></param>
+        /// <param name="oc"></param>
+        /// <returns></returns>
+        Task<Guid?> GetIdAsync(string code, Guid instanceId, NpgsqlConnectionWrapper oc = null);
         
-        Task<ServiceResult> DeleteAsync(Guid userId, NpgsqlConnectionWrapper oc = null);
+        /// <summary>
+        /// Удаление пользователя.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="instanceId"></param>
+        /// <param name="oc"></param>
+        /// <returns></returns>
+        Task<ServiceResult> DeleteAsync(Guid userId, Guid instanceId, NpgsqlConnectionWrapper oc = null);
     }
 }

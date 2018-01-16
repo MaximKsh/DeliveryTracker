@@ -3,6 +3,18 @@
     public static class ErrorCode
     {
         
+        #region general errors
+        
+        /// <summary>
+        /// Код ошибки: доступ запрещен.
+        /// </summary>
+        public const string AccessDenied = "AccessDenied";
+        
+        /// <summary>
+        /// Код ошибки: неверный формат пароля.
+        /// </summary>
+        public const string IncorrectPassword = "IncorrectPassword";
+        
         /// <summary>
         /// Код внутренней серверной ошибки.
         /// </summary>
@@ -13,52 +25,73 @@
         /// </summary>
         public const string ValidationError = "ValidationError";
         
-        /// <summary>
-        /// Код ошибки: инстанс не найден.
-        /// </summary>
-        public const string InstanceNotFound = "InstanceNotFound";
-
-
+        #endregion
+        
+        #region user errors
+        
         /// <summary>
         /// Код ошибки: роль не найдена.
         /// </summary>
         public const string RoleNotFound = "RoleNotFound";
         
+        /// <summary>
+        /// Код ошибки: ошибка создания пользователя.
+        /// </summary>
+        public const string UserCreationError = "UserCreationError";
         
         /// <summary>
-        /// Код ошибки: роль c таким именем уже существует.
+        /// Код ошибки: пользователь удален.
         /// </summary>
-        public const string RoleNameConflict = "RoleNameConflict";
-
-
+        public const string UserDeleted = "UserDeleted";
+        
         /// <summary>
-        /// Код ошибки: пользователь уже в роли.
+        /// Код ошибки: ошибка редактирования пользователя.
         /// </summary>
-        public const string UserAlreadyInRole = "UserAlreadyInRole";
-
+        public const string UserEditError = "UserEditError";
         
         /// <summary>
         /// Код ошибки: пользователь не найден.
         /// </summary>
         public const string UserNotFound = "UserNotFound";
         
+        #endregion
 
-        /// <summary>
-        /// Код ошибки: доступ запрещен.
-        /// </summary>
-        public const string AccessDenied = "AccessDenied";
-
+        #region instance errors
         
         /// <summary>
-        /// Код ошибки: неверный формат пароля.
+        /// Код ошибки: инстанс не найден.
         /// </summary>
-        public const string IncorrectPassword = "IncorrectPassword";
+        public const string InstanceNotFound = "InstanceNotFound";
+
         
+        
+        #endregion
+
+        #region invitation errors
+
+        /// <summary>
+        /// Код ошибки: приглашение просрочено.
+        /// </summary>
+        public const string InvitationExpired = "InvitationExpired";
         
         /// <summary>
         /// Код ошибки: приглашение не существует.
         /// </summary>
         public const string InvitationNotFound = "InvitationNotFound";
+
+        #endregion
+
+
+        
+        
+        
+        
+        
+
+        
+
+        
+        
         
 
         
@@ -83,10 +116,7 @@
         public const string IdentityError = "IdentityError";
 
 
-        /// <summary>
-        /// Код ошибки: приглашение просрочено.
-        /// </summary>
-        public const string InvitationExpired = "InvitationExpired";
+        
 
         /// <summary>
         /// Код ошибки: у инстанса уже есть создатель.
@@ -119,9 +149,6 @@
         public const string TaskIsForbidden = "TaskIsForbidden";
 
 
-        /// <summary>
-        /// Код ошибки: пользователь удален.
-        /// </summary>
-        public const string UserDeleted = "UserDeleted";
+        
     }
 }

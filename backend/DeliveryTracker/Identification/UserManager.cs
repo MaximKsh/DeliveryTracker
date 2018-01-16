@@ -22,29 +22,29 @@ returning " + IdentificationHelper.GetUserColumns() + ";";
 update users
 set
 {0}
-where id = @id
+where id = @id and instance_id = @instance_id
 returning " + IdentificationHelper.GetUserColumns() + ";";
 
         private static readonly string SqlGet = @"
 select " + IdentificationHelper.GetUserColumns() + @"
 from users
-where id = @id;";
+where id = @id and instance_id = @instance_id;";
         
         private static readonly string SqlGetByCode = @"
 select " + IdentificationHelper.GetUserColumns() + @"
 from users
-where code = @code
+where code = @code and instance_id = @instance_id
 ;";
         
         private const string SqlGetId = @"
 select id
 from users
-where code = @code
+where code = @code and instance_id = @instance_id
 ;";
         
         private const string SqlDelete = @"
 delete from users
-where id = @id
+where id = @id and instance_id = @instance_id
 ;
 ";
         
@@ -74,75 +74,60 @@ where id = @id
             {
                 return new ServiceResult<User>(ErrorFactory.RoleNotFound());
             }
-            
-            User newUser = null;
-            using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
+
+            var validationResult = new ParametersValidator()
+                .AddNotNullRule("user", user)
+                .AddNotEmptyGuidRule("User.Id", user.Id)
+                .AddNotNullOrWhitespaceRule("User.Code", user.Code)
+                .AddNotNullOrWhitespaceRule("User.Surname", user.Surname)
+                .AddNotNullOrWhitespaceRule("User.Name", user.Name)
+                .AddNotEmptyGuidRule("User.InstanceId", user.InstanceId)
+                .Validate();
+            if (!validationResult.Success)
             {
-                using (var command = connWrapper.CreateCommand())
-                {
-                    command.CommandText = SqlCreate;
-                    command.Parameters.Add(new NpgsqlParameter("id", user.Id));
-                    command.Parameters.Add(new NpgsqlParameter("code", user.Code));
-                    command.Parameters.Add(new NpgsqlParameter("role", user.Role));
-                    command.Parameters.Add(new NpgsqlParameter("surname", user.Surname));
-                    command.Parameters.Add(new NpgsqlParameter("name", user.Name));
-                    command.Parameters.Add(new NpgsqlParameter("patronymic", user.Patronymic).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("phone_number", user.PhoneNumber).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("instance_id", user.InstanceId));
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        if (await reader.ReadAsync())
-                        {
-                            newUser = reader.GetUser();
-                        }
-                    }
-                }
+                return new ServiceResult<User>(validationResult.Error);
             }
             
-            return new ServiceResult<User>(newUser);
+            return await this.CreateAsyncInternal(user, oc);
         }
 
         
         /// <inheritdoc />
         public async Task<ServiceResult<User>> EditAsync(User user, NpgsqlConnectionWrapper oc = null)
         {
-            User updatedUser = null;
-            var userId = user.Id;
-            using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
+            var validationResult = new ParametersValidator()
+                .AddNotNullRule("user", user)
+                .AddNotEmptyGuidRule("User.Id", user.Id)
+                .AddNotEmptyGuidRule("User.InstanceId", user.InstanceId)
+                .Validate();
+            if (!validationResult.Success)
             {
-                using (var command = connWrapper.CreateCommand())
-                {
-                    var builder = new StringBuilder();
-                     
-                    command.Parameters.Add(new NpgsqlParameter("id", userId));
-                    AppendIfNotNull(command, builder, "surname", user.Surname);
-                    AppendIfNotNull(command, builder, "name", user.Name);
-                    AppendIfNotNull(command, builder, "patronymic", user.Patronymic);
-                    AppendIfNotNull(command, builder, "phone_number", user.PhoneNumber);
-                    
-                    command.CommandText = string.Format(SqlUpdate, builder.ToString());
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        if (await reader.ReadAsync())
-                        {
-                            updatedUser = reader.GetUser();
-                        }
-                    }
-                }
+                return new ServiceResult<User>(validationResult.Error);
             }
-            return new ServiceResult<User>(updatedUser);
+            
+            return await this.EditAsyncInternal(user, oc);
         }
 
         
         /// <inheritdoc />
-        public async Task<ServiceResult<User>> GetAsync(Guid userId, NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult<User>> GetAsync(Guid userId, Guid instanceId, NpgsqlConnectionWrapper oc = null)
         {
+            var validationResult = new ParametersValidator()
+                .AddNotEmptyGuidRule("userId", userId)
+                .AddNotEmptyGuidRule("instanceId", instanceId)
+                .Validate();
+            if (!validationResult.Success)
+            {
+                return new ServiceResult<User>(validationResult.Error);
+            }
+            
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {
                 using (var command = connWrapper.CreateCommand())
                 {
                     command.CommandText = SqlGet;
                     command.Parameters.Add(new NpgsqlParameter("id", userId));
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                     using (var reader = await command.ExecuteReaderAsync())
                     {
                         if (await reader.ReadAsync())
@@ -157,14 +142,24 @@ where id = @id
 
         
         /// <inheritdoc />
-        public async Task<ServiceResult<User>> GetAsync(string code, NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult<User>> GetAsync(string code, Guid instanceId, NpgsqlConnectionWrapper oc = null)
         {
+            var validationResult = new ParametersValidator()
+                .AddNotNullOrWhitespaceRule("code", code)
+                .AddNotEmptyGuidRule("instanceId", instanceId)
+                .Validate();
+            if (!validationResult.Success)
+            {
+                return new ServiceResult<User>(validationResult.Error);
+            }
+            
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {
                 using (var command = connWrapper.CreateCommand())
                 {
                     command.CommandText = SqlGetByCode;
                     command.Parameters.Add(new NpgsqlParameter("code", code));
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                     using (var reader = await command.ExecuteReaderAsync())
                     {
                         if (await reader.ReadAsync())
@@ -179,31 +174,54 @@ where id = @id
 
         
         /// <inheritdoc />
-        public async Task<Guid> GetIdAsync(string code, NpgsqlConnectionWrapper oc = null)
+        public async Task<Guid?> GetIdAsync(string code, Guid instanceId, NpgsqlConnectionWrapper oc = null)
         {
-            using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
+            var validationResult = new ParametersValidator()
+                .AddNotNullOrWhitespaceRule("code", code)
+                .AddNotEmptyGuidRule("instanceId", instanceId)
+                .Validate();
+            if (!validationResult.Success)
             {
+                return null;
+            }
+            
+            using (var connWrapper = oc ?? this.cp.Create())
+            {
+                connWrapper.Connect();
                 using (var command = connWrapper.CreateCommand())
                 {
                     command.CommandText = SqlGetId;
                     command.Parameters.Add(new NpgsqlParameter("code", code));
-                    return (Guid)await command.ExecuteScalarAsync();
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
+                    return (Guid?)await command.ExecuteScalarAsync();
                 }
             }
         }
 
         
         /// <inheritdoc />
-        public async Task<ServiceResult> DeleteAsync(Guid userId, NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult> DeleteAsync(Guid userId, Guid instanceId, NpgsqlConnectionWrapper oc = null)
         {
+            var validationResult = new ParametersValidator()
+                .AddNotEmptyGuidRule("userId", userId)
+                .AddNotEmptyGuidRule("instanceId", instanceId)
+                .Validate();
+            if (!validationResult.Success)
+            {
+                return new ServiceResult(validationResult.Error);
+            }
+            
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {
                 using (var command = connWrapper.CreateCommand())
                 {
                     command.CommandText = SqlDelete;
                     command.Parameters.Add(new NpgsqlParameter("id", userId));
-                    await command.ExecuteNonQueryAsync();
-                    return new ServiceResult();
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
+                    var rowsAffected = await command.ExecuteNonQueryAsync();
+                    return rowsAffected == 1 
+                        ? new ServiceResult()
+                        : new ServiceResult(ErrorFactory.UserNotFound(userId)); 
                 }
             }
         }
@@ -228,6 +246,84 @@ where id = @id
             command.Parameters.Add(new NpgsqlParameter(name, value));
         }
         
+        private async Task<ServiceResult<User>> CreateAsyncInternal(User user, NpgsqlConnectionWrapper oc = null)
+        {
+            User newUser = null;
+            using (var connWrapper = oc ?? this.cp.Create())
+            {
+                connWrapper.Connect();
+                using (var command = connWrapper.CreateCommand())
+                {
+                    command.CommandText = SqlCreate;
+                    command.Parameters.Add(new NpgsqlParameter("id", user.Id));
+                    command.Parameters.Add(new NpgsqlParameter("code", user.Code).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("role", user.Role).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("surname", user.Surname).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("name", user.Name).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("patronymic", user.Patronymic).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("phone_number", user.PhoneNumber).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", user.InstanceId));
+
+                    try
+                    {
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                newUser = reader.GetUser();
+                            }
+                        }
+                    }
+                    catch (NpgsqlException)
+                    {
+                        return new ServiceResult<User>(ErrorFactory.UserEditError());
+                    }
+                }
+            }
+            
+            return new ServiceResult<User>(newUser);
+        }
+        
+        private async Task<ServiceResult<User>> EditAsyncInternal(User user, NpgsqlConnectionWrapper oc = null)
+        {
+            User updatedUser = null;
+            var userId = user.Id;
+            using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
+            {
+                using (var command = connWrapper.CreateCommand())
+                {
+                    var builder = new StringBuilder();
+                     
+                    command.Parameters.Add(new NpgsqlParameter("id", userId));
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", user.InstanceId));
+                    AppendIfNotNull(command, builder, "surname", user.Surname);
+                    AppendIfNotNull(command, builder, "name", user.Name);
+                    AppendIfNotNull(command, builder, "patronymic", user.Patronymic);
+                    AppendIfNotNull(command, builder, "phone_number", user.PhoneNumber);
+                    
+                    command.CommandText = string.Format(SqlUpdate, builder.ToString());
+                    try
+                    {
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                updatedUser = reader.GetUser();
+                            }
+                        }
+                    }
+                    catch (NpgsqlException)
+                    {
+                        return new ServiceResult<User>(ErrorFactory.UserEditError());
+                    }
+                }
+            }
+
+            return updatedUser != null
+                ? new ServiceResult<User>(updatedUser)
+                : new ServiceResult<User>(ErrorFactory.UserNotFound(userId));
+        }
+
         #endregion
         
     }

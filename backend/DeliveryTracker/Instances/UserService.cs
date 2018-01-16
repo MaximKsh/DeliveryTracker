@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
+using DeliveryTracker.Validation;
 
 namespace DeliveryTracker.Instances
 {
@@ -14,7 +15,7 @@ namespace DeliveryTracker.Instances
 
         private readonly IUserManager userManager;
 
-        private readonly IUserCredentialsAccessor credentials;
+        private readonly IUserCredentialsAccessor credentialsAccessor;
         
         #endregion
         
@@ -23,11 +24,11 @@ namespace DeliveryTracker.Instances
         public UserService(
             IPostgresConnectionProvider cp,
             IUserManager userManager,
-            IUserCredentialsAccessor credentials)
+            IUserCredentialsAccessor credentialsAccessor)
         {
             this.cp = cp;
             this.userManager = userManager;
-            this.credentials = credentials;
+            this.credentialsAccessor = credentialsAccessor;
         }
         
         #endregion
@@ -36,13 +37,22 @@ namespace DeliveryTracker.Instances
         
         public async Task<ServiceResult<User>> GetAsync(Guid userId, NpgsqlConnectionWrapper oc = null)
         {
-            var credentials = this.credentials.UserCredentials;
-            return await this.userManager.GetAsync(userId, oc);
+            var credentials = this.credentialsAccessor.UserCredentials;
+            if (credentials.Valid)
+            {
+                return await this.userManager.GetAsync(userId, credentials.InstanceId, oc);    
+            }
+            return new ServiceResult<User>(ErrorFactory.AccessDenied());
         }
 
         public async Task<ServiceResult<User>> GetAsync(string code, NpgsqlConnectionWrapper oc = null)
         {
-            return await this.userManager.GetAsync(code, oc);
+            var credentials = this.credentialsAccessor.UserCredentials;
+            if (credentials.Valid)
+            {
+                return await this.userManager.GetAsync(code, credentials.InstanceId, oc);    
+            }
+            return new ServiceResult<User>(ErrorFactory.AccessDenied());
         }
 
         public async Task<ServiceResult<User>> EditAsync(User newData, NpgsqlConnectionWrapper oc = null)
@@ -52,7 +62,12 @@ namespace DeliveryTracker.Instances
 
         public async Task<ServiceResult> DeleteAsync(Guid userId, NpgsqlConnectionWrapper oc = null)
         {
-            return await this.userManager.DeleteAsync(userId, oc);
+            var credentials = this.credentialsAccessor.UserCredentials;
+            if (credentials.Valid)
+            {
+                return await this.userManager.DeleteAsync(userId, credentials.InstanceId, oc);  
+            }
+            return new ServiceResult(ErrorFactory.AccessDenied());
         }
 
         public async Task<ServiceResult> UpdatePositionAsync(
