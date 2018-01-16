@@ -19,6 +19,8 @@ namespace DeliveryTrackerWeb.Controllers
 
         private readonly IInvitationService invitationService;
         
+        private readonly IUserService userService;
+        
         private readonly ISecurityManager securityManager;
 
         private readonly IPostgresConnectionProvider connectionProvider;
@@ -37,7 +39,7 @@ namespace DeliveryTrackerWeb.Controllers
             IInvitationService invitationService,
             ILogger<SessionController> logger, 
             IPostgresConnectionProvider connectionProvider, 
-            IInstanceService instanceService)
+            IInstanceService instanceService, IUserService userService)
         {
             this.userManager = userManager;
             this.securityManager = securityManager;
@@ -45,6 +47,7 @@ namespace DeliveryTrackerWeb.Controllers
             this.logger = logger;
             this.connectionProvider = connectionProvider;
             this.instanceService = instanceService;
+            this.userService = userService;
         }
 
         #endregion
@@ -64,14 +67,21 @@ namespace DeliveryTrackerWeb.Controllers
                 Code = "aaaaa",
                 Password = "abc",
             };
-            var result = await this.invitationService.DeleteAsync("Rspf");
-            return this.Ok();
+            var token =  this.securityManager.AcquireToken(new UserCredentials(
+                Guid.NewGuid(),
+                "",
+                "CreatorRole",
+                Guid.NewGuid()));
+            var result = await this.userService.GetAsync(Guid.NewGuid());
+            return this.Ok(token);
         }
 
         [HttpGet("aa")]
+        [Authorize(AuthorizationPolicies.CreatorOrManager)]
         public async Task<IActionResult> MethodA(string username, string password)
         {
            
+            var result = await this.userService.GetAsync(Guid.NewGuid());
             return this.Ok();
         }
 

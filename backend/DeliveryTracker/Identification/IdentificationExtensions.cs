@@ -17,6 +17,8 @@ namespace DeliveryTracker.Identification
             services
                 .AddSingleton<IUserManager, UserManager>()
                 .AddSingleton<ISecurityManager, SecurityManager>()
+                
+                .AddSingleton<IUserCredentialsAccessor, UserCredentialsAccessor>()
                 ;
 
             var tokenSettings = new TokenSettings(

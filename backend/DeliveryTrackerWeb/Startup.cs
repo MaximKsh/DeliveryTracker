@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using DeliveryTracker.Validation;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Newtonsoft.Json;
 
 namespace DeliveryTrackerWeb
@@ -29,6 +30,9 @@ namespace DeliveryTrackerWeb
             Configure4xx(services);
             ConfigureJson(services);
 
+            services
+                .TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            
             services
                 .AddDeliveryTrackerDatabase()
                 .AddDeliveryTrackerIdentification(this.configuration)

@@ -13,6 +13,8 @@ namespace DeliveryTracker.Instances
         private readonly IPostgresConnectionProvider cp;
 
         private readonly IUserManager userManager;
+
+        private readonly IUserCredentialsAccessor credentials;
         
         #endregion
         
@@ -20,10 +22,12 @@ namespace DeliveryTracker.Instances
 
         public UserService(
             IPostgresConnectionProvider cp,
-            IUserManager userManager)
+            IUserManager userManager,
+            IUserCredentialsAccessor credentials)
         {
             this.cp = cp;
             this.userManager = userManager;
+            this.credentials = credentials;
         }
         
         #endregion
@@ -32,6 +36,7 @@ namespace DeliveryTracker.Instances
         
         public async Task<ServiceResult<User>> GetAsync(Guid userId, NpgsqlConnectionWrapper oc = null)
         {
+            var credentials = this.credentials.UserCredentials;
             return await this.userManager.GetAsync(userId, oc);
         }
 
