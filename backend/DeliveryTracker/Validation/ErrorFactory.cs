@@ -181,6 +181,15 @@ namespace DeliveryTracker.Validation
         #region invitations errors
 
         /// <summary>
+        /// Ошибка при создании приглашения.
+        /// </summary>
+        /// <returns></returns>
+        public static IError InvitationCreationError() =>
+            new Error(
+                ErrorCode.InvitationCreationError,
+                LocalizationAlias.Error.InvitationCreationError);
+        
+        /// <summary>
         /// Указанное приглашение просрочено.
         /// </summary>
         /// <param name="invitationCode"></param>

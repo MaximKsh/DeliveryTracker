@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace DeliveryTracker.Validation
 {
-    public interface IError
+    public interface IError : IEquatable<IError>
     {
         /// <summary>
         /// Код ошибки.

@@ -16,6 +16,11 @@ namespace DeliveryTracker.Instances
         /// Код приглашения.
         /// </summary>
         public string InvitationCode { get; set; }
+        
+        /// <summary>
+        /// Пользователь, создавший приглашение
+        /// </summary>
+        public Guid CreatorId { get; set; }
 
         /// <summary>
         /// Дата создания приглашения.

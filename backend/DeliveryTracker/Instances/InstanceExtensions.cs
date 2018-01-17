@@ -19,12 +19,8 @@ namespace DeliveryTracker.Instances
                 .AddSingleton<IAccountService, AccountService>()
                 .AddSingleton<IInstanceService, InstanceService>()
                 .AddSingleton<IUserService, UserService>();
-            
-            var invitationSettings = new InvitationSettings(
-                configuration.GetValue("InvitationSettings:ExpiresInDays", 3),
-                configuration.GetValue("InvitationSettings:CodeLength", 6),
-                configuration.GetValue("InvitationSettings:Alphabet", "23456789qwertyupasdfghkzxbnmQWERTYUPASDFGHKZXVBNM"))
-            ;
+
+            var invitationSettings = InstanceHelper.ReadInvitationSettingsFromConf(configuration);
             services.AddSingleton(invitationSettings);
             
             return services;
@@ -62,6 +58,7 @@ namespace DeliveryTracker.Instances
             {
                 Id = reader.GetGuid(idx++),
                 InvitationCode = reader.GetString(idx++),
+                CreatorId = reader.GetGuid(idx++),
                 Created = reader.GetDateTime(idx++),
                 Expires = reader.GetDateTime(idx++),
                 Role = reader.GetString(idx++),

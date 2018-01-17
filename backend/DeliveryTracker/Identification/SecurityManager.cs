@@ -19,7 +19,7 @@ namespace DeliveryTracker.Identification
         private const string SqlSelectPassword = @"
 select
     id,
-    code
+    code,
     instance_id,
     role,
     password_hash
@@ -75,6 +75,10 @@ returning code, role, instance_id
             string password,
             NpgsqlConnectionWrapper outerConnection = null)
         {
+            if (string.IsNullOrEmpty(password))
+            {
+                return new ServiceResult<UserCredentials>(ErrorFactory.AccessDenied());
+            }
             return await this.ValidatePasswordInternalAsync(
                 SqlSelectPasswordByCode,
                 new NpgsqlParameter("code", code),
@@ -88,6 +92,10 @@ returning code, role, instance_id
             string password,
             NpgsqlConnectionWrapper outerConnection = null)
         {
+            if (string.IsNullOrEmpty(password))
+            {
+                return new ServiceResult<UserCredentials>(ErrorFactory.AccessDenied());
+            }
             return await this.ValidatePasswordInternalAsync(
                 SqlSelectPasswordById,
                 new NpgsqlParameter("id", userId),
@@ -177,13 +185,18 @@ returning code, role, instance_id
 
         private bool CheckPassword(string password, out IError error)
         {
+            // Если пароль null или пустые символы, отметем как слишком короткий
+            if (string.IsNullOrWhiteSpace(password))
+            {
+                password = string.Empty;
+            }
             error = null;
             var hasUpperCase = false;
             var hasLowerCase = false;
             var hasOneDigit = false;
             var forbiddenCharacters = new char[this.passwordSettings.MaxLength];
-            var maxSameCharactersInARow = 0;
-            var currentSameCharactersInARow = 0;
+            var maxSameCharactersInARow = 1;
+            var currentSameCharactersInARow = 1;
             var len = 0;
             var forbiddentCharactedIdx = 0;
             var previousCh = char.MinValue;
@@ -226,7 +239,7 @@ returning code, role, instance_id
                 }
                 else
                 {
-                    currentSameCharactersInARow = 0;
+                    currentSameCharactersInARow = 1;
                 }
                 if (len > this.passwordSettings.MaxLength)
                 {
@@ -262,6 +275,7 @@ returning code, role, instance_id
             string password,
             NpgsqlConnectionWrapper outerConnection = null)
         {
+            
             using (var connWrapper = outerConnection ?? this.cp.Create())
             {
                 connWrapper.Connect();

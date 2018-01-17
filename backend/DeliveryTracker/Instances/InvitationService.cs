@@ -52,6 +52,8 @@ where expires < (now() AT TIME ZONE 'UTC');
         private readonly IPostgresConnectionProvider cp;
 
         private readonly InvitationSettings invitationSettings;
+
+        private readonly IUserCredentialsAccessor userCredentialsAccessor;
         
         private readonly ILogger<InvitationService> logger;
         
@@ -62,10 +64,12 @@ where expires < (now() AT TIME ZONE 'UTC');
         public InvitationService(
             IPostgresConnectionProvider cp,
             InvitationSettings invitationSettings,
+            IUserCredentialsAccessor userCredentialsAccessor,
             ILogger<InvitationService> logger)
         {
             this.cp = cp;
             this.invitationSettings = invitationSettings;
+            this.userCredentialsAccessor = userCredentialsAccessor;
             this.logger = logger;
         }
         
@@ -121,7 +125,7 @@ where expires < (now() AT TIME ZONE 'UTC');
                             }
                             else
                             {
-                                this.logger.LogTrace($"Invitation code {code} repeated.");
+                                this.logger.LogWarning($"Invitation code {code} repeated.");
                             }
                         }
 
@@ -138,54 +142,26 @@ where expires < (now() AT TIME ZONE 'UTC');
             User preliminaryUserData,
             NpgsqlConnectionWrapper oc = null)
         {
-            if (preliminaryUserData == null)
-            {
-                throw new ArgumentNullException(nameof(preliminaryUserData));
-            }
-            if (!DefaultRoles.AllRoles.Contains(preliminaryUserData.Role))
-            {
-                return new ServiceResult<Invitation>(ErrorFactory.RoleNotFound());
-            }
-            
             var validationResult = new ParametersValidator()
-                .AddRule("InstanceId", preliminaryUserData.InstanceId, x =>  x != Guid.Empty)
+                .AddNotNullRule("User", preliminaryUserData)
+                .AddNotEmptyGuidRule("User.InstanceId", preliminaryUserData.InstanceId)
                 .Validate();
             if (!validationResult.Success)
             {
                 return new ServiceResult<Invitation>(validationResult.Error);
             }
-
-            Invitation invitation = null;
-            using (var conn = oc ?? this.cp.Create())
+            
+            if (!DefaultRoles.AllRoles.Contains(preliminaryUserData.Role))
             {
-                conn.Connect();
-                var invitationCode = await this.GenerateUniqueCodeAsync(conn);
-                
-                using (var command = conn.CreateCommand())
-                {
-                    command.CommandText = SqlCreate;
-                    command.Parameters.Add(new NpgsqlParameter("id", Guid.NewGuid()));
-                    command.Parameters.Add(new NpgsqlParameter("invitation_code", invitationCode));
-                    command.Parameters.Add(new NpgsqlParameter("created", DateTime.UtcNow));
-                    command.Parameters.Add(new NpgsqlParameter(
-                        "expires", DateTime.UtcNow.AddDays(this.invitationSettings.ExpiresInDays)));
-                    command.Parameters.Add(new NpgsqlParameter("role", preliminaryUserData.Role));
-                    command.Parameters.Add(new NpgsqlParameter("instance_id", preliminaryUserData.InstanceId));
-                    command.Parameters.Add(new NpgsqlParameter("surname", preliminaryUserData.Surname));
-                    command.Parameters.Add(new NpgsqlParameter("name", preliminaryUserData.Name));
-                    command.Parameters.Add(new NpgsqlParameter("patronymic", preliminaryUserData.Patronymic).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("phone_number", preliminaryUserData.PhoneNumber).CanBeNull());
-
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        if(await reader.ReadAsync())
-                        {
-                            invitation = reader.GetInvitation();
-                        }
-                    }
-                }
+                return new ServiceResult<Invitation>(ErrorFactory.RoleNotFound());
             }
-            return new ServiceResult<Invitation>(invitation);
+
+            if (!this.CanCreateInvitation(preliminaryUserData, out var credentials))
+            {
+                return new ServiceResult<Invitation>(ErrorFactory.AccessDenied());
+            }
+
+            return await this.CreateAsyncInternal(credentials.Id, preliminaryUserData, oc);
         }
 
         
@@ -211,7 +187,10 @@ where expires < (now() AT TIME ZONE 'UTC');
                     }
                 }
             }
-            return new ServiceResult<Invitation>(invitation);
+
+            return invitation != null
+                ? new ServiceResult<Invitation>(invitation)
+                : new ServiceResult<Invitation>(ErrorFactory.InvitationNotFound(invitationCode));
         }
 
         
@@ -246,6 +225,73 @@ where expires < (now() AT TIME ZONE 'UTC');
                     return new ServiceResult();
                 }
             }
+        }
+        
+        #endregion
+        
+        #region private
+
+        private bool CanCreateInvitation(User preliminaryUserData, out UserCredentials userCredentials)
+        {
+            userCredentials = this.userCredentialsAccessor.UserCredentials;
+            if (preliminaryUserData.Role == DefaultRoles.ManagerRole)
+            {
+                return userCredentials.Role == DefaultRoles.CreatorRole;
+            }
+
+            if (preliminaryUserData.Role == DefaultRoles.PerformerRole)
+            {
+                return userCredentials.Role == DefaultRoles.CreatorRole
+                       || userCredentials.Role == DefaultRoles.ManagerRole;
+            }
+
+            return false;
+        }
+        
+        private async Task<ServiceResult<Invitation>> CreateAsyncInternal(
+            Guid creatorId,
+            User preliminaryUserData,
+            NpgsqlConnectionWrapper oc = null)
+        {
+            Invitation invitation = null;
+            using (var conn = oc ?? this.cp.Create())
+            {
+                conn.Connect();
+                var invitationCode = await this.GenerateUniqueCodeAsync(conn);
+                
+                using (var command = conn.CreateCommand())
+                {
+                    command.CommandText = SqlCreate;
+                    command.Parameters.Add(new NpgsqlParameter("id", Guid.NewGuid()));
+                    command.Parameters.Add(new NpgsqlParameter("invitation_code", invitationCode));
+                    command.Parameters.Add(new NpgsqlParameter("creator_id", creatorId));
+                    command.Parameters.Add(new NpgsqlParameter("created", DateTime.UtcNow));
+                    command.Parameters.Add(new NpgsqlParameter(
+                        "expires", DateTime.UtcNow.AddDays(this.invitationSettings.ExpiresInDays)));
+                    command.Parameters.Add(new NpgsqlParameter("role", preliminaryUserData.Role));
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", preliminaryUserData.InstanceId));
+                    command.Parameters.Add(new NpgsqlParameter("surname", preliminaryUserData.Surname).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("name", preliminaryUserData.Name).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("patronymic", preliminaryUserData.Patronymic).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("phone_number", preliminaryUserData.PhoneNumber).CanBeNull());
+
+                    try
+                    {
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            if(await reader.ReadAsync())
+                            {
+                                invitation = reader.GetInvitation();
+                            }
+                        }
+                    }
+                    catch (NpgsqlException)
+                    {
+                        return new ServiceResult<Invitation>(ErrorFactory.InvitationCreationError());   
+                    }
+                }
+            }
+            return new ServiceResult<Invitation>(invitation);
         }
         
         #endregion

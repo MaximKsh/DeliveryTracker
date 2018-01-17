@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 
 namespace DeliveryTracker.Validation
 {
-    /// <inheritdoc />
+    /// <inheritdoc />True
     public class Error: IError
     {
         private static readonly IReadOnlyDictionary<string, string> EmptyInfo = 
@@ -29,5 +29,31 @@ namespace DeliveryTracker.Validation
         
         /// <inheritdoc />
         public IReadOnlyDictionary<string, string> Info { get; }
+
+        public bool Equals(IError other)
+        {
+            return string.Equals(this.Code, other.Code);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            return obj.GetType() == this.GetType() 
+                   && this.Equals((Error) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (this.Code != null ? this.Code.GetHashCode() : 0);
+        }
     }
 }

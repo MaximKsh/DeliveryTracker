@@ -256,10 +256,10 @@ where id = @id and instance_id = @instance_id
                 {
                     command.CommandText = SqlCreate;
                     command.Parameters.Add(new NpgsqlParameter("id", user.Id));
-                    command.Parameters.Add(new NpgsqlParameter("code", user.Code).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("role", user.Role).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("surname", user.Surname).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("name", user.Name).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("code", user.Code));
+                    command.Parameters.Add(new NpgsqlParameter("role", user.Role));
+                    command.Parameters.Add(new NpgsqlParameter("surname", user.Surname));
+                    command.Parameters.Add(new NpgsqlParameter("name", user.Name));
                     command.Parameters.Add(new NpgsqlParameter("patronymic", user.Patronymic).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("phone_number", user.PhoneNumber).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("instance_id", user.InstanceId));
@@ -276,7 +276,7 @@ where id = @id and instance_id = @instance_id
                     }
                     catch (NpgsqlException)
                     {
-                        return new ServiceResult<User>(ErrorFactory.UserEditError());
+                        return new ServiceResult<User>(ErrorFactory.UserCreationError());
                     }
                 }
             }

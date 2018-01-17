@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Configuration;
 
 namespace DeliveryTracker.Instances
 {
@@ -23,6 +24,7 @@ namespace DeliveryTracker.Instances
         {
             "id", 
             "invitation_code", 
+            "creator_id",
             "created",
             "expires", 
             "role",
@@ -38,5 +40,15 @@ namespace DeliveryTracker.Instances
             prefix = prefix ?? string.Empty;
             return string.Join("," + Environment.NewLine, InvitationColumnList.Select(p => prefix + p));
         }
+
+        public static InvitationSettings ReadInvitationSettingsFromConf(IConfiguration configuration)
+        {
+            return new InvitationSettings(
+                    configuration.GetValue("InvitationSettings:ExpiresInDays", 3),
+                    configuration.GetValue("InvitationSettings:CodeLength", 6),
+                    configuration.GetValue("InvitationSettings:Alphabet", "23456789qwertyupasdfghkzxbnmQWERTYUPASDFGHKZXVBNM"))
+                ;
+        }
+        
     }
 }

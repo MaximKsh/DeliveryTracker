@@ -6,6 +6,14 @@ namespace DeliveryTracker.Identification
 {
     public sealed class UserCredentials
     {
+        public UserCredentials(User user)
+        {
+            this.Id = user.Id;
+            this.Code = user.Code;
+            this.Role = user.Role;
+            this.InstanceId = user.InstanceId;
+        }
+        
         public UserCredentials(
             Guid id,
             string code,

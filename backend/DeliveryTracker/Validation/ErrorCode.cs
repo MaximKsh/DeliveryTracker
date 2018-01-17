@@ -70,6 +70,11 @@
         #region invitation errors
 
         /// <summary>
+        /// Код ошибки: ошибка при добавлении приглашения.
+        /// </summary>
+        public const string InvitationCreationError = "InvitationCreationError";
+        
+        /// <summary>
         /// Код ошибки: приглашение просрочено.
         /// </summary>
         public const string InvitationExpired = "InvitationExpired";

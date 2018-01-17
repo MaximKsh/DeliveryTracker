@@ -1,12 +1,11 @@
 ﻿using System;
-using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using Xunit;
 
 namespace DeliveryTracker.Tests.Identification
 {
-    public class UserManagerTest : DeliveryTrackerTestBase
+    public class UserManagerTest : DeliveryTrackerConnectionTestBase
     {
         private readonly IUserManager userManager;
         
@@ -17,9 +16,8 @@ namespace DeliveryTracker.Tests.Identification
         
         public UserManagerTest() : base()
         {
-            var provider = new PostgresConnectionProvider(this.Configuration);
-            this.userManager = new UserManager(provider);
-            using (var conn = provider.Create())
+            this.userManager = new UserManager(this.Cp);
+            using (var conn = this.Cp.Create())
             {
                 conn.Connect();
                 this.instance = TestHelper.CreateRandomInstance(conn);

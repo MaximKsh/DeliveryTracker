@@ -29,6 +29,7 @@
             public const string UserEditError = Pref + "UserEditError";
             public const string UserNotFound = Pref + "UserNotFound";
             public const string ValidationError = Pref + "ValidationError";
+            public const string InvitationCreationError = Pref + "InvitationCreationError";
 
 
             
