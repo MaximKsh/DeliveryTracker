@@ -15,7 +15,5 @@ namespace DeliveryTracker.Instances
         Task<ServiceResult<User>> EditAsync(User newData, NpgsqlConnectionWrapper oc = null);
 
         Task<ServiceResult> DeleteAsync(Guid userId, NpgsqlConnectionWrapper oc = null);
-
-        Task<ServiceResult> UpdatePositionAsync(Guid userId, Geoposition position, NpgsqlConnectionWrapper oc = null);
     }
 }

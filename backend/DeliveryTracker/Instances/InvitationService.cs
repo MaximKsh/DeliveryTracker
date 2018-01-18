@@ -55,7 +55,7 @@ where expires < (now() AT TIME ZONE 'UTC');
 
         private readonly IUserCredentialsAccessor userCredentialsAccessor;
         
-        private readonly ILogger<InvitationService> logger;
+        private readonly ILogger<IInvitationService> logger;
         
         #endregion
         
@@ -65,7 +65,7 @@ where expires < (now() AT TIME ZONE 'UTC');
             IPostgresConnectionProvider cp,
             InvitationSettings invitationSettings,
             IUserCredentialsAccessor userCredentialsAccessor,
-            ILogger<InvitationService> logger)
+            ILogger<IInvitationService> logger)
         {
             this.cp = cp;
             this.invitationSettings = invitationSettings;
@@ -144,7 +144,6 @@ where expires < (now() AT TIME ZONE 'UTC');
         {
             var validationResult = new ParametersValidator()
                 .AddNotNullRule("User", preliminaryUserData)
-                .AddNotEmptyGuidRule("User.InstanceId", preliminaryUserData.InstanceId)
                 .Validate();
             if (!validationResult.Success)
             {
@@ -161,7 +160,7 @@ where expires < (now() AT TIME ZONE 'UTC');
                 return new ServiceResult<Invitation>(ErrorFactory.AccessDenied());
             }
 
-            return await this.CreateAsyncInternal(credentials.Id, preliminaryUserData, oc);
+            return await this.CreateAsyncInternal(credentials.Id, credentials.InstanceId, preliminaryUserData, oc);
         }
 
         
@@ -250,6 +249,7 @@ where expires < (now() AT TIME ZONE 'UTC');
         
         private async Task<ServiceResult<Invitation>> CreateAsyncInternal(
             Guid creatorId,
+            Guid instanceId,
             User preliminaryUserData,
             NpgsqlConnectionWrapper oc = null)
         {
@@ -269,7 +269,7 @@ where expires < (now() AT TIME ZONE 'UTC');
                     command.Parameters.Add(new NpgsqlParameter(
                         "expires", DateTime.UtcNow.AddDays(this.invitationSettings.ExpiresInDays)));
                     command.Parameters.Add(new NpgsqlParameter("role", preliminaryUserData.Role));
-                    command.Parameters.Add(new NpgsqlParameter("instance_id", preliminaryUserData.InstanceId));
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                     command.Parameters.Add(new NpgsqlParameter("surname", preliminaryUserData.Surname).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("name", preliminaryUserData.Name).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("patronymic", preliminaryUserData.Patronymic).CanBeNull());

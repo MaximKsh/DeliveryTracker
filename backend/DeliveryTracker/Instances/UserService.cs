@@ -69,14 +69,6 @@ namespace DeliveryTracker.Instances
             }
             return new ServiceResult(ErrorFactory.AccessDenied());
         }
-
-        public async Task<ServiceResult> UpdatePositionAsync(
-            Guid userId, 
-            Geoposition position, 
-            NpgsqlConnectionWrapper oc = null)
-        {
-            throw new NotImplementedException();
-        }
         
         #endregion
     }

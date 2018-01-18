@@ -39,11 +39,14 @@ where id = @id
         
         private readonly IPostgresConnectionProvider cp;
 
-        private readonly IAccountService accountService;
+        private readonly ISecurityManager securityManager;
+
+        private readonly IUserManager userManager;
 
         private readonly IInvitationService invitationService;
         
-        private readonly ILogger<InstanceService> logger;
+        private readonly IUserCredentialsAccessor accessor;
+        
         
         #endregion
         
@@ -51,12 +54,16 @@ where id = @id
         
         public InstanceService(
             IPostgresConnectionProvider cp,
+            IUserManager userManager,
+            ISecurityManager securityManager, 
             IInvitationService invitationService,
-            IAccountService accountService)
+            IUserCredentialsAccessor accessor)
         {
             this.cp = cp;
+            this.userManager = userManager;
+            this.securityManager = securityManager;
             this.invitationService = invitationService;
-            this.accountService = accountService;
+            this.accessor = accessor;
         }
         
         #endregion
@@ -70,23 +77,24 @@ where id = @id
             NpgsqlConnectionWrapper oc = null)
         {
             var validationResult = new ParametersValidator()
-                .AddRule("InstanceName", instanceName, x => x != null && !string.IsNullOrWhiteSpace(x))
-                .AddRule("creatorInfo.Surname", creatorInfo?.Surname, x => x != null && !string.IsNullOrWhiteSpace(x))
-                .AddRule("creatorInfo.Name", creatorInfo?.Name, x => x != null && !string.IsNullOrWhiteSpace(x))
-                .AddRule("creatorInfo.PhoneNumber", creatorInfo?.PhoneNumber, x => x != null && !string.IsNullOrWhiteSpace(x))
-                .AddRule("codePassword.Password", codePassword?.Password, x => x != null && !string.IsNullOrWhiteSpace(x))
+                .AddNotNullOrWhitespaceRule("InstanceName", instanceName)
+                .AddNotNullOrWhitespaceRule("creatorInfo.Surname", creatorInfo.Surname)
+                .AddNotNullOrWhitespaceRule("creatorInfo.Name", creatorInfo.Name)
+                .AddNotNullOrWhitespaceRule("creatorInfo.PhoneNumber", creatorInfo.PhoneNumber)
+                .AddNotNullOrWhitespaceRule("codePassword.Password", codePassword.Password)
                 .Validate();
             
             if (!validationResult.Success)
             {
                 return new ServiceResult<Tuple<Instance, User, UserCredentials>>(validationResult.Error);
             }
-            
+
             return await this.CreateInternalAsync(instanceName, creatorInfo, codePassword, oc);
         }
 
-        public async Task<ServiceResult<Instance>> GetAsync(Guid instanceId, NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult<Instance>> GetAsync(NpgsqlConnectionWrapper oc = null)
         {
+            var instanceId = this.accessor.UserCredentials.InstanceId;
             using (var connWrapper = oc ?? this.cp.Create())
             {
                 connWrapper.Connect();
@@ -118,6 +126,8 @@ where id = @id
             CodePassword codePassword, 
             NpgsqlConnectionWrapper oc = null)
         {
+            var creator = new User();
+            creator.Deserialize(creatorInfo.Serialize());
             using (var connWrapper = oc ?? this.cp.Create())
             {
                 connWrapper.Connect();
@@ -125,29 +135,29 @@ where id = @id
                 using (var transaction = connWrapper.BeginTransaction())
                 {
                     var instanceId = await InsertNewInstance(instanceName, connWrapper);
-                    creatorInfo.InstanceId = instanceId;
-                    var code = await this.invitationService.GenerateUniqueCodeAsync(oc);
-                    var registrationResult = await this.accountService.RegisterAsync(
-                        codePassword,
-                        u =>
-                        {
-                            u.Code = code;
-                            u.Role = DefaultRoles.CreatorRole;
-                            u.Surname = creatorInfo.Surname;
-                            u.Name = creatorInfo.Name;
-                            u.Patronymic = creatorInfo.Patronymic;
-                            u.PhoneNumber = creatorInfo.PhoneNumber;
-                            u.InstanceId = instanceId;
-                        },
-                        connWrapper);
-                    if (!registrationResult.Success)
+                    creator.Id = Guid.NewGuid();
+                    creator.Code = await this.invitationService.GenerateUniqueCodeAsync(connWrapper);
+                    creator.Role = DefaultRoles.CreatorRole;
+                    creator.InstanceId = instanceId;
+
+                    var createResult = await this.userManager.CreateAsync(creator, connWrapper);
+                    if (!createResult.Success)
                     {
                         transaction.Rollback();
-                        return new ServiceResult<Tuple<Instance, User, UserCredentials>>(registrationResult.Errors);
+                        return new ServiceResult<Tuple<Instance, User, UserCredentials>>(createResult.Errors);
                     }
 
-                    var user = registrationResult.Result.Item1;
-                    var credentials = registrationResult.Result.Item2;
+                    var user = createResult.Result;
+                    var setPasswordResult =
+                        await this.securityManager.SetPasswordAsync(user.Id, codePassword.Password, connWrapper);
+                    if (!setPasswordResult.Success)
+                    {
+                        transaction.Rollback();
+                        return new ServiceResult<Tuple<Instance, User, UserCredentials>>(setPasswordResult.Errors);
+                    }
+
+                    var credentials = setPasswordResult.Result;
+
                     await SetInstanceCreator(instanceId, user.Id, connWrapper);
                     var createdInstance = new Instance
                     {

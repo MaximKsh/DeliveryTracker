@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace DeliveryTracker.Validation
 {
@@ -54,6 +55,11 @@ namespace DeliveryTracker.Validation
         public override int GetHashCode()
         {
             return (this.Code != null ? this.Code.GetHashCode() : 0);
+        }
+
+        public override string ToString()
+        {
+            return $"{this.Code}({string.Join(", ", this.Info.Select(kv => $"([{kv.Key}] = '{kv.Value}')"))})";
         }
     }
 }

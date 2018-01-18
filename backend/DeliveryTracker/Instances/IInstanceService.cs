@@ -14,7 +14,6 @@ namespace DeliveryTracker.Instances
             NpgsqlConnectionWrapper oc = null);
 
         Task<ServiceResult<Instance>> GetAsync(
-            Guid instanceId,
             NpgsqlConnectionWrapper oc = null);
     }
 }

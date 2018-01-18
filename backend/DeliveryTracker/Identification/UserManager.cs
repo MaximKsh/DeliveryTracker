@@ -79,8 +79,6 @@ where id = @id and instance_id = @instance_id
                 .AddNotNullRule("user", user)
                 .AddNotEmptyGuidRule("User.Id", user.Id)
                 .AddNotNullOrWhitespaceRule("User.Code", user.Code)
-                .AddNotNullOrWhitespaceRule("User.Surname", user.Surname)
-                .AddNotNullOrWhitespaceRule("User.Name", user.Name)
                 .AddNotEmptyGuidRule("User.InstanceId", user.InstanceId)
                 .Validate();
             if (!validationResult.Success)
@@ -258,8 +256,8 @@ where id = @id and instance_id = @instance_id
                     command.Parameters.Add(new NpgsqlParameter("id", user.Id));
                     command.Parameters.Add(new NpgsqlParameter("code", user.Code));
                     command.Parameters.Add(new NpgsqlParameter("role", user.Role));
-                    command.Parameters.Add(new NpgsqlParameter("surname", user.Surname));
-                    command.Parameters.Add(new NpgsqlParameter("name", user.Name));
+                    command.Parameters.Add(new NpgsqlParameter("surname", user.Surname).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("name", user.Name).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("patronymic", user.Patronymic).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("phone_number", user.PhoneNumber).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("instance_id", user.InstanceId));

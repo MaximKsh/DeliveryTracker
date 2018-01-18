@@ -13,8 +13,6 @@ namespace DeliveryTracker.Tests.Instances
     {
         private readonly IInvitationService defaultInvitationService;
 
-        private readonly InvitationSettings defaultInvitationSettings;
-
         private readonly Instance defaultInstance;
         private readonly User creator;
         private readonly User manager;
@@ -55,10 +53,9 @@ namespace DeliveryTracker.Tests.Instances
                 .Returns(new UserCredentials(this.performer));
             
             
-            this.defaultInvitationSettings = InstanceHelper.ReadInvitationSettingsFromConf(this.Configuration);
             this.defaultInvitationService = new InvitationService(
                 this.Cp, 
-                this.defaultInvitationSettings, 
+                this.DefaultInvitationSettings, 
                 this.creatorCredentialsMock.Object,
                 null);
         }
@@ -124,11 +121,10 @@ namespace DeliveryTracker.Tests.Instances
         {
             // Arrange
             var accesor = this.accessors[accesorIndex];
-            var invitationService = new InvitationService(this.Cp, this.defaultInvitationSettings, accesor, null);
+            var invitationService = new InvitationService(this.Cp, this.DefaultInvitationSettings, accesor, null);
             var userData = new User
             {
                 Role = role,
-                InstanceId = this.defaultInstance.Id,
             };
             
             // Act
@@ -148,11 +144,10 @@ namespace DeliveryTracker.Tests.Instances
         {
             // Arrange
             var accesor = this.accessors[accesorIndex];
-            var invitationService = new InvitationService(this.Cp, this.defaultInvitationSettings, accesor, null);
+            var invitationService = new InvitationService(this.Cp, this.DefaultInvitationSettings, accesor, null);
             var userData = new User
             {
                 Role = role,
-                InstanceId = this.defaultInstance.Id,
             };
             
             // Act
@@ -170,7 +165,6 @@ namespace DeliveryTracker.Tests.Instances
             var userData = new User
             {
                 Role = DefaultRoles.PerformerRole,
-                InstanceId = this.defaultInstance.Id,
             };
             var result = await this.defaultInvitationService.CreateAsync(userData);
             
@@ -198,7 +192,6 @@ namespace DeliveryTracker.Tests.Instances
             var userData = new User
             {
                 Role = DefaultRoles.PerformerRole,
-                InstanceId = this.defaultInstance.Id,
             };
             var result = await this.defaultInvitationService.CreateAsync(userData);
             

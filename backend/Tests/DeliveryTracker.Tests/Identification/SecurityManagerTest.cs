@@ -11,15 +11,13 @@ namespace DeliveryTracker.Tests.Identification
         private readonly IPostgresConnectionProvider provider;
         private readonly ISecurityManager defaultSecurityManager;
         private readonly Instance defaultInstance;
-        private readonly TokenSettings defaultTokenSettings;
         
         public SecurityManagerTest()
         {
             this.provider = new PostgresConnectionProvider(this.Configuration);
-            this.defaultTokenSettings = IdentificationHelper.ReadTokenSettingsFromConf(this.Configuration);
-            var passwordSettings = IdentificationHelper.ReadPasswordSettingsFromConf(this.Configuration);
+            
             this.defaultSecurityManager = new SecurityManager(
-                this.provider, this.defaultTokenSettings, passwordSettings);
+                this.provider, this.DefaultTokenSettings, this.DefaultPasswordSettings);
             
             using (var conn = this.provider.Create())
             {
@@ -77,10 +75,10 @@ namespace DeliveryTracker.Tests.Identification
                 conn.Connect();
                 user = TestHelper.CreateRandomUser(DefaultRoles.CreatorRole, this.defaultInstance.Id, conn);
             }
-            await this.defaultSecurityManager.SetPasswordAsync(user.Id, "123Bb!");
+            await this.defaultSecurityManager.SetPasswordAsync(user.Id, TestHelper.CorrectPassword);
             
             // Act
-            var result = await this.defaultSecurityManager.ValidatePasswordAsync(user.Id, "123Bb!");
+            var result = await this.defaultSecurityManager.ValidatePasswordAsync(user.Id, TestHelper.CorrectPassword);
             
             // Assert
             Assert.True(result.Success);
@@ -96,10 +94,10 @@ namespace DeliveryTracker.Tests.Identification
                 conn.Connect();
                 user = TestHelper.CreateRandomUser(DefaultRoles.CreatorRole, this.defaultInstance.Id, conn);
             }
-            await this.defaultSecurityManager.SetPasswordAsync(user.Id, "123Bb!");
+            await this.defaultSecurityManager.SetPasswordAsync(user.Id, TestHelper.CorrectPassword);
             
             // Act
-            var result = await this.defaultSecurityManager.ValidatePasswordAsync(user.Code, "123Bb!");
+            var result = await this.defaultSecurityManager.ValidatePasswordAsync(user.Code, TestHelper.CorrectPassword);
             
             // Assert
             Assert.True(result.Success);
@@ -119,7 +117,7 @@ namespace DeliveryTracker.Tests.Identification
                 conn.Connect();
                 user = TestHelper.CreateRandomUser(DefaultRoles.CreatorRole, this.defaultInstance.Id, conn);
             }
-            await this.defaultSecurityManager.SetPasswordAsync(user.Id, "123Bb!");
+            await this.defaultSecurityManager.SetPasswordAsync(user.Id, TestHelper.CorrectPassword);
             
             // Act
             var result = await this.defaultSecurityManager.ValidatePasswordAsync(user.Id, pwd);
@@ -141,7 +139,7 @@ namespace DeliveryTracker.Tests.Identification
                 conn.Connect();
                 user = TestHelper.CreateRandomUser(DefaultRoles.CreatorRole, this.defaultInstance.Id, conn);
             }
-            await this.defaultSecurityManager.SetPasswordAsync(user.Id, "123Bb!");
+            await this.defaultSecurityManager.SetPasswordAsync(user.Id, TestHelper.CorrectPassword);
             
             // Act
             var result = await this.defaultSecurityManager.ValidatePasswordAsync(user.Code, pwd);
@@ -160,8 +158,8 @@ namespace DeliveryTracker.Tests.Identification
                 conn.Connect();
                 user = TestHelper.CreateRandomUser(DefaultRoles.CreatorRole, this.defaultInstance.Id, conn);
             }
-            await this.defaultSecurityManager.SetPasswordAsync(user.Id, "123Bb!");
-            var result = await this.defaultSecurityManager.ValidatePasswordAsync(user.Id, "123Bb!");
+            await this.defaultSecurityManager.SetPasswordAsync(user.Id, TestHelper.CorrectPassword);
+            var result = await this.defaultSecurityManager.ValidatePasswordAsync(user.Id, TestHelper.CorrectPassword);
             
             // Act
             var token = this.defaultSecurityManager.AcquireToken(result.Result);
@@ -193,7 +191,7 @@ namespace DeliveryTracker.Tests.Identification
         {
             var ps = new PasswordSettings(min, max, upper, lower, digit, alphabet, sameCharactersInRow);
             var securityManager = new SecurityManager(
-                this.provider, this.defaultTokenSettings, ps);
+                this.provider, this.DefaultTokenSettings, ps);
             // Arrange
             User user;
             using (var conn = this.provider.Create())

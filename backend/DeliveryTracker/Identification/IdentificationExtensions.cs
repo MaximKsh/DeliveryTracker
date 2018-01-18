@@ -78,11 +78,11 @@ namespace DeliveryTracker.Identification
                 Id = reader.GetGuid(idx++),
                 Code = reader.GetString(idx++),
                 Role = reader.GetString(idx++),
-                Surname = reader.GetString(idx++),
-                Name = reader.GetString(idx++),
+                InstanceId = reader.GetGuid(idx++),
+                Surname = reader.GetValueOrDefault<string>(idx++),
+                Name = reader.GetValueOrDefault<string>(idx++),
                 Patronymic = reader.GetValueOrDefault<string>(idx++),
                 PhoneNumber = reader.GetValueOrDefault<string>(idx++),
-                InstanceId = reader.GetGuid(idx++),
             };
         }
     }

@@ -297,11 +297,12 @@ returning code, role, instance_id
                             code = reader.GetString(1);
                             instanceId = reader.GetGuid(2);
                             role = reader.GetString(3);
-                            passwordHash = reader.GetString(4);
+                            passwordHash = reader.GetValueOrDefault<string>(4);
                         }
                     }
                 }
                 if (id != Guid.Empty
+                    && !string.IsNullOrWhiteSpace(passwordHash)
                     && this.ComparePasswords(passwordHash, password))
                 {
                     var credentials = new UserCredentials(id, code, role, instanceId);

@@ -13,11 +13,11 @@ namespace DeliveryTracker.Identification
             "id", 
             "code", 
             "role",
+            "instance_id",
             "surname", 
             "name", 
             "patronymic", 
             "phone_number", 
-            "instance_id"
         }.AsReadOnly();
         
         public static string GetUserColumns(string prefix = null)

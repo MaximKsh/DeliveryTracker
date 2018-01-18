@@ -69,10 +69,6 @@ namespace DeliveryTracker.Tests.Identification
         [Theory]
         [InlineData(false, null, null, null, null, null)]
         [InlineData(true, "Petrov", "Ivan", null, null, null)]
-        [InlineData(false, "Petrov", "Ivan", null, null, DefaultRoles.CreatorRole)]
-        [InlineData(true, "Petrov", null, null, null, DefaultRoles.CreatorRole)]
-        [InlineData(true, null, "Ivan", null, null, DefaultRoles.CreatorRole)]
-        [InlineData(true, "", "Ivan", null, null, DefaultRoles.CreatorRole)]
         [InlineData(false, null, null, "4231", "123", null)]
         public async void AddUserWrongData(
             bool useInstanceId, 

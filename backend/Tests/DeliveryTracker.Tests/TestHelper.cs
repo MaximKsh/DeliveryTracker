@@ -2,6 +2,9 @@
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Internal;
+using Moq;
 using Npgsql;
 
 namespace DeliveryTracker.Tests
@@ -19,6 +22,22 @@ insert into instances({InstanceHelper.GetInstanceColumns()})
 values ({InstanceHelper.GetInstanceColumns("@")})
 returning {InstanceHelper.GetInstanceColumns()}
 ;";
+
+        public const string CorrectPassword = "123Bb!";
+
+        public static Mock<ILogger<T>> CreateLoggerMock<T>()
+        {
+            var mock = new Mock<ILogger<T>>();
+            mock.Setup(p => 
+                p.Log(
+                    It.IsAny<LogLevel>(), 
+                    It.IsAny<EventId>(),
+                    It.IsAny<FormattedLogValues>(),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<FormattedLogValues, Exception, string>>()));
+            return mock;
+        }
+        
 
         public static Instance CreateRandomInstance(NpgsqlConnectionWrapper conn)
         {
