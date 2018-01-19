@@ -121,6 +121,25 @@ namespace DeliveryTracker.Validation
         {
             return this.AddRule(variableName, value, v => value != Guid.Empty);
         }
+
+        /// <summary>
+        /// Содержит ли переданный набор пар указанный ключ
+        /// </summary>
+        /// <param name="dict">проверяемый набор пар</param>
+        /// <param name="key">требуемый ключ</param>
+        /// <typeparam name="TK"></typeparam>
+        /// <returns></returns>
+        public ParametersValidator AddContainsKeyRule<TK>(
+            IEnumerable<KeyValuePair<string, TK>> dict,
+            string key)
+        {
+            return this.AddRule(
+                key,
+                dict,
+                en => en != null
+                      && (en is IReadOnlyDictionary<string, TK> roc && roc.ContainsKey(key)
+                          || en is IDictionary<string, TK> d && d.ContainsKey(key)));
+        }
         
         /// <summary>
         /// Выполнить валидацию по заданным правилам.

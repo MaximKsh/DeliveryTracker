@@ -57,7 +57,13 @@ namespace DeliveryTracker.Instances
 
         public async Task<ServiceResult<User>> EditAsync(User newData, NpgsqlConnectionWrapper oc = null)
         {
-            return await this.userManager.EditAsync(newData, oc);
+            var credentials = this.credentialsAccessor.UserCredentials;
+            if (credentials.Valid)
+            {
+                newData.InstanceId = credentials.Id;
+                return await this.userManager.EditAsync(newData, oc);   
+            }
+            return new ServiceResult<User>(ErrorFactory.AccessDenied());
         }
 
         public async Task<ServiceResult> DeleteAsync(Guid userId, NpgsqlConnectionWrapper oc = null)

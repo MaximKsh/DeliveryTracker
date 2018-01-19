@@ -169,6 +169,14 @@ where expires < (now() AT TIME ZONE 'UTC');
             string invitationCode, 
             NpgsqlConnectionWrapper oc = null)
         {
+            var validationResult = new ParametersValidator()
+                .AddNotNullOrWhitespaceRule("InvitationCode", invitationCode)
+                .Validate();
+            if (!validationResult.Success)
+            {
+                return new ServiceResult<Invitation>(validationResult.Error);
+            }
+            
             Invitation invitation = null;
             using (var conn = oc ?? this.cp.Create())
             {

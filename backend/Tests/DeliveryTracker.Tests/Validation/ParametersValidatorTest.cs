@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using DeliveryTracker.Validation;
 using Xunit;
 using Enumerable = System.Linq.Enumerable;
@@ -18,6 +19,16 @@ namespace DeliveryTracker.Tests.Validation
             var v2 = new object();
             var v3 = Guid.NewGuid();
             var v4 = "123";
+            var dic = new Dictionary<string, object>
+            {
+                ["A"] = "a",
+                ["B"] = "b",
+            };
+            var roDic = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
+            {
+                ["A"] = "a",
+                ["B"] = "b",
+            });
 
             // Act
             var result = new ParametersValidator()
@@ -25,6 +36,8 @@ namespace DeliveryTracker.Tests.Validation
                 .AddNotNullRule("v2", v2)
                 .AddNotEmptyGuidRule("v3", v3)
                 .AddNotNullOrWhitespaceRule("v4", v4)
+                .AddContainsKeyRule(dic, "A")
+                .AddContainsKeyRule(roDic, "B")
                 .Validate();
 
             // Assert
@@ -45,6 +58,30 @@ namespace DeliveryTracker.Tests.Validation
             Assert.Contains(
                 Enumerable.AsEnumerable(result.Error.Info),
                 x => x.Key == name && x.Value == (value?.ToString() ?? "null"));
+        }
+
+        [Fact]
+        public void WrongContainsKey()
+        {
+            var dic = new Dictionary<string, object>
+            {
+                ["A"] = "a",
+                ["B"] = "b",
+            };
+            var roDic = new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
+            {
+                ["A"] = "a",
+                ["B"] = "b",
+            });
+
+            // Act
+            var result = new ParametersValidator()
+                .AddContainsKeyRule(dic, "C")
+                .AddContainsKeyRule(roDic, "D")
+                .Validate();
+
+            // Assert
+            Assert.False(result.Success);
         }
 
         [Fact]

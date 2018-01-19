@@ -10,5 +10,10 @@ namespace DeliveryTracker.Validation
         {
             return string.Join(Environment.NewLine, errors.Select(e => e.ToString()));
         }
+
+        public static IList<IError> ToOneElementList(this IError error)
+        {
+            return new List<IError> {error};
+        }
     }
 }

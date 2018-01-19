@@ -184,7 +184,14 @@ namespace DeliveryTracker.Instances
                 }
             }
         }
-        
+
+        /// <inheritdoc />
+        public async Task<ServiceResult<User>> GetAsync(NpgsqlConnectionWrapper oc = null)
+        {
+            var credentials = this.userCredentialsAccessor.UserCredentials;
+            return await this.userManager.GetAsync(credentials.Id, credentials.InstanceId, oc);
+        }
+
         /// <inheritdoc />
         public async Task<ServiceResult<User>> EditAsync(
             User newData, 
@@ -201,16 +208,12 @@ namespace DeliveryTracker.Instances
 
         /// <inheritdoc />
         public async Task<ServiceResult> ChangePasswordAsync(
-            Guid userId, 
             string oldPassword, 
             string newPassword, 
             NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.userCredentialsAccessor.UserCredentials;
-            if (userId != credentials.Id)
-            {
-                return new ServiceResult(ErrorFactory.AccessDenied());
-            }
+            var userId = credentials.Id;
             
             var verificationResult = await this.securityManager.ValidatePasswordAsync(userId, oldPassword, oc);
             if (!verificationResult.Success)

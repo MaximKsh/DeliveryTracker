@@ -1,17 +1,28 @@
-﻿using DeliveryTracker.Common;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using DeliveryTracker.Identification;
+using DeliveryTracker.Instances;
+using DeliveryTracker.Validation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace DeliveryTrackerWeb.Controllers
 {
+    [Authorize]
     [Route("api/user")]
     public class UserController: Controller
     {
-        /*
+        
         #region fields
+
+        private readonly IUserManager userManager;
         
-        private readonly DeliveryTrackerDbContext dbContext;
-        
-        private readonly AccountService accountService;
+        private readonly IUserService userService;
+
+        private readonly IUserCredentialsAccessor accessor;
         
         private readonly ILogger<UserController> logger;
         
@@ -20,187 +31,109 @@ namespace DeliveryTrackerWeb.Controllers
         #region constructor
         
         public UserController(
-            DeliveryTrackerDbContext dbContext, 
-            AccountService accountService,
+            IUserManager userManager,
+            IUserService userService,
+            IUserCredentialsAccessor accessor,
             ILogger<UserController> logger)
         {
-            this.dbContext = dbContext;
-            this.accountService = accountService;
+            this.userManager = userManager;
+            this.userService = userService;
+            this.accessor = accessor;
             this.logger = logger;
         }
 
         #endregion 
-        */
+
+        
         #region actions
         
-        // user/invitation/create
-        // user/invitation/get
-        // user/invitation/delete
         // user/get
         // user/edit
         // user/delete
-        // user/update_position
-        
-        [HttpPost("invitation/create")]
-        public IActionResult CreateInvitation()
-        {
-            return this.Ok();
-        }
-        
-        [HttpGet("invitation/get")]
-        public IActionResult GetInvitation()
-        {
-            return this.Ok();
-        }
-        
-        [HttpPost("invitation/delete")]
-        public IActionResult DeleteInvitation()
-        {
-            return this.Ok();
-        }
         
         [HttpGet("get")]
-        public IActionResult Get()
+        public async Task<IActionResult> Get(Guid? id, string code)
         {
-            var geopos = new Geoposition
+            if (id.HasValue)
             {
-                Latitude = 1,
-                Longitude = 4,
-            };
-            
-            return this.Ok(geopos.Serialize());
+                var result = await this.userService.GetAsync(id.Value);
+                return result.Success
+                    ? (IActionResult) this.Ok(result.Result)
+                    : this.BadRequest(result.Errors);
+            }
+            if (!string.IsNullOrWhiteSpace(code))
+            {
+                var result = await this.userService.GetAsync(code);
+                return result.Success
+                    ? (IActionResult) this.Ok(result.Result)
+                    : this.BadRequest(result.Errors);   
+            }
+            return this.BadRequest(ErrorFactory.ValidationError(new List<KeyValuePair<string, object>>
+            {
+                new KeyValuePair<string, object>(nameof(id), null),
+                new KeyValuePair<string, object>(nameof(code), null),
+            }));
         }
         
+        [Authorize(Policy = AuthorizationPolicies.CreatorOrManager)]
         [HttpPost("edit")]
-        public IActionResult Edit()
+        public async Task<IActionResult> Edit([FromBody] User userInfo)
         {
-            return this.Ok();
-        }
-        
-        [HttpPost("delete")]
-        public IActionResult Delete()
-        {
-            return this.Ok();
-        }
-        
-        /*
+            var result = await this.userService.EditAsync(userInfo);
+            if (result.Success)
+            {
+                return this.Ok(result.Result);
+            }
 
-        [HttpPost("edit")]
-        public async Task<IActionResult> Edit([FromBody] UserViewModel userInfo)
-        {
-            var validateQueryParametersResult = new ParametersValidator()
-                .AddRule("userInfo", userInfo, p => p != null)
-                .Validate();
-            
-            if (!validateQueryParametersResult.Success)
+            if (result.Errors.Any(p => p.Code == ErrorCode.AccessDenied))
             {
-                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
+                return this.Forbid();
             }
-            
-            
-            using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
-            {
-                try
-                {
-                    var result = await this.accountService.Modify(this.User.Identity.Name, userInfo);
-                    if (!result.Success)
-                    {
-                        // Обработаем первую ошибку
-                        var error = result.Errors[0];
-                        transaction.Rollback();
-                        if (error.Code == ErrorCode.UserNotFound)
-                        {
-                            return this.NotFound(error.ToErrorListViewModel());
-                        }
-                        return this.BadRequest(error.ToErrorListViewModel());
-                    }
-                    var user = result.Result;
-                    var role = await this.accountService.GetUserRole(user);
-                    await this.dbContext.SaveChangesAsync();
-                    transaction.Commit();
-                    return this.Ok(new UserViewModel
-                    {
-                        Instance = new InstanceViewModel
-                        {
-                            InstanceName = user.Instance.InstanceName
-                        },
-                        Username = user.UserName,
-                        Surname = user.Surname,
-                        Name = user.Name,
-                        PhoneNumber = user.PhoneNumber,
-                        Role = role.Result ?? string.Empty,
-                
-                    });
-                }
-                catch (Exception)
-                {
-                    transaction.Rollback();
-                    throw;
-                }
-            }
+
+            return this.BadRequest(result.Errors);
         }
         
-        [HttpPost("change_password")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordViewModel passwords)
+        [Authorize(Policy = AuthorizationPolicies.CreatorOrManager)]
+        [HttpPost("delete")]
+        public async Task<IActionResult> Delete(Guid? id, string code)
         {
-            var validateQueryParametersResult = new ParametersValidator()
-                .AddRule("passwords", passwords, p => p != null)
-                .AddRule("currentCredentials", passwords.CurrentCredentials, p => p != null)
-                .AddRule("newCredentials", passwords.NewCredentials, p => p != null)
-                .Validate();
-            
-            if (!validateQueryParametersResult.Success)
+            Guid validId;
+            if (id.HasValue)
             {
-                return this.BadRequest(validateQueryParametersResult.Error.ToErrorListViewModel());
+                validId = id.Value;
             }
-            
-            if (!this.ModelState.IsValid)
+            if (!string.IsNullOrWhiteSpace(code))
             {
-                return this.BadRequest(this.ModelState.ToErrorListViewModel());
-            }
-            
-            using (var transaction = await this.dbContext.Database.BeginTransactionAsync())
-            {
-                try
+                var credentials = this.accessor.UserCredentials;
+                var idByCode = await this.userManager.GetIdAsync(code, credentials.InstanceId);
+                if (!idByCode.HasValue)
                 {
-                    var result = await this.accountService.ChangePassword(this.User.Identity.Name, passwords);
-                    if (!result.Success)
-                    {
-                        // Обработаем первую ошибку
-                        var error = result.Errors[0];
-                        transaction.Rollback();
-                        if (error.Code == ErrorCode.UserNotFound)
-                        {
-                            return this.NotFound(error.ToErrorListViewModel());
-                        }
-                        return this.BadRequest(error.ToErrorListViewModel());
-                    }
-                    var user = result.Result;
-                    var role = await this.accountService.GetUserRole(user);
-                    await this.dbContext.SaveChangesAsync();
-                    transaction.Commit();
-                    return this.Ok(new UserViewModel
-                    {
-                        Instance = new InstanceViewModel
-                        {
-                            InstanceName = user.Instance.InstanceName
-                        },
-                        Username = user.UserName,
-                        Surname = user.Surname,
-                        Name = user.Name,
-                        PhoneNumber = user.PhoneNumber,
-                        Role = role.Result ?? string.Empty,
-                
-                    });
+                    return this.BadRequest(ErrorFactory.UserNotFound(code));
                 }
-                catch (Exception)
-                {
-                    transaction.Rollback();
-                    throw;
-                }
+
+                validId = idByCode.Value;
             }
+            else
+            {
+                return this.BadRequest(ErrorFactory.ValidationError(new List<KeyValuePair<string, object>>
+                {
+                    new KeyValuePair<string, object>(nameof(id), null),
+                    new KeyValuePair<string, object>(nameof(code), null),
+                }));
+            }
+            var result = await this.userService.DeleteAsync(validId);
+            if (result.Success)
+            {
+                return this.Ok();
+            }
+
+            if (result.Errors.Any(p => p.Code == ErrorCode.AccessDenied))
+            {
+                return this.Forbid();
+            }
+
+            return this.BadRequest(result.Errors);
         }
-        */
         
         #endregion
     }

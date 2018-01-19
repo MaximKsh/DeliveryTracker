@@ -21,12 +21,13 @@ namespace DeliveryTracker.Instances
             CodePassword codePassword,
             NpgsqlConnectionWrapper oc = null);
 
+        Task<ServiceResult<User>> GetAsync(NpgsqlConnectionWrapper oc = null);
+        
         Task<ServiceResult<User>> EditAsync(
             User newData,
             NpgsqlConnectionWrapper oc = null);
         
         Task<ServiceResult> ChangePasswordAsync(
-            Guid userId,
             string oldPassword,
             string newPassword,
             NpgsqlConnectionWrapper oc = null);

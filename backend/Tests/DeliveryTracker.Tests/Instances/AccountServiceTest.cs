@@ -287,6 +287,16 @@ namespace DeliveryTracker.Tests.Instances
             // Assert
             Assert.False(loginResult.Success, loginResult.Errors.ErrorsToString());
         }
+
+        [Fact]
+        public async void GetMe()
+        {
+            // Act
+            var getResult = await this.accountService.GetAsync();
+            
+            // Assert
+            Assert.True(getResult.Success, getResult.Errors.ErrorsToString());
+        }
         
         [Fact]
         public async void EditMe()

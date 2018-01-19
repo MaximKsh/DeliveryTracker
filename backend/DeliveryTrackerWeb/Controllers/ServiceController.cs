@@ -2,10 +2,10 @@
 
 namespace DeliveryTrackerWeb.Controllers
 {
-    public sealed class PingController : Controller
+    public sealed class ServiceController : Controller
     {
         [HttpGet("/")]
-        public IActionResult Ping()
+        public IActionResult Alive()
         {
             return this.Ok();
         }
