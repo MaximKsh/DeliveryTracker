@@ -3,8 +3,14 @@ using DeliveryTracker.Localization;
 
 namespace DeliveryTracker.Identification
 {
+    /// <summary>
+    /// Список стандартных ролей.
+    /// </summary>
     public static class DefaultRoles
     {
+        /// <summary>
+        /// Все стандартные роли
+        /// </summary>
         public static readonly IReadOnlyList<string> AllRoles = new List<string>
         {
             CreatorRole,
@@ -12,10 +18,19 @@ namespace DeliveryTracker.Identification
             PerformerRole,
         }.AsReadOnly();
         
+        /// <summary>
+        /// Создатель компании.
+        /// </summary>
         public const string CreatorRole = "CreatorRole";
 
+        /// <summary>
+        /// Менеджер.
+        /// </summary>
         public const string ManagerRole = "ManagerRole";
 
+        /// <summary>
+        /// Исполнитель.
+        /// </summary>
         public const string PerformerRole = "PerformerRole";
 
         public const string CreatorRoleCaption = LocalizationAlias.Roles.CreatorRole;

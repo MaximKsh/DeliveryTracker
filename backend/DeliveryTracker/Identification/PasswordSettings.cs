@@ -2,6 +2,9 @@
 
 namespace DeliveryTracker.Identification
 {
+    /// <summary>
+    /// Настройки корректности пароля
+    /// </summary>
     public sealed class PasswordSettings
     {
         public PasswordSettings(
@@ -23,13 +26,45 @@ namespace DeliveryTracker.Identification
             this.SameCharactersInARow = sameCharactersInARow;
         }
     
+        /// <summary>
+        /// Минимальная длина пароля.
+        /// </summary>
         public int MinLength { get; }
+        
+        /// <summary>
+        /// Максимальная длина пароля.
+        /// </summary>
         public int MaxLength { get; }
+        
+        /// <summary>
+        /// В пароле должен присутствовать хотя бы один символ в верхнем регистре.
+        /// </summary>
         public bool AtLeastOneUpperCase { get; }
+        
+        /// <summary>
+        /// В пароле должен присутствовать хотя бы один символ в нижнем регистре.
+        /// </summary>
         public bool AtLeastOneLowerCase { get; }
+        
+        /// <summary>
+        /// В пароле должна быть хотя бы одна цифра.
+        /// </summary>
         public bool AtLeastOneDigit { get; }
+        
+        /// <summary>
+        /// Символы, из которых может состоять пароль.
+        /// </summary>
         public ImmutableHashSet<char> Alphabet { get; }
+        
+        /// <summary>
+        /// Есть ли ограничение на набор символов в пароле.
+        /// Вычисляется из поля Alphabet
+        /// </summary>
         public bool HasAlphabet { get; }
+        
+        /// <summary>
+        /// Максимальное количество одинаковых символов подряд.
+        /// </summary>
         public int SameCharactersInARow { get; }
         
     }

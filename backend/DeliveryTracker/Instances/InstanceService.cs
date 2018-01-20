@@ -9,6 +9,7 @@ using Npgsql;
 namespace DeliveryTracker.Instances
 {
     // ReSharper disable once ClassNeverInstantiated.Global
+    /// <inheritdoc />
     public class InstanceService : IInstanceService
     {
         #region sql
@@ -68,6 +69,7 @@ where id = @id
 
         #region public
 
+        /// <inheritdoc />
         public async Task<ServiceResult<Tuple<Instance, User, UserCredentials>>> CreateAsync(
             string instanceName, 
             User creatorInfo, 
@@ -90,6 +92,7 @@ where id = @id
             return await this.CreateInternalAsync(instanceName, creatorInfo, codePassword, oc);
         }
 
+        /// <inheritdoc />
         public async Task<ServiceResult<Instance>> GetAsync(NpgsqlConnectionWrapper oc = null)
         {
             var instanceId = this.accessor.UserCredentials.InstanceId;

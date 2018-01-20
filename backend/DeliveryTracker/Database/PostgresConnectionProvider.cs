@@ -2,6 +2,7 @@
 
 namespace DeliveryTracker.Database
 {
+    /// <inheritdoc />
     public class PostgresConnectionProvider : IPostgresConnectionProvider
     {
         private readonly string connectionString;

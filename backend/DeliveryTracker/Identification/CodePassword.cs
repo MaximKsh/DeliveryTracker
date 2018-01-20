@@ -1,5 +1,8 @@
 ﻿namespace DeliveryTracker.Identification
 {
+    /// <summary>
+    /// Сущность, хранящая пару Код-Пароль.
+    /// </summary>
     public class CodePassword
     {
         /// <summary>

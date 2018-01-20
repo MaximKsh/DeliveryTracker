@@ -2,6 +2,9 @@
 
 namespace DeliveryTracker.Identification
 {
+    /// <summary>
+    /// Учетные данные пользователя.
+    /// </summary>
     public sealed class UserCredentials
     {
         public UserCredentials(User user)
@@ -24,14 +27,30 @@ namespace DeliveryTracker.Identification
             this.InstanceId = instanceId;
         }
         
+        /// <summary>
+        /// Идентификатор пользователя.
+        /// </summary>
         public Guid Id { get; }
 
+        /// <summary>
+        /// Код пользователя.
+        /// </summary>
         public string Code { get; }
         
+        /// <summary>
+        /// Роль пользователя.
+        /// </summary>
         public string Role { get; }
         
+        /// <summary>
+        /// ID инстанса пользователя.
+        /// </summary>
         public Guid InstanceId { get; }
 
+        
+        /// <summary>
+        /// Содержит ли объект корректные данные о пользователе.
+        /// </summary>
         public bool Valid =>
             this.Id != Guid.Empty
             && !string.IsNullOrWhiteSpace(this.Code)

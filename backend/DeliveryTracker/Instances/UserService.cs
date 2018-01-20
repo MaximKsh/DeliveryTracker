@@ -7,11 +7,10 @@ using DeliveryTracker.Validation;
 
 namespace DeliveryTracker.Instances
 {
+    /// <inheritdoc />
     public class UserService : IUserService
     {
         #region fields
-
-        private readonly IPostgresConnectionProvider cp;
 
         private readonly IUserManager userManager;
 
@@ -22,11 +21,9 @@ namespace DeliveryTracker.Instances
         #region constructor
 
         public UserService(
-            IPostgresConnectionProvider cp,
             IUserManager userManager,
             IUserCredentialsAccessor credentialsAccessor)
         {
-            this.cp = cp;
             this.userManager = userManager;
             this.credentialsAccessor = credentialsAccessor;
         }
@@ -35,6 +32,7 @@ namespace DeliveryTracker.Instances
         
         #region public
         
+        /// <inheritdoc />
         public async Task<ServiceResult<User>> GetAsync(Guid userId, NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.credentialsAccessor.UserCredentials;
@@ -45,6 +43,7 @@ namespace DeliveryTracker.Instances
             return new ServiceResult<User>(ErrorFactory.AccessDenied());
         }
 
+        /// <inheritdoc />
         public async Task<ServiceResult<User>> GetAsync(string code, NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.credentialsAccessor.UserCredentials;
@@ -55,6 +54,7 @@ namespace DeliveryTracker.Instances
             return new ServiceResult<User>(ErrorFactory.AccessDenied());
         }
 
+        /// <inheritdoc />
         public async Task<ServiceResult<User>> EditAsync(User newData, NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.credentialsAccessor.UserCredentials;
@@ -66,6 +66,7 @@ namespace DeliveryTracker.Instances
             return new ServiceResult<User>(ErrorFactory.AccessDenied());
         }
 
+        /// <inheritdoc />
         public async Task<ServiceResult> DeleteAsync(Guid userId, NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.credentialsAccessor.UserCredentials;

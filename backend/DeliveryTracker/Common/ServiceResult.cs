@@ -5,6 +5,9 @@ using DeliveryTracker.Validation;
 
 namespace DeliveryTracker.Common
 {
+    /// <summary>
+    /// Результат выполнения операции.
+    /// </summary>
     public class ServiceResult
     {
         public ServiceResult(params IError[] errors)
@@ -18,8 +21,14 @@ namespace DeliveryTracker.Common
                 errors?.ToList() ?? new List<IError>());
         }
 
+        /// <summary>
+        /// Операция произошла без ошибок.
+        /// </summary>
         public bool Success => this.Errors.Count == 0;
         
+        /// <summary>
+        /// Список ошибок.
+        /// </summary>
         public IReadOnlyList<IError> Errors { get; }
 
     }

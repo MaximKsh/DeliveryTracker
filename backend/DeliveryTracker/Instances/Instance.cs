@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace DeliveryTracker.Instances
 {
     // ReSharper disable once ClassNeverInstantiated.Global
+    [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
     public class Instance 
     {
         /// <summary>

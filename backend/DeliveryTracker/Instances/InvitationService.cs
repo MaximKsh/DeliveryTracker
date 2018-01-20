@@ -11,6 +11,7 @@ using NpgsqlTypes;
 
 namespace DeliveryTracker.Instances
 {
+    /// <inheritdoc />
     public class InvitationService : IInvitationService
     {
         #region sql

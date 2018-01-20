@@ -5,40 +5,35 @@ using DeliveryTracker.Validation;
 
 namespace DeliveryTracker.Common
 {
-    public class ServiceResult<T>
+    /// <summary>
+    /// Результат выполнения операции данными на выходе.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class ServiceResult<T> : ServiceResult
         where T: class
     {
-        public ServiceResult(params IError[] errors)
+        public ServiceResult(params IError[] errors) : base(errors)
         {
-            this.Result = null;
-            this.Errors = new ReadOnlyCollection<IError>(errors);
         }
         
-        public ServiceResult(IEnumerable<IError> errors = null)
+        public ServiceResult(IEnumerable<IError> errors = null) : base (errors)
         {
-            this.Result = null;
-            this.Errors = new ReadOnlyCollection<IError>(
-                errors?.ToList() ?? new List<IError>());
         }
         
-        public ServiceResult(T result, params IError[] errors)
+        public ServiceResult(T result, params IError[] errors): base(errors)
         {
             this.Result = result;
-            this.Errors = new ReadOnlyCollection<IError>(errors);
         }
         
-        public ServiceResult(T result, IEnumerable<IError> errors = null)
+        public ServiceResult(T result, IEnumerable<IError> errors = null) : base(errors)
         {
             this.Result = result;
-            this.Errors = new ReadOnlyCollection<IError>(
-                errors?.ToList() ?? new List<IError>());
         }
 
-        public T Result { get; }
-
-        public bool Success => this.Errors.Count == 0;
-        
-        public IReadOnlyList<IError> Errors { get; }
+        /// <summary>
+        /// Результат выполнения операции.
+        /// </summary>
+        public T Result { get; } = null;
 
     }
 }

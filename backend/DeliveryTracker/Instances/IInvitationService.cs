@@ -5,6 +5,9 @@ using DeliveryTracker.Identification;
 
 namespace DeliveryTracker.Instances
 {
+    /// <summary>
+    /// Сервис для работы с приглашениями.
+    /// </summary>
     public interface IInvitationService
     {
         /// <summary>
