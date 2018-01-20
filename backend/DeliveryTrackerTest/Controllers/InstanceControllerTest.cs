@@ -1,9 +1,4 @@
-﻿using System.Net;
-using System.Threading.Tasks;
-using DeliveryTracker.Instances;
-using Xunit;
-
-namespace DeliveryTrackerTest.Controllers
+﻿namespace DeliveryTrackerTest.Controllers
 {
     public class InstanceControllerTest: BaseControllerTest
     {

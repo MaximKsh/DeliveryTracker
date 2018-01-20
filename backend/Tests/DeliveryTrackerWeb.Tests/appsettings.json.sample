@@ -1,0 +1,37 @@
+﻿{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=delivery_tracker;"
+  },
+
+  "Logging": {
+    "IncludeScopes": false,
+    "LogLevel": {
+      "Default": "Warning"
+    }
+  },
+  
+  "AuthInfo": {
+    "Key": "mysupersecret_secretkey!123",
+    "Issuer": "DeliveryTracker",
+    "Audience": "http://localhost:5000",
+    "Lifetime": 1,
+    "ClockCkew": 1,
+    "RequireHttps": false
+  },
+  
+  "PasswordSettings": {
+    "MinLength": 4,
+    "MaxLength": 20,
+    "AtLeastOneUpperCase": false,
+    "AtLeastOneLowerCase": false,
+    "AtLeastOneDigit": false,
+    "Alphabet": "qwertyuioplkjhgfdsazxcvbbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890!@#$%^&*()-=!~",
+    "SameCharactersInARow": 20
+  },
+  
+  "InvitationSettings": {
+    "ExpiresInDays": 3,
+    "CodeLength" : 6,
+    "Alphabet": "23456789qwertyupasdfghkzxbnmQWERTYUPASDFGHKZXVBNM"
+  }
+}

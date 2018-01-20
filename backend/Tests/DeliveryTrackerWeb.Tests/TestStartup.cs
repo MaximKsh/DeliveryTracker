@@ -3,23 +3,22 @@ using System.Threading.Tasks;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using DeliveryTracker.Validation;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Newtonsoft.Json;
 
-namespace DeliveryTrackerWeb
+namespace DeliveryTrackerWeb.Tests
 {
-    // ReSharper disable once ClassNeverInstantiated.Global
-    public sealed class Startup
+    public class TestStartup
     {
         private readonly IConfiguration configuration;
         
-        public Startup(IConfiguration configuration)
+        public TestStartup(IConfiguration configuration)
         {
             this.configuration = configuration;
         }
@@ -89,6 +88,5 @@ namespace DeliveryTrackerWeb
                     p.SerializerSettings.Formatting = Formatting.None;
                 });
         }
-
     }
 }

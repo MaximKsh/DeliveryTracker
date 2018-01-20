@@ -1,15 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace DeliveryTracker.Validation
 {
-    /// <inheritdoc />True
+    /// <inheritdoc />
     public class Error: IError
     {
         private static readonly IReadOnlyDictionary<string, string> EmptyInfo = 
             new ReadOnlyDictionary<string, string>(new Dictionary<string, string>());
         
+        [JsonConstructor]
         public Error(
             string code,
             string message,

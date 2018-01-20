@@ -4,7 +4,7 @@ CREATE TABLE public.users
     code VARCHAR(10) NOT NULL,
     role VARCHAR(50) NOT NULL,
     instance_id UUID NOT NULL,
-    password_hash TEXT,
+    password_hash TEXT, 
     surname CITEXT,
     name CITEXT,
     patronymic CITEXT,

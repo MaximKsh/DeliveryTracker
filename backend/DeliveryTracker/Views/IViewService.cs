@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using DeliveryTracker.Common;
 using DeliveryTracker.Identification;
-using DeliveryTracker.Instances;
 
 namespace DeliveryTracker.Views
 {

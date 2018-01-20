@@ -1,9 +1,4 @@
-﻿using System;
-using DeliveryTracker.Common;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
-
-namespace DeliveryTracker.Tasks
+﻿namespace DeliveryTracker.Tasks
 {
     // ReSharper disable once ClassNeverInstantiated.Global
     public class TaskStateCache

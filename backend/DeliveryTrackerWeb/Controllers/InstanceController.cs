@@ -72,29 +72,32 @@ namespace DeliveryTrackerWeb.Controllers
         // view/{groupName}/{viewName}
 
         [HttpPost("create")]
-        public async Task<IActionResult> Create([FromBody] CreateInstanceViewModel createInstanceViewModel)
+        public async Task<IActionResult> Create([FromBody] InstanceRequest request)
         {
+            var instance = request.Instance;
+            var creator = request.Creator;
+            var codePassword = request.CodePassword;
+            
             var validationResult = new ParametersValidator()
-                .AddNotNullRule("CreateInstanceViewModel", createInstanceViewModel)
-                .AddNotNullOrWhitespaceRule("InstanceName", createInstanceViewModel.InstanceName)
-                .AddNotNullRule("Creator", createInstanceViewModel.Creator)
-                .AddNotNullRule("CreatorCodePassword", createInstanceViewModel.CreatorCodePassword)
+                .AddNotNullRule(nameof(request.Instance), request.Instance)
+                .AddNotNullRule(nameof(request.Creator), request.Creator)
+                .AddNotNullRule(nameof(request.CodePassword), request.CodePassword)
                 .Validate();
             if (!validationResult.Success)
             {
-                return this.BadRequest(validationResult.Error.ToOneElementList());
+                return this.BadRequest(new InstanceResponse(validationResult.Error));
             }
             var result = await this.instanceService.CreateAsync(
-                createInstanceViewModel.InstanceName, 
-                createInstanceViewModel.Creator,
-                createInstanceViewModel.CreatorCodePassword);
+                instance.Name, 
+                creator,
+                codePassword);
             if(!result.Success)
             {
-                return this.BadRequest(result.Errors);
+                return this.BadRequest(new InstanceResponse(result.Errors));
             }
 
             var token = this.securityManager.AcquireToken(result.Result.Item3);
-            return this.Ok(new
+            return this.Ok(new InstanceResponse
             {
                 Instance = result.Result.Item1,
                 Creator = result.Result.Item2,
@@ -108,8 +111,8 @@ namespace DeliveryTrackerWeb.Controllers
         {
             var result = await this.instanceService.GetAsync();
             return result.Success
-                ? (IActionResult)this.Ok(result.Result)
-                : this.BadRequest(result.Errors);
+                ? (IActionResult)this.Ok(new InstanceResponse { Instance = result.Result} )
+                : this.BadRequest(new InstanceResponse(result.Errors));
         }
         
         

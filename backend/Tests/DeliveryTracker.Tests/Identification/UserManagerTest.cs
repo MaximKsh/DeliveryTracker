@@ -48,7 +48,7 @@ namespace DeliveryTracker.Tests.Identification
         }
 
         [Fact]
-        public async void AddTwoSameUsers()
+        public async void AddTwoUsersSameCode()
         {
             var user = new User
             {
@@ -60,7 +60,15 @@ namespace DeliveryTracker.Tests.Identification
                 Role = DefaultRoles.CreatorRole,
             };
             var secondUser = new User();
-            secondUser.Deserialize(user.Serialize());
+            var user2 = new User
+            {
+                Id = Guid.NewGuid(),
+                Code = user.Code,
+                InstanceId = this.instance.Id,
+                Surname = "Petrov",
+                Name = "Ivan",
+                Role = DefaultRoles.CreatorRole,
+            };
             await this.userManager.CreateAsync(user);
             var newSecondUserResult = await this.userManager.CreateAsync(secondUser);
             Assert.False(newSecondUserResult.Success);

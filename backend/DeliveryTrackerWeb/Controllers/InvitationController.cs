@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.Validation;
+using DeliveryTrackerWeb.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,12 +25,24 @@ namespace DeliveryTrackerWeb.Controllers
         // invitation/delete
         
         [HttpPost("create")]
-        public async Task<IActionResult> CreateInvitation(User preliminaryUserData)
+        public async Task<IActionResult> CreateInvitation([FromBody] InvitationRequest request)
         {
+            var preliminaryUserData = request.User;
+            var validationResult = new ParametersValidator()
+                .AddNotNullRule(nameof(request.User), request.User)
+                .Validate();
+            if (!validationResult.Success)
+            {
+                return this.BadRequest(new InvitationResponse(validationResult.Error));
+            }
+            
             var result = await this.invitationService.CreateAsync(preliminaryUserData);
             if (result.Success)
             {
-                return this.Ok(result.Result);
+                return this.Ok(new InvitationResponse
+                {
+                    Invitation = result.Result
+                });
             }
 
             if (result.Errors.Any(p => p.Code == ErrorCode.AccessDenied))
@@ -37,7 +50,7 @@ namespace DeliveryTrackerWeb.Controllers
                 return this.Forbid();
             }
 
-            return this.BadRequest(result.Errors);
+            return this.BadRequest(new InvitationResponse(result.Errors));
         }
 
         [HttpGet("get")]
@@ -46,7 +59,10 @@ namespace DeliveryTrackerWeb.Controllers
             var result = await this.invitationService.GetAsync(code);
             if (result.Success)
             {
-                return this.Ok(result.Result);
+                return this.Ok(new InvitationResponse
+                {
+                    Invitation = result.Result
+                });
             }
 
             if (result.Errors.Any(p => p.Code == ErrorCode.AccessDenied))
@@ -54,16 +70,28 @@ namespace DeliveryTrackerWeb.Controllers
                 return this.Forbid();
             }
 
-            return this.BadRequest(result.Errors);
+            return this.BadRequest(new InvitationResponse(result.Errors));
         }
         
-        [HttpGet("delete")]
-        public async Task<IActionResult> DeleteInvitation(string code)
+        [HttpPost("delete")]
+        public async Task<IActionResult> DeleteInvitation([FromBody] InvitationRequest request)
         {
+            var code = request.Code;
+            var validationResult = new ParametersValidator()
+                .AddNotNullOrWhitespaceRule(nameof(request.Code), request.Code)
+                .Validate();
+            if (!validationResult.Success)
+            {
+                return this.BadRequest(new InvitationResponse(validationResult.Error));
+            }
+            
             var result = await this.invitationService.GetAsync(code);
             if (result.Success)
             {
-                return this.Ok(result.Result);
+                return this.Ok(new InvitationResponse
+                {
+                    Invitation = result.Result
+                });
             }
 
             if (result.Errors.Any(p => p.Code == ErrorCode.AccessDenied))
@@ -71,7 +99,7 @@ namespace DeliveryTrackerWeb.Controllers
                 return this.Forbid();
             }
 
-            return this.BadRequest(result.Errors);
+            return this.BadRequest(new InvitationResponse(result.Errors));
         }
     }
 }

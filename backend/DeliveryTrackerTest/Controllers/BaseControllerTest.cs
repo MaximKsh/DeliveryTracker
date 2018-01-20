@@ -1,11 +1,14 @@
-﻿namespace DeliveryTrackerTest.Controllers
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+
+namespace DeliveryTrackerTest.Controllers
 {
     public abstract class BaseControllerTest
     {
-        /*
+        
         protected readonly TestServer Server = new TestServer(new WebHostBuilder()
             .UseStartup<TestStartup>());
-
+/*
         protected const string ContentType ="application/json";
         
         protected static string PingUrl() =>

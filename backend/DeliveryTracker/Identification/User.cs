@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using DeliveryTracker.Common;
 
 namespace DeliveryTracker.Identification
 {
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-    public class User : IDictionarySerializable
+    public class User
     {
         /// <summary>
         /// ID пользователя.
@@ -53,33 +52,5 @@ namespace DeliveryTracker.Identification
         /// </summary>
         public Geoposition Position { get; set; }
 
-        /// <inheritdoc />
-        public IDictionary<string, object> Serialize()
-        {
-            return new Dictionary<string, object>
-            {
-                [nameof(this.Id)] = this.Id,
-                [nameof(this.Code)] = this.Code,
-                [nameof(this.Role)] = this.Role,
-                [nameof(this.Surname)] = this.Surname,
-                [nameof(this.Name)] = this.Name,
-                [nameof(this.Patronymic)] = this.Patronymic,
-                [nameof(this.PhoneNumber)] = this.PhoneNumber,
-                [nameof(this.Position)] = this.Position?.Serialize(),
-            };
-        }
-
-        /// <inheritdoc />
-        public void Deserialize(IDictionary<string, object> dict)
-        {
-            this.Id = dict.GetPlain<Guid>(nameof(this.Id));
-            this.Code = dict.GetPlain<string>(nameof(this.Code));
-            this.Role = dict.GetPlain<string>(nameof(this.Role));
-            this.Surname = dict.GetPlain<string>(nameof(this.Surname));
-            this.Name = dict.GetPlain<string>(nameof(this.Name));
-            this.Patronymic = dict.GetPlain<string>(nameof(this.Patronymic));
-            this.PhoneNumber = dict.GetPlain<string>(nameof(this.PhoneNumber));
-            this.Position = dict.GetObject<Geoposition>(nameof(this.Position));
-        }
     }
 }

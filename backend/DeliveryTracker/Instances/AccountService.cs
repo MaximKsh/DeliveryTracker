@@ -198,12 +198,10 @@ namespace DeliveryTracker.Instances
             NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.userCredentialsAccessor.UserCredentials;
-            var newDataWithIds = new User();
-            newDataWithIds.Deserialize(newData.Serialize());
-            newDataWithIds.Id = credentials.Id;
-            newDataWithIds.InstanceId = credentials.InstanceId;
+            newData.Id = credentials.Id;
+            newData.InstanceId = credentials.InstanceId;
             
-            return await this.userManager.EditAsync(newDataWithIds, oc);
+            return await this.userManager.EditAsync(newData, oc);
         }
 
         /// <inheritdoc />

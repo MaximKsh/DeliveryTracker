@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using Microsoft.AspNetCore.Http;
 
 namespace DeliveryTracker.Identification

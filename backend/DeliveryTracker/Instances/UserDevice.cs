@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using DeliveryTracker.Common;
-
-namespace DeliveryTracker.Instances
+﻿namespace DeliveryTracker.Instances
 {
     public class UserDevice 
     {

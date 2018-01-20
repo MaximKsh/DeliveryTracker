@@ -4,8 +4,6 @@ using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Validation;
-using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 
 namespace DeliveryTracker.Instances
@@ -122,12 +120,10 @@ where id = @id
 
         private async Task<ServiceResult<Tuple<Instance, User, UserCredentials>>> CreateInternalAsync(
             string instanceName,
-            User creatorInfo,
+            User creator,
             CodePassword codePassword, 
             NpgsqlConnectionWrapper oc = null)
         {
-            var creator = new User();
-            creator.Deserialize(creatorInfo.Serialize());
             using (var connWrapper = oc ?? this.cp.Create())
             {
                 connWrapper.Connect();
