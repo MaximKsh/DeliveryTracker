@@ -33,7 +33,7 @@ namespace DeliveryTrackerWeb.Controllers
             var codePassword = request.CodePassword;
             
             var validationResult = new ParametersValidator()
-                .AddNotNullRule(nameof(request.CodePassword), request.User)
+                .AddNotNullRule(nameof(request.CodePassword), request.CodePassword)
                 .Validate();
             
             if (!validationResult.Success)

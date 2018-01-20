@@ -85,13 +85,10 @@ namespace DeliveryTrackerWeb.Controllers
                 return this.BadRequest(new InvitationResponse(validationResult.Error));
             }
             
-            var result = await this.invitationService.GetAsync(code);
+            var result = await this.invitationService.DeleteAsync(code);
             if (result.Success)
             {
-                return this.Ok(new InvitationResponse
-                {
-                    Invitation = result.Result
-                });
+                return this.Ok();
             }
 
             if (result.Errors.Any(p => p.Code == ErrorCode.AccessDenied))

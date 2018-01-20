@@ -94,7 +94,7 @@ where id = @id and instance_id = @instance_id
         public async Task<ServiceResult<User>> EditAsync(User user, NpgsqlConnectionWrapper oc = null)
         {
             var validationResult = new ParametersValidator()
-                .AddNotNullRule("user", user)
+                .AddNotNullRule("User", user)
                 .AddNotEmptyGuidRule("User.Id", user.Id)
                 .AddNotEmptyGuidRule("User.InstanceId", user.InstanceId)
                 .Validate();
@@ -285,14 +285,13 @@ where id = @id and instance_id = @instance_id
         private async Task<ServiceResult<User>> EditAsyncInternal(User user, NpgsqlConnectionWrapper oc = null)
         {
             User updatedUser = null;
-            var userId = user.Id;
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {
                 using (var command = connWrapper.CreateCommand())
                 {
                     var builder = new StringBuilder();
                      
-                    command.Parameters.Add(new NpgsqlParameter("id", userId));
+                    command.Parameters.Add(new NpgsqlParameter("id", user.Id));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", user.InstanceId));
                     AppendIfNotNull(command, builder, "surname", user.Surname);
                     AppendIfNotNull(command, builder, "name", user.Name);
@@ -319,7 +318,7 @@ where id = @id and instance_id = @instance_id
 
             return updatedUser != null
                 ? new ServiceResult<User>(updatedUser)
-                : new ServiceResult<User>(ErrorFactory.UserNotFound(userId));
+                : new ServiceResult<User>(ErrorFactory.UserNotFound(user.Id));
         }
 
         #endregion

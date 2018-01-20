@@ -60,7 +60,7 @@ namespace DeliveryTracker.Instances
             var credentials = this.credentialsAccessor.UserCredentials;
             if (credentials.Valid)
             {
-                newData.InstanceId = credentials.Id;
+                newData.InstanceId = credentials.InstanceId;
                 return await this.userManager.EditAsync(newData, oc);   
             }
             return new ServiceResult<User>(ErrorFactory.AccessDenied());

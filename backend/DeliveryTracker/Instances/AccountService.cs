@@ -170,8 +170,10 @@ namespace DeliveryTracker.Instances
                     var creationResult = await this.userManager.CreateAsync(newUser, conn);
                     if (!creationResult.Success)
                     {
+                        transaction.Rollback();
                         return new ServiceResult<Tuple<User, UserCredentials>>(creationResult.Errors);
                     }
+                    transaction.Commit();
 
                     var createdUser = creationResult.Result;
                     var userCredentials = new UserCredentials(
