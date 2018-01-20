@@ -89,10 +89,26 @@
 
         
         
+        #region reference errors
+        
+        /// <summary>
+        /// Код ошибки: ошибка при добавлении записи в справочник.
+        /// </summary>
+        public const string ReferenceCreationError = "ReferenceCreationError";
         
         
+        /// <summary>
+        /// Код ошибки: ошибка при изменении записи в справочник.
+        /// </summary>
+        public const string ReferenceEditError = "ReferenceEditError";
         
-
+        /// <summary>
+        /// Код ошибки: запись в справочнике не найдена.
+        /// </summary>
+        public const string ReferenceEntryNotFound = "ReferenceEntryNotFound";
+        
+        
+        #endregion
         
 
         

@@ -30,6 +30,9 @@
             public const string UserNotFound = Pref + "UserNotFound";
             public const string ValidationError = Pref + "ValidationError";
             public const string InvitationCreationError = Pref + "InvitationCreationError";
+            public const string ReferenceCreationError = Pref + "ReferenceCreationError";
+            public const string ReferenceEditError = Pref + "ReferenceEditError";
+            public const string ReferenceEntryNotFound = Pref + "ReferenceEntryNotFound";
 
 
             

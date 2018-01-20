@@ -7,10 +7,13 @@ namespace DeliveryTracker.References
         {
             Client,
             Product,
+            PaymentType,
         };
         
         public const string Client = "Client";
 
         public const string Product = "Product";
+        
+        public const string PaymentType = "PaymentType";
     }
 }

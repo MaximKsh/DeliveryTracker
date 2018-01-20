@@ -1,26 +1,29 @@
 ﻿using System;
+using System.Threading.Tasks;
 using DeliveryTracker.Common;
+using DeliveryTracker.Database;
 
 namespace DeliveryTracker.References
 {
     public class ClientReferenceService : IReferenceService<ClientReferenceService>
     {
-        public ServiceResult<ClientReferenceService> Create(ClientReferenceService newData)
+        public Task<ServiceResult<ClientReferenceService>> CreateAsync(ClientReferenceService newData, NpgsqlConnectionWrapper oc = null)
         {
             throw new NotImplementedException();
         }
 
-        public ServiceResult<ClientReferenceService> Get(Guid id)
+        public Task<ServiceResult<ClientReferenceService>> GetAsync(Guid id, NpgsqlConnectionWrapper oc = null)
         {
             throw new NotImplementedException();
         }
 
-        public ServiceResult<ClientReferenceService> Edit(Guid id, ClientReferenceService newData)
+        public Task<ServiceResult<ClientReferenceService>> EditAsync(ClientReferenceService newData,
+            NpgsqlConnectionWrapper oc = null)
         {
             throw new NotImplementedException();
         }
 
-        public ServiceResult Delete(Guid id)
+        public Task<ServiceResult> DeleteAsync(Guid id, NpgsqlConnectionWrapper oc = null)
         {
             throw new NotImplementedException();
         }

@@ -228,22 +228,6 @@ where id = @id and instance_id = @instance_id
         
         #region private
         
-        private static void AppendIfNotNull(NpgsqlCommand command, StringBuilder builder, string name, object value)
-        {
-            if (value == null)
-            {
-                return;
-            }
-            if (builder.Length != 0)
-            {
-                builder.Append(",");
-            }
-            builder.Append(name);
-            builder.Append(" = @");
-            builder.Append(name);
-            command.Parameters.Add(new NpgsqlParameter(name, value));
-        }
-        
         private async Task<ServiceResult<User>> CreateAsyncInternal(User user, NpgsqlConnectionWrapper oc = null)
         {
             User newUser = null;
@@ -293,10 +277,10 @@ where id = @id and instance_id = @instance_id
                      
                     command.Parameters.Add(new NpgsqlParameter("id", user.Id));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", user.InstanceId));
-                    AppendIfNotNull(command, builder, "surname", user.Surname);
-                    AppendIfNotNull(command, builder, "name", user.Name);
-                    AppendIfNotNull(command, builder, "patronymic", user.Patronymic);
-                    AppendIfNotNull(command, builder, "phone_number", user.PhoneNumber);
+                    command.AppendIfNotNull(builder, "surname", user.Surname);
+                    command.AppendIfNotNull(builder, "name", user.Name);
+                    command.AppendIfNotNull(builder, "patronymic", user.Patronymic);
+                    command.AppendIfNotNull(builder, "phone_number", user.PhoneNumber);
                     
                     command.CommandText = string.Format(SqlUpdate, builder.ToString());
                     try

@@ -222,10 +222,54 @@ namespace DeliveryTracker.Validation
         #endregion
         
         
-        
+        #region references error
             
        
+        /// <summary>
+        /// Ошибка при создании новой записи в справочнике.
+        /// </summary>
+        /// <param name="referenceType"></param>
+        /// <returns></returns>
+        public static IError ReferenceCreationError(string referenceType) =>
+            new Error(
+                ErrorCode.ReferenceCreationError,
+                LocalizationAlias.Error.ReferenceCreationError,
+                new Dictionary<string, string>
+                {
+                    ["referenceType"] = referenceType,
+                });
         
+        /// <summary>
+        /// Ошибка при редактировании записи в справочнике.
+        /// </summary>
+        /// <param name="referenceType"></param>
+        /// <returns></returns>
+        public static IError ReferenceEditError(string referenceType) =>
+            new Error(
+                ErrorCode.ReferenceEditError,
+                LocalizationAlias.Error.ReferenceEditError,
+                new Dictionary<string, string>
+                {
+                    ["referenceType"] = referenceType,
+                });
+
+        /// <summary>
+        /// Не найдена запись в справочнике.
+        /// </summary>
+        /// <param name="referenceType"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static IError ReferenceEntryNotFound(string referenceType, Guid id) =>
+            new Error(
+                ErrorCode.ReferenceEntryNotFound,
+                LocalizationAlias.Error.ReferenceEntryNotFound,
+                new Dictionary<string, string>
+                {
+                    ["referenceType"] = referenceType,
+                    ["id"] = id.ToString(),
+                });
+        
+        #endregion
        
         
         /// <summary>

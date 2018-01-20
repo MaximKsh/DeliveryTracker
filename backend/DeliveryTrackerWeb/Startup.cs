@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
+using DeliveryTracker.References;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +38,7 @@ namespace DeliveryTrackerWeb
                 .AddDeliveryTrackerDatabase()
                 .AddDeliveryTrackerIdentification(this.configuration)
                 .AddDeliveryTrackerInstances(this.configuration)
+                .AddDeliveryTrackerReferences()
                 ;
         }
 
