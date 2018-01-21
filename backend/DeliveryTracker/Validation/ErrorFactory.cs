@@ -270,6 +270,56 @@ namespace DeliveryTracker.Validation
                 });
         
         #endregion
+        
+        #region views
+        
+        /// <summary>
+        /// Группа представлений не найдена.
+        /// </summary>
+        /// <param name="viewGroup"></param>
+        /// <returns></returns>
+        public static IError ViewGroupNotFound(string viewGroup) =>
+            new Error(
+                ErrorCode.ViewGroupNotFound,
+                LocalizationAlias.Error.ViewGroupNotFound,
+                new Dictionary<string, string>
+                {
+                    ["viewGroup"] = viewGroup,
+                });
+        
+        /// <summary>
+        /// Представление не найдено в группе.
+        /// </summary>
+        /// <param name="viewGroup"></param>
+        /// <param name="viewName"></param>
+        /// <returns></returns>
+        public static IError ViewNotFound(string viewGroup, string viewName) =>
+            new Error(
+                ErrorCode.ViewNotFound,
+                LocalizationAlias.Error.ViewNotFound,
+                new Dictionary<string, string>
+                {
+                    ["viewGroup"] = viewGroup,
+                    ["view"] = viewName,
+                });
+        
+        /// <summary>
+        /// Ошибка при преобразовании типов результата выполнения представления.
+        /// </summary>
+        /// <param name="viewGroup"></param>
+        /// <param name="viewName"></param>
+        /// <returns></returns>
+        public static IError ViewResultTypeError(string viewGroup, string viewName) =>
+            new Error(
+                ErrorCode.ViewResultTypeError,
+                LocalizationAlias.Error.ViewResultTypeError,
+                new Dictionary<string, string>
+                {
+                    ["viewGroup"] = viewGroup,
+                    ["view"] = viewName,
+                });
+        
+        #endregion
        
         
         /// <summary>

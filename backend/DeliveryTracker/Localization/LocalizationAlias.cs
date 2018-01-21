@@ -33,6 +33,9 @@
             public const string ReferenceCreationError = Pref + "ReferenceCreationError";
             public const string ReferenceEditError = Pref + "ReferenceEditError";
             public const string ReferenceEntryNotFound = Pref + "ReferenceEntryNotFound";
+            public const string ViewGroupNotFound = Pref + "ViewGroupNotFound";
+            public const string ViewNotFound = Pref + "ViewNotFound";
+            public const string ViewResultTypeError = Pref + "ViewResultTypeError";
 
 
             

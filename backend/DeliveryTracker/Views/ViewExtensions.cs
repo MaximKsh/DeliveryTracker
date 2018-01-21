@@ -9,8 +9,7 @@ namespace DeliveryTracker.Views
         public static IServiceCollection AddDeliveryTrackerViews(this IServiceCollection services)
         {
             services
-                .AddScoped<IViewService<User>, UserViewService>()
-                .AddScoped<IViewService<Task>, TaskViewService>()
+                .AddSingleton<IViewService, ViewService>()
                 ;
             
             return services;

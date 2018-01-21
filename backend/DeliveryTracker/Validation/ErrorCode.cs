@@ -110,10 +110,24 @@
         
         #endregion
         
-
+        #region view errors
         
+        /// <summary>
+        /// Код ошибки: группа представлений не найдена.
+        /// </summary>   
+        public const string ViewGroupNotFound = "ViewGroupNotFound";
         
+        /// <summary>
+        /// Код ошибки: представление не найдена.
+        /// </summary>   
+        public const string ViewNotFound = "ViewNotFound";
         
+        /// <summary>
+        /// Код ошибки: ошибка при преобразовании типов.
+        /// </summary>
+        public const string ViewResultTypeError = "ViewResultTypeError";
+        
+        #endregion
 
         
         

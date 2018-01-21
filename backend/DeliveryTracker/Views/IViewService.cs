@@ -1,17 +1,23 @@
-﻿using System.Collections.Generic;
-using DeliveryTracker.Common;
-using DeliveryTracker.Identification;
+﻿using DeliveryTracker.Common;
 
 namespace DeliveryTracker.Views
 {
-    public interface IViewService<T>
+    /// <summary>
+    /// Сервис для обращения к группам представлений.
+    /// </summary>
+    public interface IViewService
     {
-        string GroupName { get; }
-
-        ServiceResult<IList<T>> GetViewResult(
-            UserCredentials userCredentials,
-            string viewName,
-            IReadOnlyDictionary<string, string[]> parameters);
-
+        /// <summary>
+        /// Получить список групп.
+        /// </summary>
+        /// <returns></returns>
+        ServiceResult<string[]> GetViewGroupsList();
+        
+        /// <summary>
+        /// Получить группу представлений.
+        /// </summary>
+        /// <param name="groupName"></param>
+        /// <returns></returns>
+        ServiceResult<IViewGroup> GetViewGroup(string groupName);
     }
 }

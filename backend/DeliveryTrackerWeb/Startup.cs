@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using DeliveryTracker.Validation;
+using DeliveryTracker.Views;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -39,6 +40,7 @@ namespace DeliveryTrackerWeb
                 .AddDeliveryTrackerIdentification(this.configuration)
                 .AddDeliveryTrackerInstances(this.configuration)
                 .AddDeliveryTrackerReferences()
+                .AddDeliveryTrackerViews()
                 ;
         }
 

@@ -5,6 +5,7 @@ using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.References;
 using DeliveryTracker.Validation;
+using DeliveryTracker.Views;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -38,6 +39,7 @@ namespace DeliveryTrackerWeb.Tests
                 .AddDeliveryTrackerIdentification(this.configuration)
                 .AddDeliveryTrackerInstances(this.configuration)
                 .AddDeliveryTrackerReferences()
+                .AddDeliveryTrackerViews()
                 ;
         }
 

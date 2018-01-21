@@ -10,7 +10,6 @@ namespace DeliveryTracker.Common
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class ServiceResult<T> : ServiceResult
-        where T: class
     {
         public ServiceResult(params IError[] errors) : base(errors)
         {
@@ -33,7 +32,7 @@ namespace DeliveryTracker.Common
         /// <summary>
         /// Результат выполнения операции.
         /// </summary>
-        public T Result { get; } = null;
+        public T Result { get; } = default;
 
     }
 }

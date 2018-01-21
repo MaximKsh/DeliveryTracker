@@ -1,73 +1,117 @@
-﻿using System;
-using System.Threading;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
-using DeliveryTracker.Identification;
 using DeliveryTracker.Views;
+using DeliveryTrackerWeb.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DeliveryTrackerWeb.Controllers
 {
+    [Authorize]
     [Route("api/view")]
     public class ViewController : Controller
     {
         // view/groups
         // view/{groupName}/views
+        // view/{groupName}/digest
         // view/{groupName}/{viewName}
-        
-        private readonly Lazy<IViewService<User>> userViewService;
-        private readonly Lazy<IViewService<Task>> taskViewService;
 
-        public ViewController(
-            IServiceProvider serviceProvider)
+        private readonly IViewService viewService;
+
+        public ViewController(IViewService viewService)
         {
-            this.userViewService = new Lazy<IViewService<User>>(
-                () => (IViewService<User>)serviceProvider.GetService(typeof(IViewService<User>)),
-                LazyThreadSafetyMode.ExecutionAndPublication);
-            this.taskViewService = new Lazy<IViewService<Task>>(
-                () => (IViewService<Task>)serviceProvider.GetService(typeof(IViewService<Task>)),
-                LazyThreadSafetyMode.ExecutionAndPublication);
+            this.viewService = viewService;
         }
 
         [HttpGet("groups")]
         public IActionResult GetGroupsList()
         {
-            return this.Ok(new[]
+            var result = this.viewService.GetViewGroupsList();
+            if (!result.Success)
             {
-                ViewGroups.TaskViewGroup,
-                ViewGroups.UserViewGroup,
+                return this.BadRequest(new ViewResponse(result.Errors));
+            }
+            
+            return this.Ok(new ViewResponse
+            {
+                Groups = result.Result,
             });
         }
 
         [HttpGet("{viewGroup}/views")]
-        public IActionResult GetViewsList()
+        public IActionResult GetViewsList(string viewGroup)
         {
-            throw new NotImplementedException();
+            var groupResult = this.viewService.GetViewGroup(viewGroup);
+            if (!groupResult.Success)
+            {
+                return this.BadRequest(new ViewResponse(groupResult.Errors));
+            }
+
+            var group = groupResult.Result;
+            
+            var result = group.GetViewsList();
+            if (!result.Success)
+            {
+                return this.BadRequest(new ViewResponse(result.Errors));
+            }
+            
+            return this.Ok(new ViewResponse
+            {
+                Groups = result.Result,
+            });
         }
+
+        [HttpGet("{viewGroup}/digest")]
+        public async Task<IActionResult> GetDigest(string viewGroup)
+        {
+            var groupResult = this.viewService.GetViewGroup(viewGroup);
+            if (!groupResult.Success)
+            {
+                return this.BadRequest(new ViewResponse(groupResult.Errors));
+            }
+
+            var group = groupResult.Result;
+            
+            var result = await group.GetDigestAsync();
+            if (!result.Success)
+            {
+                return this.BadRequest(new ViewResponse(result.Errors));
+            }
+            
+            return this.Ok(new ViewResponse
+            {
+                Digest = result.Result,
+            });
+        }
+            
         
         [HttpGet("{viewGroup}/{viewName}")]
-        public IActionResult GetViewResult(string viewGroup, string viewName)
+        public async Task<IActionResult> GetViewResult(string viewGroup, string viewName)
         {
-            //var userCredentials = this.User.Claims.ToUserCredentials();
-            //var parameters = this.Request.Query
-            //    .Select(p => new KeyValuePair<string, string[]>(p.Key, p.Value.ToArray()))
-            //    .ToImmutableDictionary();
+            var parameters = this.Request.Query
+                .Select(p => new KeyValuePair<string, string[]>(p.Key, p.Value.ToArray()))
+                .ToImmutableDictionary();
             
-            //switch (viewGroup)
-            //{
-            //    case ViewGroups.UserViewGroup:
-            //        var userResult =  this.userViewService.Value.GetViewResult(userCredentials, viewName, parameters);
-            //        return userResult.Success
-            //            ? (IActionResult)this.Ok(userResult.Result)
-            //            : this.BadRequest();
-            //    case ViewGroups.TaskViewGroup:
-            //        var taskResult =  this.taskViewService.Value.GetViewResult(userCredentials, viewName, parameters);
-            //        return taskResult.Success
-            //            ? (IActionResult)this.Ok(taskResult.Result)
-            //            : this.BadRequest();
-                    
-            //}
-           
-            return this.BadRequest();
+            var groupResult = this.viewService.GetViewGroup(viewGroup);
+            if (!groupResult.Success)
+            {
+                return this.BadRequest(new ViewResponse(groupResult.Errors));
+            }
+
+            var group = groupResult.Result;
+            
+            var result = await group.ExecuteViewAsync(viewName, parameters);
+            if (!result.Success)
+            {
+                return this.BadRequest(new ViewResponse(result.Errors));
+            }
+            
+            return this.Ok(new ViewResponse
+            {
+                ViewResult = result.Result,
+            });
         }
     }
 }
