@@ -1,14 +1,8 @@
-﻿using System;
-
+﻿
 namespace DeliveryTracker.References
 {
-    public class Address : ReferenceEntityBase
+    public class Address : ReferenceCollectionBase
     {
-        /// <summary>
-        /// Id клиента.
-        /// </summary>
-        public Guid ClientId { get; set; }
-        
         /// <summary>
         /// Неформатированный адрес.
         /// </summary>

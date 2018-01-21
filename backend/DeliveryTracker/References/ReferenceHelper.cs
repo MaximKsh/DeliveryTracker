@@ -11,9 +11,16 @@ namespace DeliveryTracker.References
             "id", 
             "instance_id", 
         }.AsReadOnly();
+        
+        public static readonly IReadOnlyList<string> CollectionColumnList = new List<string>
+        {
+            "parent_id", 
+        }.AsReadOnly();
 
         public static readonly IReadOnlyList<string> ProductColumnList;
         public static readonly IReadOnlyList<string> PaymentTypeColumnList;
+        public static readonly IReadOnlyList<string> ClientColumnList;
+        public static readonly IReadOnlyList<string> AddressColumnList;
 
         static ReferenceHelper()
         {
@@ -35,17 +42,40 @@ namespace DeliveryTracker.References
                 "name",
             });
             PaymentTypeColumnList = paymentTypeColumnList.AsReadOnly();
+            
+            var clientColumnList = new List<string>();
+            clientColumnList.AddRange(BaseColumnList);
+            clientColumnList.AddRange(new []
+            {
+                "surname",
+                "name",
+                "patronymic",
+                "phone_number"
+            });
+            ClientColumnList = clientColumnList.AsReadOnly();
+            
+            var addressColumnList = new List<string>();
+            addressColumnList.AddRange(BaseColumnList);
+            addressColumnList.AddRange(CollectionColumnList);
+            addressColumnList.AddRange(new []
+            {
+                "raw_address",
+            });
+            AddressColumnList = addressColumnList.AsReadOnly();
         }
         
-        public static string GetBaseColumns(string prefix = null)=>
-            GetColumnsInternal(BaseColumnList, prefix);
         
         public static string GetProductColumns(string prefix = null)=>
             GetColumnsInternal(ProductColumnList, prefix);
         
         public static string GetPaymentTypeColumns(string prefix = null) =>
             GetColumnsInternal(PaymentTypeColumnList, prefix);
-
+        
+        public static string GetClientColumns(string prefix = null)=>
+            GetColumnsInternal(ClientColumnList, prefix);
+        
+        public static string GetAddressColumns(string prefix = null)=>
+            GetColumnsInternal(AddressColumnList, prefix);
 
         private static string GetColumnsInternal(IEnumerable<string> source, string prefix = null)
         {

@@ -277,10 +277,10 @@ where id = @id and instance_id = @instance_id
                      
                     command.Parameters.Add(new NpgsqlParameter("id", user.Id));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", user.InstanceId));
-                    command.AppendIfNotNull(builder, "surname", user.Surname);
-                    command.AppendIfNotNull(builder, "name", user.Name);
-                    command.AppendIfNotNull(builder, "patronymic", user.Patronymic);
-                    command.AppendIfNotNull(builder, "phone_number", user.PhoneNumber);
+                    command.AppendIfNotDefault(builder, "surname", user.Surname);
+                    command.AppendIfNotDefault(builder, "name", user.Name);
+                    command.AppendIfNotDefault(builder, "patronymic", user.Patronymic);
+                    command.AppendIfNotDefault(builder, "phone_number", user.PhoneNumber);
                     
                     command.CommandText = string.Format(SqlUpdate, builder.ToString());
                     try

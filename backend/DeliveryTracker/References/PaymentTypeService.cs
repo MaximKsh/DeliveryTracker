@@ -7,82 +7,70 @@ using Npgsql;
 
 namespace DeliveryTracker.References
 {
-    public class ProductReferenceService : ReferenceServiceBase<Product>
+    public class PaymentTypeService : ReferenceServiceBase<PaymentType>
     {
         #region sql
         
         private static readonly string SqlCreate = @"
-insert into products (" + ReferenceHelper.GetProductColumns() + @")
-values (" + ReferenceHelper.GetProductColumns("@") + @")
-returning " + ReferenceHelper.GetProductColumns() + ";";
+insert into payment_types (" + ReferenceHelper.GetPaymentTypeColumns() + @")
+values (" + ReferenceHelper.GetPaymentTypeColumns("@") + @")
+returning " + ReferenceHelper.GetPaymentTypeColumns() + ";";
 
         private static readonly string SqlUpdate = @"
-update products
+update payment_types
 set
 {0}
 where id = @id and instance_id = @instance_id
-returning " + ReferenceHelper.GetProductColumns() + ";";
+returning " + ReferenceHelper.GetPaymentTypeColumns() + ";";
 
         private static readonly string SqlGet = @"
-select " + ReferenceHelper.GetProductColumns() + @"
-from products
+select " + ReferenceHelper.GetPaymentTypeColumns() + @"
+from payment_types
 where id = @id and instance_id = @instance_id;";
         
         private const string SqlDelete = @"
-delete from products
+delete from payment_types
 where id = @id and instance_id = @instance_id
 ;
 ";
         
         #endregion
         
-        #region fields
-
-        #endregion
-
         #region constructor
         
-        public ProductReferenceService(
-            IPostgresConnectionProvider cp,
+        public PaymentTypeService(
+            IPostgresConnectionProvider cp, 
             IUserCredentialsAccessor accessor) : base(cp, accessor)
         {
         }
-
+        
         #endregion
 
-        #region public
-
+        #region protected
+        
         protected override ExecutionParameters SetCommandCreate(
-            NpgsqlCommand command, 
-            Product newData, 
+            NpgsqlCommand command,
+            PaymentType newData, 
             Guid id, 
             UserCredentials credentials)
         {
             command.CommandText = SqlCreate;
-            command.Parameters.Add(new NpgsqlParameter("vendor_code", newData.VendorCode).CanBeNull());
             command.Parameters.Add(new NpgsqlParameter("name", newData.Name).CanBeNull());
-            command.Parameters.Add(new NpgsqlParameter("description", newData.Description).CanBeNull());
-            command.Parameters.Add(new NpgsqlParameter("cost", newData.Cost).CanBeNull());
-            
             return null;
         }
 
         protected override ExecutionParameters SetCommandEdit(
             NpgsqlCommand command, 
-            Product newData, 
+            PaymentType newData,
             UserCredentials credentials)
         {
-            var queryStringBuilder = new StringBuilder();
-            var parametersCounter = 0;
-            parametersCounter += command.AppendIfNotDefault(queryStringBuilder, "vendor_code", newData.VendorCode);
-            parametersCounter += command.AppendIfNotDefault(queryStringBuilder, "name", newData.Name);
-            parametersCounter += command.AppendIfNotDefault(queryStringBuilder,"description", newData.Description);
-            parametersCounter += command.AppendIfNotDefault(queryStringBuilder, "cost", newData.Cost);
+            var sb = new StringBuilder();
 
-            command.CommandText = parametersCounter > 0
-                ? string.Format(SqlUpdate, queryStringBuilder.ToString())
+            var cnt = command.AppendIfNotDefault(sb, "name", newData.Name);
+            command.CommandText = cnt == 1
+                ? string.Format(SqlUpdate, sb.ToString())
                 : SqlGet;
-            
+
             return null;
         }
 
@@ -104,11 +92,13 @@ where id = @id and instance_id = @instance_id
             return null;
         }
 
-        protected override Product Read(IDataReader reader, ReferenceServiceExecutionContext ctx)
+        protected override PaymentType Read(
+            IDataReader reader,
+            ReferenceServiceExecutionContext ctx)
         {
-            return reader.GetProduct();
+            return reader.GetPaymentType();
         }
-
+        
         #endregion
     }
 }

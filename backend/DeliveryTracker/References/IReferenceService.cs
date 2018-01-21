@@ -10,7 +10,7 @@ namespace DeliveryTracker.References
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public interface IReferenceService<T>
-        where T : class
+        where T : ReferenceEntityBase
     {
         /// <summary>
         /// Создать новую запись в справочнике.

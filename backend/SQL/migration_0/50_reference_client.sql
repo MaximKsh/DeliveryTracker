@@ -13,8 +13,8 @@ CREATE TABLE public.addresses
 (
     id UUID PRIMARY KEY,
     instance_id UUID NOT NULL,
-    client_id UUID,
+    parent_id UUID,
     raw_address CITEXT,
     CONSTRAINT addresses_instances_id_fk FOREIGN KEY (instance_id) REFERENCES instances (id),
-    CONSTRAINT addresses_clients_id_fk FOREIGN KEY (client_id) REFERENCES clients (id)
+    CONSTRAINT addresses_parent_id_fk FOREIGN KEY (parent_id) REFERENCES clients (id)
 );

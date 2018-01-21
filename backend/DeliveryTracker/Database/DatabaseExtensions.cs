@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,20 +32,26 @@ namespace DeliveryTracker.Database
                 defValue;
         }
         
-        public static void AppendIfNotNull(this NpgsqlCommand command, StringBuilder builder, string name, object value)
+        public static int AppendIfNotDefault<T>(
+            this NpgsqlCommand command, 
+            StringBuilder builder, 
+            string name, 
+            T value,
+            string columnName = null)
         {
-            if (value == null)
+            if (EqualityComparer<T>.Default.Equals(value,default(T)))
             {
-                return;
+                return 0;
             }
             if (builder.Length != 0)
             {
                 builder.Append(",");
             }
-            builder.Append(name);
+            builder.Append(columnName ?? name);
             builder.Append(" = @");
             builder.Append(name);
             command.Parameters.Add(new NpgsqlParameter(name, value));
+            return 1;
         }
     }
 }
