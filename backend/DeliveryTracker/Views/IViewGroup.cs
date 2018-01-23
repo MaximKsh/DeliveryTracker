@@ -36,7 +36,7 @@ namespace DeliveryTracker.Views
         /// <param name="oc"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        Task<ServiceResult<T[]>> ExecuteViewAsync<T>(
+        Task<ServiceResult<IList<T>>> ExecuteViewAsync<T>(
             string viewName,
             IImmutableDictionary<string, string[]> parameters,
             NpgsqlConnectionWrapper oc = null);
@@ -48,7 +48,7 @@ namespace DeliveryTracker.Views
         /// <param name="parameters"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<object[]>> ExecuteViewAsync(
+        Task<ServiceResult<IList<IDictionaryObject>>> ExecuteViewAsync(
             string viewName,
             IImmutableDictionary<string, string[]> parameters,
             NpgsqlConnectionWrapper oc = null);

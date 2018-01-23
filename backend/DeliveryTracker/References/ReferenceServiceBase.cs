@@ -11,7 +11,7 @@ using Npgsql;
 namespace DeliveryTracker.References
 {
     public abstract class ReferenceServiceBase <T> : IReferenceService<T> 
-        where T : ReferenceEntityBase
+        where T : ReferenceEntityBase, new()
     {
         #region nested types
 
@@ -120,6 +120,9 @@ namespace DeliveryTracker.References
         #endregion
         
         #region public
+        
+        /// <inheritdoc />
+        public abstract string Name { get; }
         
         /// <inheritdoc />
         public virtual async Task<ServiceResult<T>> CreateAsync(
@@ -325,7 +328,48 @@ namespace DeliveryTracker.References
                 }
             }
         }
+        
+        public async Task<ServiceResult<ReferenceEntityBase>> CreateAsync(
+            IDictionary<string, object> newData,
+            NpgsqlConnectionWrapper oc = null)
+        {
+            var entity = new T();
+            entity.SetDictionary(newData);
+            var result = await this.CreateAsync(entity, oc);
+            return result.Success
+                ? new ServiceResult<ReferenceEntityBase>(result.Result) 
+                : new ServiceResult<ReferenceEntityBase>(result.Errors);
+        }
 
+        async Task<ServiceResult<ReferenceEntityBase>> IReferenceService.GetAsync(
+            Guid id,
+            NpgsqlConnectionWrapper oc)
+        {
+            var result = await this.GetAsync(id, oc);
+            return result.Success
+                ? new ServiceResult<ReferenceEntityBase>(result.Result) 
+                : new ServiceResult<ReferenceEntityBase>(result.Errors);
+        }
+
+        public async Task<ServiceResult<ReferenceEntityBase>> EditAsync(
+            IDictionary<string, object> newData,
+            NpgsqlConnectionWrapper oc = null)
+        {
+            var entity = new T();
+            entity.SetDictionary(newData);
+            var result = await this.EditAsync(entity, oc);
+            return result.Success
+                ? new ServiceResult<ReferenceEntityBase>(result.Result) 
+                : new ServiceResult<ReferenceEntityBase>(result.Errors);
+        }
+
+        async Task<ServiceResult> IReferenceService.DeleteAsync(
+            Guid id,
+            NpgsqlConnectionWrapper oc)
+        {
+            return await this.DeleteAsync(id, oc);
+        }
+        
         #endregion
 
     }

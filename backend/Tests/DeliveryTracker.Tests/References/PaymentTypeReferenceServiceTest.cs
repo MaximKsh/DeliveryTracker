@@ -22,7 +22,7 @@ namespace DeliveryTracker.Tests.References
                     .Setup(x => x.UserCredentials)
                     .Returns(new UserCredentials(me));
             }
-            this.paymentTypeService = new PaymentTypeService(this.Cp, accessor.Object);
+            this.paymentTypeService = new PaymentTypeReferenceService(this.Cp, accessor.Object);
         }
 
         [Fact]

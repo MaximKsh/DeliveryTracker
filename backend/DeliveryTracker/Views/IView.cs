@@ -23,7 +23,7 @@ namespace DeliveryTracker.Views
         /// <param name="userCredentials"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        Task<ServiceResult<object[]>> GetViewResultAsync(
+        Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
             NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
             IImmutableDictionary<string, string[]> parameters);

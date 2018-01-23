@@ -36,6 +36,8 @@
             public const string ViewGroupNotFound = Pref + "ViewGroupNotFound";
             public const string ViewNotFound = Pref + "ViewNotFound";
             public const string ViewResultTypeError = Pref + "ViewResultTypeError";
+            public const string ReferenceTypeNotFound = Pref + "ReferenceTypeNotFound";
+
 
 
             

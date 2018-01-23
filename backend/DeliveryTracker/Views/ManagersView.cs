@@ -1,35 +1,43 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
-using DeliveryTracker.References;
 using Npgsql;
 
 namespace DeliveryTracker.Views
 {
-    public class ProductsView : IView
+    public class ManagersView : IView
     {
         private static readonly string SqlGet = $@"
-select
-    {ReferenceHelper.GetProductColumns()}
-from products
-where instance_id = @instance_id
+(
+    select
+        {IdentificationHelper.GetUserColumns()}
+    from users
+    where instance_id = @instance_id and role = @role_creator
+    limit 1
+)
+union all
+(
+    select
+        {IdentificationHelper.GetUserColumns()}
+    from users
+    where instance_id = @instance_id and role = @role
+)
 ;
 ";
 
         private const string SqlCount = @"
 select count(1)
-from products
-where instance_id = @instance_id
+from users
+where instance_id = @instance_id and role = @role
 ;
 ";
         
         
         /// <inheritdoc />
-        public string Name { get; } = nameof(ProductsView);
+        public string Name { get; } = nameof(ManagersView);
         
         /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(NpgsqlConnectionWrapper oc,
@@ -41,12 +49,14 @@ where instance_id = @instance_id
             {
                 command.CommandText = SqlGet;
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
+                command.Parameters.Add(new NpgsqlParameter("@role_creator", DefaultRoles.CreatorRole));
+                command.Parameters.Add(new NpgsqlParameter("@role", DefaultRoles.ManagerRole));
 
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
                     {
-                        list.Add(reader.GetProduct());
+                        list.Add(reader.GetUser());
                     }
                 }
             }
@@ -63,8 +73,9 @@ where instance_id = @instance_id
             {
                 command.CommandText = SqlCount;
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
+                command.Parameters.Add(new NpgsqlParameter("role", DefaultRoles.ManagerRole));
 
-                return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
+                return new ServiceResult<long>((long)await command.ExecuteScalarAsync() + 1);
             }
         }
     }

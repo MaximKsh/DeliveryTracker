@@ -67,8 +67,12 @@ namespace DeliveryTracker.Tests.Views
             var viewGroup = this.viewService.GetViewGroup("ReferenceViewGroup").Result;
             var viewsList = viewGroup.GetViewsList();
             var digest = await viewGroup.GetDigestAsync();
-            var abstractResult = await viewGroup.ExecuteViewAsync("ProductsView", new Dictionary<string, string[]>().ToImmutableDictionary());
-            var typifiedResult = await viewGroup.ExecuteViewAsync<Product>("ProductsView", new Dictionary<string, string[]>().ToImmutableDictionary());
+            var abstractResult = await viewGroup.ExecuteViewAsync(
+                "ProductsView", 
+                new Dictionary<string, string[]>().ToImmutableDictionary());
+            var typifiedResult = await viewGroup.ExecuteViewAsync<Product>(
+                "ProductsView",
+                new Dictionary<string, string[]>().ToImmutableDictionary());
 
             // Assert
         }

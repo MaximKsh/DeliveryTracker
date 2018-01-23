@@ -110,7 +110,7 @@ namespace DeliveryTrackerWeb.Controllers
             
             return this.Ok(new ViewResponse
             {
-                ViewResult = result.Result,
+                ViewResult = result.Result.Select(p => p.GetDictionary()),
             });
         }
     }

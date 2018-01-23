@@ -2,7 +2,10 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using DeliveryTracker.Identification;
+using DeliveryTracker.Instances;
 using DeliveryTrackerWeb.Tests.Validation;
+using DeliveryTrackerWeb.ViewModels;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
@@ -170,6 +173,65 @@ namespace DeliveryTrackerWeb.Tests
             {
                 HttpResponse = response
             };
+        }
+        
+        protected async Task<(HttpClient, Instance, User, string)> CreateNewHttpClientAndInstance()
+        {
+            var client = this.Server.CreateClient();
+            var createResult = await RequestPost<InstanceResponse>(
+                client, 
+                InstanceUrl("create"),
+                new InstanceRequest
+                {
+                    Creator = new User
+                    {
+                        Surname = "Petrov",
+                        Name = "Ivan",
+                        PhoneNumber = "+89123456789"
+                    },
+                    CodePassword = new CodePassword
+                    {
+                        Password = CorrectPassword
+                    },
+                    Instance = new Instance
+                    {
+                        Name = CorrectInstanceName,
+                    }
+                });
+            SetToken(client, createResult.Result.Token);
+            return (client, createResult.Result.Instance, createResult.Result.Creator, createResult.Result.Token);
+        }
+
+        protected async Task<(HttpClient, User)> CreateUserViaInvitation(HttpClient client, string role)
+        {
+            var inviteResult = await RequestPost<InvitationResponse>(
+                client,
+                InvitationUrl("create"),
+                new InvitationRequest
+                {
+                    User = new User
+                    {
+                        Surname = "Petrov",
+                        Name = "Ivan",
+                        Role = role,
+                    }
+                });
+
+            var newClient = this.Server.CreateClient();
+            var firstLoginResult = await RequestPost<AccountResponse>(
+                newClient,
+                AccountUrl("login"),
+                new AccountRequest
+                {
+                    CodePassword = new CodePassword()
+                    {
+                        Code = inviteResult.Result.Invitation.InvitationCode,
+                        Password = CorrectPassword,
+                    }
+                });
+            SetToken(newClient, firstLoginResult.Result.Token);
+
+            return (newClient, firstLoginResult.Result.User);
         }
         
     }

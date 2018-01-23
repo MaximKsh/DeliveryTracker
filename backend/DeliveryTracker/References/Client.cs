@@ -7,26 +7,46 @@ namespace DeliveryTracker.References
         /// <summary>
         /// Фамилия.
         /// </summary>
-        public string Surname { get; set; }
+        public string Surname 
+        {
+            get => this.Get<string>(nameof(this.Surname));
+            set => this.Set(nameof(this.Surname), value);
+        }
         
         /// <summary>
         /// Имя.
         /// </summary>
-        public string Name { get; set; }
+        public string Name
+        {
+            get => this.Get<string>(nameof(this.Name));
+            set => this.Set(nameof(this.Name), value);
+        }
         
         /// <summary>
         /// Отчество.
         /// </summary>
-        public string Patronymic { get; set; }
+        public string Patronymic 
+        {
+            get => this.Get<string>(nameof(this.Patronymic));
+            set => this.Set(nameof(this.Patronymic), value);
+        }
         
         /// <summary>
         /// Номер телефона.
         /// </summary>
-        public string PhoneNumber { get; set; }
+        public string PhoneNumber 
+        {
+            get => this.Get<string>(nameof(this.PhoneNumber));
+            set => this.Set(nameof(this.PhoneNumber), value);
+        }
         
         /// <summary>
         /// Список адресов.
         /// </summary>
-        public IList<Address> Addresses { get; set; }
+        public IList<Address> Addresses 
+        {
+            get => this.GetList<Address>(nameof(this.Addresses));
+            set => this.Set(nameof(this.Addresses), value);
+        }
     }
 }

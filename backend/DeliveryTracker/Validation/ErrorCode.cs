@@ -107,6 +107,10 @@
         /// </summary>
         public const string ReferenceEntryNotFound = "ReferenceEntryNotFound";
         
+        /// <summary>
+        /// Код ошибки: тип справочника не найден.
+        /// </summary>
+        public const string ReferenceTypeNotFound = "ReferenceTypeNotFound";
         
         #endregion
         

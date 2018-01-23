@@ -107,6 +107,12 @@ returning 1
 
         #region public
 
+        public override string Name { get; } = nameof(Client);
+        
+        #endregion
+        
+        #region protected
+
         protected override ExecutionParameters SetCommandCreate(
             NpgsqlCommand command,
             Client newData, 

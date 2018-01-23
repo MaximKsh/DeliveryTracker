@@ -6,7 +6,11 @@ namespace DeliveryTracker.References
         /// <summary>
         /// Неформатированный адрес.
         /// </summary>
-        public string RawAddress { get; set; }
+        public string RawAddress 
+        {
+            get => this.Get<string>(nameof(this.RawAddress));
+            set => this.Set(nameof(this.RawAddress), value);
+        }
         
     }
 }

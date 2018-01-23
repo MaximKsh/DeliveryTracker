@@ -1,8 +1,5 @@
 ﻿using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
 using DeliveryTracker.Identification;
-using DeliveryTracker.Instances;
 using DeliveryTracker.Validation;
 using DeliveryTrackerWeb.ViewModels;
 using Xunit;
@@ -53,7 +50,7 @@ namespace DeliveryTrackerWeb.Tests.Integration
                 InvitationUrl("create"),
                 new InvitationRequest
                 {
-                    User = new User { Role = DefaultRoles.PerformerRole, }
+                    User = new User { Surname = "Ivanov", Role = DefaultRoles.PerformerRole, }
                 });
 
             var getInviteManagerResult = await RequestGet<InvitationResponse>(
@@ -70,6 +67,8 @@ namespace DeliveryTrackerWeb.Tests.Integration
             Assert.Equal(HttpStatusCode.OK, getInvitePerformerResult.StatusCode);
             Assert.Equal(inviteManagerResult.Result.Invitation.InvitationCode, getInviteManagerResult.Result.Invitation.InvitationCode);
             Assert.Equal(invitePerformerResult.Result.Invitation.InvitationCode, getInvitePerformerResult.Result.Invitation.InvitationCode);
+            
+            Assert.Equal("Ivanov", getInvitePerformerResult.Result.Invitation.PreliminaryUser.Surname);
 
             var deleteManagerInvitationResult = await RequestPost(
                 client,
@@ -205,63 +204,6 @@ namespace DeliveryTrackerWeb.Tests.Integration
             Assert.Equal(HttpStatusCode.OK, loginResult.StatusCode);
         }
 
-        private async Task<(HttpClient, Instance, User, string)> CreateNewHttpClientAndInstance()
-        {
-            var client = this.Server.CreateClient();
-            var createResult = await RequestPost<InstanceResponse>(
-                client, 
-                InstanceUrl("create"),
-                new InstanceRequest
-                {
-                    Creator = new User
-                    {
-                        Surname = "Petrov",
-                        Name = "Ivan",
-                        PhoneNumber = "+89123456789"
-                    },
-                    CodePassword = new CodePassword
-                    {
-                        Password = CorrectPassword
-                    },
-                    Instance = new Instance
-                    {
-                        Name = CorrectInstanceName,
-                    }
-                });
-            SetToken(client, createResult.Result.Token);
-            return (client, createResult.Result.Instance, createResult.Result.Creator, createResult.Result.Token);
-        }
-
-        private async Task<(HttpClient, User)> CreateUserViaInvitation(HttpClient client, string role)
-        {
-            var inviteResult = await RequestPost<InvitationResponse>(
-                client,
-                InvitationUrl("create"),
-                new InvitationRequest
-                {
-                    User = new User
-                    {
-                        Surname = "Petrov",
-                        Name = "Ivan",
-                        Role = role,
-                    }
-                });
-
-            var newClient = this.Server.CreateClient();
-            var firstLoginResult = await RequestPost<AccountResponse>(
-                newClient,
-                AccountUrl("login"),
-                new AccountRequest
-                {
-                    CodePassword = new CodePassword()
-                    {
-                        Code = inviteResult.Result.Invitation.InvitationCode,
-                        Password = CorrectPassword,
-                    }
-                });
-            SetToken(newClient, firstLoginResult.Result.Token);
-
-            return (newClient, firstLoginResult.Result.User);
-        }
+        
     }
 }

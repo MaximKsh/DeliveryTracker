@@ -11,9 +11,10 @@ namespace DeliveryTracker.References
         public static IServiceCollection AddDeliveryTrackerReferences(this IServiceCollection services)
         {
             return services
-                .AddSingleton<IReferenceService<PaymentType>, PaymentTypeService>()
-                .AddSingleton<IReferenceService<Product>, ProductReferenceService>()
-                .AddSingleton<IReferenceService<Client>, ClientReferenceService>()
+                .AddSingleton<IReferenceFacade, ReferenceFacade>()
+                .AddSingleton<IReferenceService, PaymentTypeReferenceService>()
+                .AddSingleton<IReferenceService, ProductReferenceService>()
+                .AddSingleton<IReferenceService, ClientReferenceService>()
                 ;
 
         }

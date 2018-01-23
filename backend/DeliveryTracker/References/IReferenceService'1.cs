@@ -1,27 +1,24 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 
 namespace DeliveryTracker.References
 {
-    public interface IReferenceService
+    /// <summary>
+    /// Сервис для взаимодействия с справочником.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public interface IReferenceService<T> : IReferenceService
+        where T : ReferenceEntityBase
     {
-        /// <summary>
-        /// Название справочника.
-        /// </summary>
-        string Name { get; }
-        
         /// <summary>
         /// Создать новую запись в справочнике.
         /// </summary>
         /// <param name="newData"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<ReferenceEntityBase>> CreateAsync(
-            IDictionary<string, object> newData,
-            NpgsqlConnectionWrapper oc = null);
+        Task<ServiceResult<T>> CreateAsync(T newData, NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
         /// Получить запись из справочника.
@@ -29,9 +26,7 @@ namespace DeliveryTracker.References
         /// <param name="id"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<ReferenceEntityBase>> GetAsync(
-            Guid id, 
-            NpgsqlConnectionWrapper oc = null);
+        new Task<ServiceResult<T>> GetAsync(Guid id, NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
         /// Редактировать запись в справочнике.
@@ -39,9 +34,7 @@ namespace DeliveryTracker.References
         /// <param name="newData"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<ReferenceEntityBase>> EditAsync(
-            IDictionary<string, object> newData, 
-            NpgsqlConnectionWrapper oc = null);
+        Task<ServiceResult<T>> EditAsync(T newData, NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
         /// Удалить запись из справочника.
@@ -49,8 +42,6 @@ namespace DeliveryTracker.References
         /// <param name="id"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult> DeleteAsync(
-            Guid id, 
-            NpgsqlConnectionWrapper oc = null);
+        new Task<ServiceResult> DeleteAsync(Guid id, NpgsqlConnectionWrapper oc = null);
     }
 }

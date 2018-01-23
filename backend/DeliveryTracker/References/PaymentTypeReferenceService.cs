@@ -7,7 +7,7 @@ using Npgsql;
 
 namespace DeliveryTracker.References
 {
-    public class PaymentTypeService : ReferenceServiceBase<PaymentType>
+    public class PaymentTypeReferenceService : ReferenceServiceBase<PaymentType>
     {
         #region sql
         
@@ -38,7 +38,7 @@ where id = @id and instance_id = @instance_id
         
         #region constructor
         
-        public PaymentTypeService(
+        public PaymentTypeReferenceService(
             IPostgresConnectionProvider cp, 
             IUserCredentialsAccessor accessor) : base(cp, accessor)
         {
@@ -46,6 +46,12 @@ where id = @id and instance_id = @instance_id
         
         #endregion
 
+        #region public
+
+        public override string Name { get; } = nameof(PaymentType);
+
+        #endregion
+        
         #region protected
         
         protected override ExecutionParameters SetCommandCreate(

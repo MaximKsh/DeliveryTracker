@@ -72,37 +72,35 @@ namespace DeliveryTracker.Views
         }
 
         /// <inheritdoc />
-        public virtual async Task<ServiceResult<T[]>> ExecuteViewAsync<T>(string viewName,
+        public virtual async Task<ServiceResult<IList<T>>> ExecuteViewAsync<T>(string viewName,
             IImmutableDictionary<string, string[]> parameters,
             NpgsqlConnectionWrapper oc = null)
         {
             var result = await this.ExecuteViewAsync(viewName, parameters, oc);
             if (!result.Success)
             {
-                return new ServiceResult<T[]>(result.Errors);
+                return new ServiceResult<IList<T>>(result.Errors);
             }
 
             var viewResult = result.Result;
-            var typedArray = new T[viewResult.Length];
             try
             {
-                Array.Copy(viewResult, typedArray, viewResult.Length);
-                return new ServiceResult<T[]>(typedArray);
+                return new ServiceResult<IList<T>>(viewResult.Cast<T>().ToList());
             }
             catch (Exception)
             {
-                return new ServiceResult<T[]> (ErrorFactory.ViewResultTypeError(this.Name, viewName));
+                return new ServiceResult<IList<T>> (ErrorFactory.ViewResultTypeError(this.Name, viewName));
             }
         }
 
         /// <inheritdoc />
-        public virtual async Task<ServiceResult<object[]>> ExecuteViewAsync(string viewName,
+        public virtual async Task<ServiceResult<IList<IDictionaryObject>>> ExecuteViewAsync(string viewName,
             IImmutableDictionary<string, string[]> parameters,
             NpgsqlConnectionWrapper oc = null)
         {
             if (!this.Views.TryGetValue(viewName, out var view))
             {
-                return new ServiceResult<object[]>(ErrorFactory.ViewNotFound(this.Name, viewName));
+                return new ServiceResult<IList<IDictionaryObject>>(ErrorFactory.ViewNotFound(this.Name, viewName));
             }
             
             var credentials = this.Accessor.UserCredentials;

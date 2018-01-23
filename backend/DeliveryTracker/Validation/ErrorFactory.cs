@@ -269,6 +269,21 @@ namespace DeliveryTracker.Validation
                     ["id"] = id.ToString(),
                 });
         
+        /// <summary>
+        /// Не найдена тип справочника.
+        /// </summary>
+        /// <param name="referenceType"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static IError ReferenceTypeNotFound(string referenceType) =>
+            new Error(
+                ErrorCode.ReferenceTypeNotFound,
+                LocalizationAlias.Error.ReferenceTypeNotFound,
+                new Dictionary<string, string>
+                {
+                    ["referenceType"] = referenceType,
+                });
+        
         #endregion
         
         #region views

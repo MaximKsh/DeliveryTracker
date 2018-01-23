@@ -52,6 +52,12 @@ where id = @id and instance_id = @instance_id
 
         #region public
 
+        public override string Name { get; } = nameof(Product);
+
+        #endregion
+        
+        #region protected
+
         protected override ExecutionParameters SetCommandCreate(
             NpgsqlCommand command, 
             Product newData, 

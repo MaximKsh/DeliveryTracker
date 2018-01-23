@@ -1,38 +1,35 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
-using DeliveryTracker.References;
+using DeliveryTracker.Instances;
 using Npgsql;
 
 namespace DeliveryTracker.Views
 {
-    public class ProductsView : IView
+    public class InvitationsView : IView
     {
         private static readonly string SqlGet = $@"
 select
-    {ReferenceHelper.GetProductColumns()}
-from products
+    {InstanceHelper.GetInvitationColumns()}
+from invitations
 where instance_id = @instance_id
 ;
 ";
 
         private const string SqlCount = @"
 select count(1)
-from products
+from invitations
 where instance_id = @instance_id
 ;
 ";
         
-        
-        /// <inheritdoc />
-        public string Name { get; } = nameof(ProductsView);
-        
-        /// <inheritdoc />
-        public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(NpgsqlConnectionWrapper oc,
+        public string Name { get; } = nameof(InvitationsView);
+
+        public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
+            NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
             IImmutableDictionary<string, string[]> parameters)
         {
@@ -46,7 +43,7 @@ where instance_id = @instance_id
                 {
                     while (await reader.ReadAsync())
                     {
-                        list.Add(reader.GetProduct());
+                        list.Add(reader.GetInvitation());
                     }
                 }
             }
@@ -54,8 +51,8 @@ where instance_id = @instance_id
             return new ServiceResult<IList<IDictionaryObject>>(list);
         }
 
-        /// <inheritdoc />
-        public async Task<ServiceResult<long>> GetCountAsync(NpgsqlConnectionWrapper oc,
+        public async Task<ServiceResult<long>> GetCountAsync(
+            NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
             IImmutableDictionary<string, string[]> parameters)
         {
