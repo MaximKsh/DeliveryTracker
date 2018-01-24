@@ -150,9 +150,22 @@ namespace DeliveryTracker.Instances
                     }
                     if (invitation == null)
                     {
-                        // Несмотря на ошибку, никаких изменений не произведено.
-                        transaction.Commit();
+                        transaction.Rollback();
                         return loginResult;
+                    }
+
+                    if (invitation.Expires < DateTime.UtcNow)
+                    {
+                        transaction.Rollback();
+                        return new ServiceResult<Tuple<User, UserCredentials>>(
+                            ErrorFactory.InvitaitonExpired(invitation.InvitationCode, invitation.Expires));
+                    }
+                    var deleteResult = await this.invitationService.DeleteAsync(invitation.InvitationCode);
+                    if (!deleteResult.Success)
+                    {
+                        transaction.Rollback();
+                        return new ServiceResult<Tuple<User, UserCredentials>>(
+                            ErrorFactory.InvitationNotFound(invitation.InvitationCode));
                     }
 
                     var newUser = new User()
@@ -167,6 +180,7 @@ namespace DeliveryTracker.Instances
                         PhoneNumber = invitation.PreliminaryUser.PhoneNumber,
                     };
 
+                    
                     var creationResult = await this.userManager.CreateAsync(newUser, conn);
                     if (!creationResult.Success)
                     {
