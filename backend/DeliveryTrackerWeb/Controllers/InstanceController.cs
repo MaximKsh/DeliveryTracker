@@ -96,11 +96,11 @@ namespace DeliveryTrackerWeb.Controllers
                 return this.BadRequest(new InstanceResponse(result.Errors));
             }
 
-            var token = this.securityManager.AcquireToken(result.Result.Item3);
+            var token = this.securityManager.AcquireToken(result.Result.Credentials);
             return this.Ok(new InstanceResponse
             {
-                Instance = result.Result.Item1,
-                Creator = result.Result.Item2,
+                Instance = result.Result.Instance,
+                Creator = result.Result.User,
                 Token = token,
             });
         }
@@ -111,7 +111,7 @@ namespace DeliveryTrackerWeb.Controllers
         {
             var result = await this.instanceService.GetAsync();
             return result.Success
-                ? (IActionResult)this.Ok(new InstanceResponse { Instance = result.Result} )
+                ? (IActionResult)this.Ok(new InstanceResponse { Instance = result.Result.Instance} )
                 : this.BadRequest(new InstanceResponse(result.Errors));
         }
         

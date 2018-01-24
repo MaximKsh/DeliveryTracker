@@ -70,7 +70,7 @@ where id = @id
         #region public
 
         /// <inheritdoc />
-        public async Task<ServiceResult<Tuple<Instance, User, UserCredentials>>> CreateAsync(
+        public async Task<ServiceResult<InstanceServiceResult>> CreateAsync(
             string instanceName, 
             User creatorInfo, 
             CodePassword codePassword, 
@@ -86,14 +86,14 @@ where id = @id
             
             if (!validationResult.Success)
             {
-                return new ServiceResult<Tuple<Instance, User, UserCredentials>>(validationResult.Error);
+                return new ServiceResult<InstanceServiceResult>(validationResult.Error);
             }
 
             return await this.CreateInternalAsync(instanceName, creatorInfo, codePassword, oc);
         }
 
         /// <inheritdoc />
-        public async Task<ServiceResult<Instance>> GetAsync(NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult<InstanceServiceResult>> GetAsync(NpgsqlConnectionWrapper oc = null)
         {
             var instanceId = this.accessor.UserCredentials.InstanceId;
             using (var connWrapper = oc ?? this.cp.Create())
@@ -109,9 +109,12 @@ where id = @id
                     {
                         if (await reader.ReadAsync())
                         {
-                            return new ServiceResult<Instance>(reader.GetInstance());
+                            return new ServiceResult<InstanceServiceResult>(new InstanceServiceResult
+                            {
+                                Instance = reader.GetInstance()
+                            });
                         }
-                        return new ServiceResult<Instance>(ErrorFactory.InstanceNotFound());
+                        return new ServiceResult<InstanceServiceResult>(ErrorFactory.InstanceNotFound());
                     }
                 }
             }
@@ -121,7 +124,7 @@ where id = @id
         
         #region private
 
-        private async Task<ServiceResult<Tuple<Instance, User, UserCredentials>>> CreateInternalAsync(
+        private async Task<ServiceResult<InstanceServiceResult>> CreateInternalAsync(
             string instanceName,
             User creator,
             CodePassword codePassword, 
@@ -143,7 +146,7 @@ where id = @id
                     if (!createResult.Success)
                     {
                         transaction.Rollback();
-                        return new ServiceResult<Tuple<Instance, User, UserCredentials>>(createResult.Errors);
+                        return new ServiceResult<InstanceServiceResult>(createResult.Errors);
                     }
 
                     var user = createResult.Result;
@@ -152,21 +155,25 @@ where id = @id
                     if (!setPasswordResult.Success)
                     {
                         transaction.Rollback();
-                        return new ServiceResult<Tuple<Instance, User, UserCredentials>>(setPasswordResult.Errors);
+                        return new ServiceResult<InstanceServiceResult>(setPasswordResult.Errors);
                     }
 
-                    var credentials = setPasswordResult.Result;
+
+                    var result = new InstanceServiceResult
+                    {
+                        User = user,
+                        Credentials = setPasswordResult.Result,
+                        Instance = new Instance
+                        {
+                            Id = instanceId,
+                            Name = instanceName, 
+                            CreatorId = user.Id
+                        }
+                    };
 
                     await SetInstanceCreator(instanceId, user.Id, connWrapper);
-                    var createdInstance = new Instance
-                    {
-                        Id = instanceId,
-                        Name = instanceName, 
-                        CreatorId = user.Id
-                    };
                     transaction.Commit();
-                    return new ServiceResult<Tuple<Instance, User, UserCredentials>>(
-                        new Tuple<Instance, User, UserCredentials>(createdInstance, user, credentials));
+                    return new ServiceResult<InstanceServiceResult>(result);
                 }
             }
             

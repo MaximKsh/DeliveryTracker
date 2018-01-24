@@ -97,7 +97,7 @@ namespace DeliveryTracker.Tests.Instances
             
             accessor
                 .Setup(x => x.UserCredentials)
-                .Returns(() => createResult.Result.Item3);
+                .Returns(() => createResult.Result.Credentials);
             
             // Act
             var getResult = await instanceService.GetAsync();
@@ -105,7 +105,7 @@ namespace DeliveryTracker.Tests.Instances
             // Assert
             Assert.True(getResult.Success, createResult.Errors.ErrorsToString());
 
-            Assert.Equal(getResult.Result.Id, createResult.Result.Item1.Id);
+            Assert.Equal(getResult.Result.Instance.Id, createResult.Result.Instance.Id);
         }
         
     }

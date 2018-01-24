@@ -50,7 +50,7 @@ namespace DeliveryTracker.Instances
         #region public
 
         /// <inheritdoc />
-        public async Task<ServiceResult<Tuple<User, UserCredentials>>> RegisterAsync(
+        public async Task<ServiceResult<AccountServiceResult>> RegisterAsync(
             CodePassword codePassword,
             Action<User> userModificationAction = null,
             NpgsqlConnectionWrapper oc = null)
@@ -65,24 +65,24 @@ namespace DeliveryTracker.Instances
                 .Validate();
             if (!validationResult.Success)
             {
-                return new ServiceResult<Tuple<User, UserCredentials>>(validationResult.Error);
+                return new ServiceResult<AccountServiceResult>(validationResult.Error);
             }
 
             if (userInfo.Role == DefaultRoles.CreatorRole)
             {
-                return new ServiceResult<Tuple<User, UserCredentials>>(ErrorFactory.AccessDenied());
+                return new ServiceResult<AccountServiceResult>(ErrorFactory.AccessDenied());
             }
             if (userInfo.Role != DefaultRoles.ManagerRole
                 && userInfo.Role != DefaultRoles.PerformerRole)
             {
-                return new ServiceResult<Tuple<User, UserCredentials>>(ErrorFactory.RoleNotFound());
+                return new ServiceResult<AccountServiceResult>(ErrorFactory.RoleNotFound());
             }
 
             return await this.RegisterInternalAsync(codePassword, userInfo, oc);
         }
 
         /// <inheritdoc />
-        public async Task<ServiceResult<Tuple<User, UserCredentials>>> LoginAsync(
+        public async Task<ServiceResult<AccountServiceResult>> LoginAsync(
             CodePassword codePassword,
             NpgsqlConnectionWrapper oc = null)
         {
@@ -93,7 +93,7 @@ namespace DeliveryTracker.Instances
                 .Validate();
             if (!validationResult.Success)
             {
-                return new ServiceResult<Tuple<User, UserCredentials>>(validationResult.Error);
+                return new ServiceResult<AccountServiceResult>(validationResult.Error);
             }
             
             var username = codePassword.Code;
@@ -102,7 +102,7 @@ namespace DeliveryTracker.Instances
             var validateResult = await this.securityManager.ValidatePasswordAsync(username, password, oc);
             if (!validateResult.Success)
             {
-                return new ServiceResult<Tuple<User, UserCredentials>>(validateResult.Errors);
+                return new ServiceResult<AccountServiceResult>(validateResult.Errors);
             }
 
             var credentials = validateResult.Result;
@@ -110,14 +110,20 @@ namespace DeliveryTracker.Instances
             var userResult = await this.userManager.GetAsync(credentials.Id, credentials.InstanceId, oc);
             if (!userResult.Success)
             {
-                return new ServiceResult<Tuple<User, UserCredentials>>(userResult.Errors);
+                return new ServiceResult<AccountServiceResult>(userResult.Errors);
             }
-            return new ServiceResult<Tuple<User, UserCredentials>>(
-                new Tuple<User, UserCredentials>(userResult.Result, credentials));
+
+            var result = new AccountServiceResult
+            {
+                User = userResult.Result,
+                Credentials = credentials,
+            };
+            
+            return new ServiceResult<AccountServiceResult>(result);
         }
 
         /// <inheritdoc />
-        public async Task<ServiceResult<Tuple<User, UserCredentials>>> LoginWithRegistrationAsync(
+        public async Task<ServiceResult<AccountServiceResult>> LoginWithRegistrationAsync(
             CodePassword codePassword, 
             NpgsqlConnectionWrapper oc = null)
         {
@@ -157,14 +163,14 @@ namespace DeliveryTracker.Instances
                     if (invitation.Expires < DateTime.UtcNow)
                     {
                         transaction.Rollback();
-                        return new ServiceResult<Tuple<User, UserCredentials>>(
+                        return new ServiceResult<AccountServiceResult>(
                             ErrorFactory.InvitaitonExpired(invitation.InvitationCode, invitation.Expires));
                     }
                     var deleteResult = await this.invitationService.DeleteAsync(invitation.InvitationCode);
                     if (!deleteResult.Success)
                     {
                         transaction.Rollback();
-                        return new ServiceResult<Tuple<User, UserCredentials>>(
+                        return new ServiceResult<AccountServiceResult>(
                             ErrorFactory.InvitationNotFound(invitation.InvitationCode));
                     }
 
@@ -185,7 +191,7 @@ namespace DeliveryTracker.Instances
                     if (!creationResult.Success)
                     {
                         transaction.Rollback();
-                        return new ServiceResult<Tuple<User, UserCredentials>>(creationResult.Errors);
+                        return new ServiceResult<AccountServiceResult>(creationResult.Errors);
                     }
                     transaction.Commit();
 
@@ -195,29 +201,49 @@ namespace DeliveryTracker.Instances
                         createdUser.Code,
                         createdUser.Role,
                         createdUser.InstanceId);
-                    return new ServiceResult<Tuple<User, UserCredentials>>(
-                        new Tuple<User, UserCredentials> (createdUser, userCredentials));
+                    var result = new AccountServiceResult
+                    {
+                        User = createdUser,
+                        Credentials = userCredentials,
+                    };
+                    
+                    return new ServiceResult<AccountServiceResult>(result);
                 }
             }
         }
 
         /// <inheritdoc />
-        public async Task<ServiceResult<User>> GetAsync(NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult<AccountServiceResult>> GetAsync(NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.userCredentialsAccessor.UserCredentials;
-            return await this.userManager.GetAsync(credentials.Id, credentials.InstanceId, oc);
+            var getResult = await this.userManager.GetAsync(credentials.Id, credentials.InstanceId, oc);
+            if (getResult.Success)
+            {
+                return new ServiceResult<AccountServiceResult>(new AccountServiceResult
+                {
+                    User = getResult.Result,
+                });
+            }
+            return new ServiceResult<AccountServiceResult>(getResult.Errors);
         }
 
         /// <inheritdoc />
-        public async Task<ServiceResult<User>> EditAsync(
+        public async Task<ServiceResult<AccountServiceResult>> EditAsync(
             User newData, 
             NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.userCredentialsAccessor.UserCredentials;
             newData.Id = credentials.Id;
             newData.InstanceId = credentials.InstanceId;
-            
-            return await this.userManager.EditAsync(newData, oc);
+            var editResult = await this.userManager.EditAsync(newData, oc);
+            if (editResult.Success)
+            {
+                return new ServiceResult<AccountServiceResult>(new AccountServiceResult
+                {
+                    User = editResult.Result,
+                });
+            }
+            return new ServiceResult<AccountServiceResult>(editResult.Errors);
         }
 
         /// <inheritdoc />
@@ -246,7 +272,7 @@ namespace DeliveryTracker.Instances
         
         #region private
 
-        private async Task<ServiceResult<Tuple<User, UserCredentials>>> RegisterInternalAsync(
+        private async Task<ServiceResult<AccountServiceResult>> RegisterInternalAsync(
             CodePassword codePassword,
             User userInfo,
             NpgsqlConnectionWrapper oc)
@@ -260,7 +286,7 @@ namespace DeliveryTracker.Instances
                     if (!createUserResult.Success)
                     {
                         transaction.Rollback();
-                        return new ServiceResult<Tuple<User, UserCredentials>>(createUserResult.Errors);
+                        return new ServiceResult<AccountServiceResult>(createUserResult.Errors);
                     }
 
                     var newUser = createUserResult.Result;
@@ -270,14 +296,19 @@ namespace DeliveryTracker.Instances
                     if (!setPasswordResult.Success)
                     {
                         transaction.Rollback();
-                        return new ServiceResult<Tuple<User, UserCredentials>>(setPasswordResult.Errors);
+                        return new ServiceResult<AccountServiceResult>(setPasswordResult.Errors);
                     }
 
                     var credentials = setPasswordResult.Result;
                     transaction.Commit();
+
+                    var result = new AccountServiceResult
+                    {
+                        User = newUser,
+                        Credentials = credentials,
+                    };
                     
-                    return new ServiceResult<Tuple<User, UserCredentials>>(
-                        new Tuple<User, UserCredentials>(newUser, credentials));
+                    return new ServiceResult<AccountServiceResult>(result);
                 }
             }
         }

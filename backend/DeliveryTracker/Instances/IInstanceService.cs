@@ -19,7 +19,7 @@ namespace DeliveryTracker.Instances
         /// <param name="codePassword">Пароль создателя</param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<Tuple<Instance, User, UserCredentials>>> CreateAsync(string instance,
+        Task<ServiceResult<InstanceServiceResult>> CreateAsync(string instance,
             User creatorInfo,
             CodePassword codePassword,
             NpgsqlConnectionWrapper oc = null);
@@ -29,7 +29,7 @@ namespace DeliveryTracker.Instances
         /// </summary>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<Instance>> GetAsync(
+        Task<ServiceResult<InstanceServiceResult>> GetAsync(
             NpgsqlConnectionWrapper oc = null);
     }
 }

@@ -229,7 +229,7 @@ namespace DeliveryTracker.Tests.Instances
             
             var codePasswordAfterRegistration = new CodePassword
             {
-                Code = result.Result.Item1.Code,
+                Code = result.Result.User.Code,
                 Password = TestHelper.CorrectPassword,
             };
 
@@ -261,7 +261,7 @@ namespace DeliveryTracker.Tests.Instances
             
             var codePasswordAfterRegistration = new CodePassword
             {
-                Code = result.Result.Item1.Code,
+                Code = result.Result.User.Code,
                 Password = TestHelper.CorrectPassword + "ccc",
             };
 
@@ -313,8 +313,8 @@ namespace DeliveryTracker.Tests.Instances
 
             // Assert
             Assert.True(editResult.Success, editResult.Errors.ErrorsToString());
-            Assert.Equal(this.me.Id, editResult.Result.Id);
-            Assert.Equal("Veniamin", editResult.Result.Name);
+            Assert.Equal(this.me.Id, editResult.Result.User.Id);
+            Assert.Equal("Veniamin", editResult.Result.User.Name);
         }
    
     }

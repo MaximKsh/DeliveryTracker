@@ -177,7 +177,6 @@ namespace DeliveryTracker.Tests.Identification
         [InlineData(3, 10, true, true, false, "abc", 10, "abcabcabc")]
         [InlineData(3, 10, true, true, false, "1235", 10, "1235321")]
         [InlineData(3, 10, false, false, true, "abcABC", 10, "abcaAbc")]
-        [InlineData(3, 10, false, false, false, "abc", 2, "aaabc")]
         public async void SetPasswordInvalidPassword(
             int min,
             int max,

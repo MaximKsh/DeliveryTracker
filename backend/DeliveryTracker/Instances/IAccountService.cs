@@ -18,7 +18,7 @@ namespace DeliveryTracker.Instances
         /// <param name="userModificationAction">Действие по модификации данных пользователя перед добавлением.</param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<Tuple<User, UserCredentials>>> RegisterAsync(
+        Task<ServiceResult<AccountServiceResult>> RegisterAsync(
             CodePassword codePassword,
             Action<User> userModificationAction = null,
             NpgsqlConnectionWrapper oc = null);
@@ -29,7 +29,7 @@ namespace DeliveryTracker.Instances
         /// <param name="codePassword"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<Tuple<User, UserCredentials>>> LoginAsync(
+        Task<ServiceResult<AccountServiceResult>> LoginAsync(
             CodePassword codePassword,
             NpgsqlConnectionWrapper oc = null);
 
@@ -41,7 +41,7 @@ namespace DeliveryTracker.Instances
         /// <param name="codePassword"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<Tuple<User, UserCredentials>>> LoginWithRegistrationAsync(
+        Task<ServiceResult<AccountServiceResult>> LoginWithRegistrationAsync(
             CodePassword codePassword,
             NpgsqlConnectionWrapper oc = null);
 
@@ -50,7 +50,7 @@ namespace DeliveryTracker.Instances
         /// </summary>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<User>> GetAsync(NpgsqlConnectionWrapper oc = null);
+        Task<ServiceResult<AccountServiceResult>> GetAsync(NpgsqlConnectionWrapper oc = null);
         
         /// <summary>
         /// Редактирование данных текущего пользователя.
@@ -58,7 +58,7 @@ namespace DeliveryTracker.Instances
         /// <param name="newData"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<User>> EditAsync(
+        Task<ServiceResult<AccountServiceResult>> EditAsync(
             User newData,
             NpgsqlConnectionWrapper oc = null);
         

@@ -46,10 +46,10 @@ namespace DeliveryTrackerWeb.Controllers
             {
                 return this.Unauthorized();
             }
-            var token = this.securityManager.AcquireToken(result.Result.Item2);
+            var token = this.securityManager.AcquireToken(result.Result.Credentials);
             return this.Ok(new AccountResponse
             {
-                User = result.Result.Item1,
+                User = result.Result.User,
                 Token = token,
             });
         }
@@ -65,7 +65,7 @@ namespace DeliveryTrackerWeb.Controllers
             }
             return this.Ok(new AccountResponse
             {
-                User = result.Result
+                User = result.Result.User
             });
         }
         
@@ -91,7 +91,7 @@ namespace DeliveryTrackerWeb.Controllers
             }
             return this.Ok(new AccountResponse
             {
-                User = result.Result
+                User = result.Result.User
             });
         }
         

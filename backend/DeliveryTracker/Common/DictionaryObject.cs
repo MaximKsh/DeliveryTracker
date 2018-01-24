@@ -40,6 +40,11 @@ namespace DeliveryTracker.Common
                 return defaultValue;
             }
 
+            if (obj == null)
+            {
+                return defaultValue;
+            }
+            
             if (obj is T value)
             {
                 return value;
@@ -68,6 +73,8 @@ namespace DeliveryTracker.Common
 
             switch (obj)
             {
+                case null:
+                    return defaultValue;
                 case T value:
                     return value;
                 case JObject jobj:
