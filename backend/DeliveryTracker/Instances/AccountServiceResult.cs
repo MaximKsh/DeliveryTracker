@@ -7,5 +7,7 @@ namespace DeliveryTracker.Instances
         public User User { get; set; }
         
         public UserCredentials Credentials { get; set; }
+
+        public bool Registered { get; set; } = false;
     }
 }

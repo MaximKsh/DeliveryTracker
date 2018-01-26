@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
@@ -47,7 +48,10 @@ namespace DeliveryTrackerWeb.Controllers
                 return this.Unauthorized();
             }
             var token = this.securityManager.AcquireToken(result.Result.Credentials);
-            return this.Ok(new AccountResponse
+            var statusCode = result.Result.Registered
+                ? (int)HttpStatusCode.Created
+                : (int)HttpStatusCode.OK;
+            return this.StatusCode(statusCode, new AccountResponse
             {
                 User = result.Result.User,
                 Token = token,

@@ -206,6 +206,7 @@ namespace DeliveryTracker.Tests.Instances
 
             // Assert
             Assert.True(loginResult.Success, loginResult.Errors.ErrorsToString());
+            Assert.True(loginResult.Result.Registered);
         }
         
         [Fact]

@@ -205,6 +205,7 @@ namespace DeliveryTracker.Instances
                     {
                         User = createdUser,
                         Credentials = userCredentials,
+                        Registered = true,
                     };
                     
                     return new ServiceResult<AccountServiceResult>(result);
