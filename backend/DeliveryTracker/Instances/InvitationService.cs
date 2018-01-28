@@ -31,12 +31,12 @@ returning {InstanceHelper.GetInvitationColumns()};
 select
 {InstanceHelper.GetInvitationColumns()}
 from invitations
-where invitation_code = @code;
+where invitation_code = @code and instance_id = @instance_id;
 ";
         
         private static readonly string SqlDelete = $@"
 delete from invitations
-where invitation_code = @code;
+where invitation_code = @code and instance_id = @instance_id
 ";
         
         private static readonly string SqlDeleteExpired = $@"
@@ -177,6 +177,7 @@ where expires < (now() AT TIME ZONE 'UTC');
             {
                 return new ServiceResult<Invitation>(validationResult.Error);
             }
+            var userCredentials = this.userCredentialsAccessor.UserCredentials;
             
             Invitation invitation = null;
             using (var conn = oc ?? this.cp.Create())
@@ -186,6 +187,7 @@ where expires < (now() AT TIME ZONE 'UTC');
                 {
                     command.CommandText = SqlGet;
                     command.Parameters.Add(new NpgsqlParameter("code", invitationCode));
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
                     using (var reader = await command.ExecuteReaderAsync())
                     {
                         if(await reader.ReadAsync())
@@ -205,6 +207,7 @@ where expires < (now() AT TIME ZONE 'UTC');
         /// <inheritdoc />
         public async Task<ServiceResult> DeleteAsync(string invitationCode, NpgsqlConnectionWrapper oc = null)
         {
+            var userCredentials = this.userCredentialsAccessor.UserCredentials;
             using (var conn = oc ?? this.cp.Create())
             {
                 conn.Connect();
@@ -212,6 +215,7 @@ where expires < (now() AT TIME ZONE 'UTC');
                 {
                     command.CommandText = SqlDelete;
                     command.Parameters.Add(new NpgsqlParameter("code", invitationCode));
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
                     var success = await command.ExecuteNonQueryAsync() == 1;
                     return success
                         ? new ServiceResult()

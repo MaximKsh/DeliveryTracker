@@ -15,6 +15,10 @@ namespace DeliveryTracker.Views
         /// </summary>
         string Name { get; }
 
+        /// <summary>
+        /// Строка локализации для представления.
+        /// </summary>
+        string Caption { get; }
 
         /// <summary>
         /// Получить результат представления.

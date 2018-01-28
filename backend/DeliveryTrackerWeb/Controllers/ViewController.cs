@@ -59,7 +59,7 @@ namespace DeliveryTrackerWeb.Controllers
             
             return this.Ok(new ViewResponse
             {
-                Groups = result.Result,
+                Views = result.Result,
             });
         }
 

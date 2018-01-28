@@ -13,7 +13,7 @@ namespace DeliveryTracker.References
         /// Получить список доступных справочников.
         /// </summary>
         /// <returns></returns>
-        string[] GetReferencesList();
+        IDictionary<string, ReferenceDescription> GetReferencesList();
         
         /// <summary>
         /// Создать новую запись в справочнике

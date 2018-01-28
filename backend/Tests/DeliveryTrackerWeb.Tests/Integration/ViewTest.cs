@@ -72,9 +72,9 @@ namespace DeliveryTrackerWeb.Tests.Integration
                 ViewUrl("UserViewGroup/digest"));
             Assert.Equal(HttpStatusCode.OK, digestResult.StatusCode);
             Assert.Equal(3, digestResult.Result.Digest.Count);
-            Assert.Equal(2, digestResult.Result.Digest["ManagersView"]);
-            Assert.Equal(1, digestResult.Result.Digest["PerformersView"]);
-            Assert.Equal(2, digestResult.Result.Digest["InvitationsView"]);
+            Assert.Equal(2, digestResult.Result.Digest["ManagersView"].Count);
+            Assert.Equal(1, digestResult.Result.Digest["PerformersView"].Count);
+            Assert.Equal(2, digestResult.Result.Digest["InvitationsView"].Count);
         }
 
         [Fact]
@@ -129,9 +129,9 @@ namespace DeliveryTrackerWeb.Tests.Integration
                 ViewUrl("ReferenceViewGroup/digest"));
             Assert.Equal(HttpStatusCode.OK, digestResult.StatusCode);
             Assert.Equal(3, digestResult.Result.Digest.Count);
-            Assert.Equal(1, digestResult.Result.Digest["ClientsView"]);
-            Assert.Equal(1, digestResult.Result.Digest["ProductsView"]);
-            Assert.Equal(1, digestResult.Result.Digest["PaymentTypesView"]);
+            Assert.Equal(1, digestResult.Result.Digest["ClientsView"].Count);
+            Assert.Equal(1, digestResult.Result.Digest["ProductsView"].Count);
+            Assert.Equal(1, digestResult.Result.Digest["PaymentTypesView"].Count);
         }
     }
 }

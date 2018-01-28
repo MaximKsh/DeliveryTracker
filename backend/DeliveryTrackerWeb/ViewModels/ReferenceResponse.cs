@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using DeliveryTracker.References;
 using DeliveryTracker.Validation;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace DeliveryTrackerWeb.ViewModels
 {
@@ -19,7 +21,7 @@ namespace DeliveryTrackerWeb.ViewModels
         
         public IDictionary<string, object> Entity { get; set; }
         
-        public string[] ReferencesList { get; set; }
+        public IDictionary<string, ReferenceDescription> ReferencesList { get; set; }
         
     }
 }

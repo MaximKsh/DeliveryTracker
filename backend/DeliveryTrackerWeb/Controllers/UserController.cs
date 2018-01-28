@@ -66,8 +66,8 @@ namespace DeliveryTrackerWeb.Controllers
             {
                 var result = await this.userService.GetAsync(code);
                 return result.Success
-                    ? (IActionResult) this.Ok(result.Result)
-                    : this.BadRequest(result.Errors);   
+                    ? (IActionResult) this.Ok(new UserResponse{ User = result.Result })
+                    : this.BadRequest(new UserResponse(result.Errors));   
             }
             return this.BadRequest(new UserResponse(ErrorFactory.ValidationError(new List<KeyValuePair<string, object>>
             {
@@ -108,8 +108,8 @@ namespace DeliveryTrackerWeb.Controllers
         [HttpPost("delete")]
         public async Task<IActionResult> Delete([FromBody] UserRequest request)
         {
-            var id = request.User?.Id ?? Guid.Empty;
-            var code = request.User?.Code ?? string.Empty;
+            var id = request.Id;
+            var code = request.Code ?? string.Empty;
             
             Guid validId;
             if (id != Guid.Empty)

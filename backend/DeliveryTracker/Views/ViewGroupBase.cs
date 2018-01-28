@@ -44,12 +44,12 @@ namespace DeliveryTracker.Views
         }
 
         /// <inheritdoc />
-        public virtual async Task<ServiceResult<Dictionary<string, long>>> GetDigestAsync(
+        public virtual async Task<ServiceResult<Dictionary<string, ViewDigest>>> GetDigestAsync(
             NpgsqlConnectionWrapper oc = null)
         {
             var parameters = new Dictionary<string, string[]>().ToImmutableDictionary();
             var credentials = this.Accessor.UserCredentials;
-            var digest = new Dictionary<string, long>(this.Views.Count);
+            var digest = new Dictionary<string, ViewDigest>(this.Views.Count);
             using (var conn = oc ?? this.Cp.Create())
             {
                 conn.Connect();
@@ -61,14 +61,18 @@ namespace DeliveryTracker.Views
                         parameters);
                     if (!result.Success)
                     {
-                        return new ServiceResult<Dictionary<string, long>>(result.Errors);
+                        return new ServiceResult<Dictionary<string, ViewDigest>>(result.Errors);
                     }
-                    
-                    digest[view.Key] = result.Result;
+
+                    digest[view.Key] = new ViewDigest
+                    {
+                        Caption = view.Value.Caption,
+                        Count = result.Result,
+                    };
                 }    
             }
             
-            return new ServiceResult<Dictionary<string, long>>(digest);
+            return new ServiceResult<Dictionary<string, ViewDigest>>(digest);
         }
 
         /// <inheritdoc />

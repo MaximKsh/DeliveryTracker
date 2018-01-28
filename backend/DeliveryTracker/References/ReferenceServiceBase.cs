@@ -125,6 +125,9 @@ namespace DeliveryTracker.References
         public abstract string Name { get; }
         
         /// <inheritdoc />
+        public abstract ReferenceDescription ReferenceDescription { get; }
+        
+        /// <inheritdoc />
         public virtual async Task<ServiceResult<T>> CreateAsync(
             T newData,
             NpgsqlConnectionWrapper oc = null)

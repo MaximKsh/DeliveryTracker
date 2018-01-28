@@ -149,7 +149,7 @@ namespace DeliveryTrackerWeb.Tests.Integration
             var deletePerformer = await RequestPost<AccountRequest>(
                 managerClient,
                 UserUrl("delete"),
-                new UserRequest { User = new User { Id = getPerformer.Result.User.Id}});
+                new UserRequest { Id = getPerformer.Result.User.Id});
             Assert.Equal(HttpStatusCode.OK, deletePerformer.StatusCode);
             
             // Не получаем

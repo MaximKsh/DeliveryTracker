@@ -50,7 +50,6 @@
             
             
             
-            public const string InstanceAlreadyHasCreator = Pref + "InstanceAlreadyHasCreator";
             
             public const string PerformerInAnotherInstance = Pref + "PerformerInAnotherInstance";
             
@@ -107,6 +106,39 @@
             public const string CreatorRole = Pref + "CreatorRole";
             public const string ManagerRole = Pref + "ManagerRole";
             public const string PerformerRole = Pref + "PerformerRole";
+        }
+        
+        #endregion
+        
+        #region References
+        
+        private const string ReferencesGroup = "References";
+        
+        public static class References
+        {
+            private const string Pref = LocalizationStringPrefix + "_" + ReferencesGroup + "_";
+                    
+            public const string Clients = Pref + "Clients";
+            public const string Products = Pref + "Products";
+            public const string PaymentTypes = Pref + "PaymentTypes";
+        }
+        
+        #endregion
+        
+        #region Views
+        
+        private const string ViewsGroup = "Views";
+        
+        public static class Views
+        {
+            private const string Pref = LocalizationStringPrefix + "_" + ViewsGroup + "_";
+                    
+            public const string ClientsView = Pref + "ClientsView";
+            public const string InvitationsView = Pref + "InvitationsView";
+            public const string ManagersView = Pref + "ManagersView";
+            public const string PaymentTypesView = Pref + "PaymentTypesView";
+            public const string PerformersView = Pref + "PerformersView";
+            public const string ProductsView = Pref + "ProductsView";
         }
         
         #endregion

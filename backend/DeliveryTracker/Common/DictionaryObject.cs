@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 
 namespace DeliveryTracker.Common
@@ -24,6 +26,33 @@ namespace DeliveryTracker.Common
 
         public IDictionary<string, object> GetDictionary()
         {
+            foreach (var k in this.dictionary.Keys.ToArray())
+            {
+                var v = this.dictionary[k];
+                if(v is IDictionaryObject dictObj)
+                {
+                    this.dictionary[k] = dictObj.GetDictionary();
+                }
+
+                if (v is IList list)
+                {
+                    var newList = new List<object>(list.Count);
+                    foreach (var elem in list)
+                    {
+                        if(elem is IDictionaryObject listElemDictObj)
+                        {
+                            newList.Add(listElemDictObj.GetDictionary());
+                        }
+                        else
+                        {
+                            newList.Add(elem);
+                        }
+                    }
+
+                    this.dictionary[k] = newList;
+                }
+            }
+            
             return this.dictionary;
         }
         

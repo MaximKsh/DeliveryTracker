@@ -5,6 +5,7 @@ using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
+using DeliveryTracker.Localization;
 using Npgsql;
 
 namespace DeliveryTracker.Views
@@ -26,8 +27,13 @@ where instance_id = @instance_id
 ;
 ";
         
+        /// <inheritdoc />
         public string Name { get; } = nameof(InvitationsView);
+        
+        /// <inheritdoc />
+        public string Caption { get; } = LocalizationAlias.Views.InvitationsView;
 
+        /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
             NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
@@ -51,6 +57,7 @@ where instance_id = @instance_id
             return new ServiceResult<IList<IDictionaryObject>>(list);
         }
 
+        /// <inheritdoc />
         public async Task<ServiceResult<long>> GetCountAsync(
             NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,

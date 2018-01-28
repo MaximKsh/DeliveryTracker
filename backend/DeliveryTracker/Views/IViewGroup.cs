@@ -24,7 +24,7 @@ namespace DeliveryTracker.Views
         /// </summary>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<Dictionary<string, long>>> GetDigestAsync(
+        Task<ServiceResult<Dictionary<string, ViewDigest>>> GetDigestAsync(
             NpgsqlConnectionWrapper oc = null);
 
         /// <summary>

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using DeliveryTracker.Validation;
+using DeliveryTracker.Views;
 
 namespace DeliveryTrackerWeb.ViewModels
 {
@@ -21,7 +22,7 @@ namespace DeliveryTrackerWeb.ViewModels
         
         public string[] Views { get; set; }
         
-        public IDictionary<string, long> Digest { get; set; }
+        public IDictionary<string, ViewDigest> Digest { get; set; }
         
         public IEnumerable<IDictionary<string, object>> ViewResult { get; set; }
     }

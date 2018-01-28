@@ -16,7 +16,7 @@ namespace DeliveryTracker.References
         
         private readonly ImmutableDictionary<string, IReferenceService> services;
 
-        private readonly string[] referencesList;
+        private readonly IDictionary<string, ReferenceDescription> referencesList;
         
         #endregion
         
@@ -32,7 +32,7 @@ namespace DeliveryTracker.References
             }
 
             this.services = dict.ToImmutableDictionary();
-            this.referencesList = this.services.Keys.ToArray();
+            this.referencesList = this.services.ToDictionary(k => k.Key, v => v.Value.ReferenceDescription);
         }
         
         #endregion
@@ -40,7 +40,7 @@ namespace DeliveryTracker.References
         #region public
         
         /// <inheritdoc />
-        public string[] GetReferencesList()
+        public IDictionary<string, ReferenceDescription> GetReferencesList()
         {
             return this.referencesList;
         }

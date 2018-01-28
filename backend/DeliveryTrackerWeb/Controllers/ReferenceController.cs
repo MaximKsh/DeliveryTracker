@@ -28,9 +28,9 @@ namespace DeliveryTrackerWeb.Controllers
         
         
         [HttpGet("types")]
-        public IActionResult GetGroupsList()
+        public IActionResult GetTypesList()
         {
-            return this.Ok(new ReferenceResponse {ReferencesList = this.referenceFacade.GetReferencesList()});
+            return this.Ok(new ReferenceResponse { ReferencesList = this.referenceFacade.GetReferencesList() });
         }
         
         [HttpPost("{type}/create")]

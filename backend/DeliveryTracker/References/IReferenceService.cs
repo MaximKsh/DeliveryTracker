@@ -14,6 +14,11 @@ namespace DeliveryTracker.References
         string Name { get; }
         
         /// <summary>
+        /// Описание справочника.
+        /// </summary>
+        ReferenceDescription ReferenceDescription { get; }
+        
+        /// <summary>
         /// Создать новую запись в справочнике.
         /// </summary>
         /// <param name="newData"></param>

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
+using DeliveryTracker.Localization;
 using Npgsql;
 
 namespace DeliveryTracker.Views
@@ -38,6 +39,10 @@ where instance_id = @instance_id and role = @role
         
         /// <inheritdoc />
         public string Name { get; } = nameof(ManagersView);
+        
+        
+        /// <inheritdoc />
+        public string Caption { get; } = LocalizationAlias.Views.ManagersView;
         
         /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(NpgsqlConnectionWrapper oc,

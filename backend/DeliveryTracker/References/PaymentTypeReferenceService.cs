@@ -3,6 +3,7 @@ using System.Data;
 using System.Text;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
+using DeliveryTracker.Localization;
 using Npgsql;
 
 namespace DeliveryTracker.References
@@ -50,6 +51,11 @@ where id = @id and instance_id = @instance_id
 
         public override string Name { get; } = nameof(PaymentType);
 
+        public override ReferenceDescription ReferenceDescription { get; } = new ReferenceDescription
+        {
+            Caption = LocalizationAlias.References.PaymentTypes
+        };
+        
         #endregion
         
         #region protected

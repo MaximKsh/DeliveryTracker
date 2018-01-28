@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
+using DeliveryTracker.Localization;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -108,6 +109,11 @@ returning 1
         #region public
 
         public override string Name { get; } = nameof(Client);
+        
+        public override ReferenceDescription ReferenceDescription { get; } = new ReferenceDescription
+        {
+            Caption = LocalizationAlias.References.Clients
+        };
         
         #endregion
         
