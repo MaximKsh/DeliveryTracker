@@ -26,7 +26,7 @@ namespace DeliveryTracker.Tests.Views
                 var defaultInstance = TestHelper.CreateRandomInstance(conn);
                 var me = TestHelper.CreateRandomUser(DefaultRoles.ManagerRole, defaultInstance.Id, conn);
                 accessor
-                    .Setup(x => x.UserCredentials)
+                    .Setup(x => x.GetUserCredentials())
                     .Returns(new UserCredentials(me));
             }
             

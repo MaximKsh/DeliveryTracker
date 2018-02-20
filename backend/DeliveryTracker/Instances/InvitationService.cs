@@ -31,12 +31,13 @@ returning {InstanceHelper.GetInvitationColumns()};
 select
 {InstanceHelper.GetInvitationColumns()}
 from invitations
-where invitation_code = @code and instance_id = @instance_id;
+where invitation_code = @code;
 ";
         
         private static readonly string SqlDelete = $@"
 delete from invitations
-where invitation_code = @code and instance_id = @instance_id
+where invitation_code = @code
+;
 ";
         
         private static readonly string SqlDeleteExpired = $@"
@@ -64,12 +65,12 @@ where expires < (now() AT TIME ZONE 'UTC');
         
         public InvitationService(
             IPostgresConnectionProvider cp,
-            InvitationSettings invitationSettings,
+            ISettingsStorage settingsStorage,
             IUserCredentialsAccessor userCredentialsAccessor,
             ILogger<IInvitationService> logger)
         {
             this.cp = cp;
-            this.invitationSettings = invitationSettings;
+            this.invitationSettings = settingsStorage.GetSettings<InvitationSettings>(SettingsName.Invitation);
             this.userCredentialsAccessor = userCredentialsAccessor;
             this.logger = logger;
         }
@@ -177,7 +178,6 @@ where expires < (now() AT TIME ZONE 'UTC');
             {
                 return new ServiceResult<Invitation>(validationResult.Error);
             }
-            var userCredentials = this.userCredentialsAccessor.UserCredentials;
             
             Invitation invitation = null;
             using (var conn = oc ?? this.cp.Create())
@@ -187,7 +187,6 @@ where expires < (now() AT TIME ZONE 'UTC');
                 {
                     command.CommandText = SqlGet;
                     command.Parameters.Add(new NpgsqlParameter("code", invitationCode));
-                    command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
                     using (var reader = await command.ExecuteReaderAsync())
                     {
                         if(await reader.ReadAsync())
@@ -207,7 +206,6 @@ where expires < (now() AT TIME ZONE 'UTC');
         /// <inheritdoc />
         public async Task<ServiceResult> DeleteAsync(string invitationCode, NpgsqlConnectionWrapper oc = null)
         {
-            var userCredentials = this.userCredentialsAccessor.UserCredentials;
             using (var conn = oc ?? this.cp.Create())
             {
                 conn.Connect();
@@ -215,7 +213,6 @@ where expires < (now() AT TIME ZONE 'UTC');
                 {
                     command.CommandText = SqlDelete;
                     command.Parameters.Add(new NpgsqlParameter("code", invitationCode));
-                    command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
                     var success = await command.ExecuteNonQueryAsync() == 1;
                     return success
                         ? new ServiceResult()
@@ -245,7 +242,7 @@ where expires < (now() AT TIME ZONE 'UTC');
 
         private bool CanCreateInvitation(User preliminaryUserData, out UserCredentials userCredentials)
         {
-            userCredentials = this.userCredentialsAccessor.UserCredentials;
+            userCredentials = this.userCredentialsAccessor.GetUserCredentials();
             if (preliminaryUserData.Role == DefaultRoles.ManagerRole)
             {
                 return userCredentials.Role == DefaultRoles.CreatorRole;

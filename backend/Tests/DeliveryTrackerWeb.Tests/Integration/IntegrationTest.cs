@@ -110,6 +110,64 @@ namespace DeliveryTrackerWeb.Tests.Integration
         }
 
         [Fact]
+        public async void RefreshSession()
+        {
+            var (client, _, _, _) = await this.CreateNewHttpClientAndInstance();
+            var inviteResult = await RequestPost<InvitationResponse>(
+                client,
+                InvitationUrl("create"),
+                new InvitationRequest
+                {
+                    User = new User
+                    {
+                        Surname = "Petrov",
+                        Name = "Ivan",
+                        Role = DefaultRoles.ManagerRole,
+                    }
+                });
+
+            var managerClient = this.Server.CreateClient();
+            var firstLoginResult = await RequestPost<AccountResponse>(
+                managerClient,
+                AccountUrl("login"),
+                new AccountRequest
+                {
+                    CodePassword = new CodePassword()
+                    {
+                        Code = inviteResult.Result.Invitation.InvitationCode,
+                        Password = CorrectPassword,
+                    }
+                });
+            SetToken(managerClient, firstLoginResult.Result.Token);
+
+
+            var refreshResult1 = await RequestPost<AccountResponse>(
+                managerClient,
+                AccountUrl("refresh"),
+                new AccountRequest {RefreshToken = firstLoginResult.Result.RefreshToken});
+            Assert.Equal(HttpStatusCode.OK, refreshResult1.StatusCode);
+            
+            SetToken(managerClient, refreshResult1.Result.Token);
+            var refreshResult2 = await RequestPost<AccountResponse>(
+                managerClient,
+                AccountUrl("refresh"),
+                new AccountRequest {RefreshToken = firstLoginResult.Result.RefreshToken});
+            Assert.Equal(HttpStatusCode.Forbidden, refreshResult2.StatusCode);
+            
+            SetToken(managerClient, firstLoginResult.Result.Token);
+            var getResult1 = await RequestGet<AccountResponse>(
+                managerClient,
+                AccountUrl("about"));
+            Assert.Equal(HttpStatusCode.Forbidden, getResult1.StatusCode);
+            
+            SetToken(managerClient, refreshResult1.Result.Token);
+            var getResult2 = await RequestGet<AccountResponse>(
+                managerClient,
+                AccountUrl("about"));
+            Assert.Equal(HttpStatusCode.OK, getResult2.StatusCode);
+        }
+        
+        [Fact]
         public async void ManagerOperatePerformer()
         {
             var (client, _, _, _) = await this.CreateNewHttpClientAndInstance();
@@ -188,7 +246,7 @@ namespace DeliveryTrackerWeb.Tests.Integration
                         Password = CorrectPassword,
                     }
                 });
-            Assert.Equal(HttpStatusCode.Unauthorized, loginResultOldPassword.StatusCode);
+            Assert.Equal(HttpStatusCode.Forbidden, loginResultOldPassword.StatusCode);
             
             var loginResult = await RequestPost<AccountResponse>(
                 creatorClient,

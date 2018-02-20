@@ -29,16 +29,14 @@ namespace DeliveryTracker.Tests.Views
                 this.defaultInstance = TestHelper.CreateRandomInstance(conn);
                 var me = TestHelper.CreateRandomUser(DefaultRoles.ManagerRole, this.defaultInstance.Id, conn);
                 accessor
-                    .Setup(x => x.UserCredentials)
+                    .Setup(x => x.GetUserCredentials())
                     .Returns(new UserCredentials(me));
             }
             
             var services = new ServiceCollection();
             this.serviceProvider = services
                 .AddSingleton(this.Cp)
-                .AddSingleton(this.DefaultInvitationSettings)
-                .AddSingleton(this.DefaultPasswordSettings)
-                .AddSingleton(this.DefaultTokenSettings)
+                .AddSingleton(this.SettingsStorage)
                 .AddSingleton(accessor.Object)
                 .AddSingleton<IInvitationService, InvitationService>()
                 .AddSingleton<IViewService, ViewService>()

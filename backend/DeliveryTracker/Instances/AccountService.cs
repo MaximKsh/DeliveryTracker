@@ -216,7 +216,7 @@ namespace DeliveryTracker.Instances
         /// <inheritdoc />
         public async Task<ServiceResult<AccountServiceResult>> GetAsync(NpgsqlConnectionWrapper oc = null)
         {
-            var credentials = this.userCredentialsAccessor.UserCredentials;
+            var credentials = this.userCredentialsAccessor.GetUserCredentials();
             var getResult = await this.userManager.GetAsync(credentials.Id, credentials.InstanceId, oc);
             if (getResult.Success)
             {
@@ -233,7 +233,7 @@ namespace DeliveryTracker.Instances
             User newData, 
             NpgsqlConnectionWrapper oc = null)
         {
-            var credentials = this.userCredentialsAccessor.UserCredentials;
+            var credentials = this.userCredentialsAccessor.GetUserCredentials();
             newData.Id = credentials.Id;
             newData.InstanceId = credentials.InstanceId;
             var editResult = await this.userManager.EditAsync(newData, oc);
@@ -253,7 +253,7 @@ namespace DeliveryTracker.Instances
             string newPassword, 
             NpgsqlConnectionWrapper oc = null)
         {
-            var credentials = this.userCredentialsAccessor.UserCredentials;
+            var credentials = this.userCredentialsAccessor.GetUserCredentials();
             var userId = credentials.Id;
             
             var verificationResult = await this.securityManager.ValidatePasswordAsync(userId, oldPassword, oc);

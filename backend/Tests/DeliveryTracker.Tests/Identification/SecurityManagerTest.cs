@@ -1,23 +1,38 @@
-﻿using DeliveryTracker.Database;
+﻿using DeliveryTracker.Common;
+using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.Validation;
+using Moq;
 using Xunit;
 
 namespace DeliveryTracker.Tests.Identification
 {
-    public class SecurityManagerTest : DeliveryTrackerTestBase
+    public class SecurityManagerTest : DeliveryTrackerConnectionTestBase
     {
         private readonly IPostgresConnectionProvider provider;
         private readonly ISecurityManager defaultSecurityManager;
+        private readonly Mock<IUserCredentialsAccessor> accessorMock;
         private readonly Instance defaultInstance;
         
         public SecurityManagerTest()
         {
             this.provider = new PostgresConnectionProvider(this.Configuration);
+
+            User me;
+            using (var conn = this.Cp.Create())
+            {
+                conn.Connect();
+                this.defaultInstance = TestHelper.CreateRandomInstance(conn);
+                me = TestHelper.CreateRandomUser(DefaultRoles.ManagerRole, this.defaultInstance.Id, conn);
+            }
+            this.accessorMock = new Mock<IUserCredentialsAccessor>();
+            this.accessorMock
+                .Setup(x => x.GetUserCredentials())
+                .Returns(new UserCredentials(me));
             
             this.defaultSecurityManager = new SecurityManager(
-                this.provider, this.DefaultTokenSettings, this.DefaultPasswordSettings);
+                this.provider, this.accessorMock.Object, this.SettingsStorage);
             
             using (var conn = this.provider.Create())
             {
@@ -149,7 +164,7 @@ namespace DeliveryTracker.Tests.Identification
         }
         
         [Fact]
-        public async void AcquireToken()
+        public async void NewSession()
         {
             // Arrange
             User user;
@@ -162,10 +177,98 @@ namespace DeliveryTracker.Tests.Identification
             var result = await this.defaultSecurityManager.ValidatePasswordAsync(user.Id, TestHelper.CorrectPassword);
             
             // Act
-            var token = this.defaultSecurityManager.AcquireToken(result.Result);
+            var newSessionResult = await this.defaultSecurityManager.NewSessionAsync(result.Result);
             
             // Assert
-            Assert.False(string.IsNullOrWhiteSpace(token));
+            Assert.True(newSessionResult.Success);
+            Assert.False(string.IsNullOrWhiteSpace(newSessionResult.Result.SessionToken));
+            Assert.False(string.IsNullOrWhiteSpace(newSessionResult.Result.RefreshToken));
+        }
+        
+        [Fact]
+        public async void RefreshSession()
+        {
+            // Arrange
+            User user;
+            using (var conn = this.provider.Create())
+            {
+                conn.Connect();
+                user = TestHelper.CreateRandomUser(DefaultRoles.CreatorRole, this.defaultInstance.Id, conn);
+            }
+            var accessor = new Mock<IUserCredentialsAccessor>();
+            accessor
+                .Setup(x => x.GetUserCredentials())
+                .Returns(new UserCredentials(user));
+            var securityManager = new SecurityManager(
+                this.provider, accessor.Object, this.SettingsStorage);
+            await securityManager.SetPasswordAsync(user.Id, TestHelper.CorrectPassword);
+            var result = await securityManager.ValidatePasswordAsync(user.Id, TestHelper.CorrectPassword);
+            var newSessionResult = await securityManager.NewSessionAsync(result.Result);
+            
+            // Act
+            var refreshResult = await securityManager.RefreshSessionAsync(newSessionResult.Result.RefreshToken);
+            
+            // Assert
+            Assert.True(refreshResult.Success);
+            Assert.False(string.IsNullOrWhiteSpace(refreshResult.Result.SessionToken));
+            Assert.False(string.IsNullOrWhiteSpace(refreshResult.Result.RefreshToken));
+        }
+        
+        [Fact]
+        public async void ValidateAfterRefresh()
+        {
+            // Arrange
+            User user;
+            using (var conn = this.provider.Create())
+            {
+                conn.Connect();
+                user = TestHelper.CreateRandomUser(DefaultRoles.CreatorRole, this.defaultInstance.Id, conn);
+            }
+            var accessor = new Mock<IUserCredentialsAccessor>();
+            accessor
+                .Setup(x => x.GetUserCredentials())
+                .Returns(new UserCredentials(user));
+            var securityManager = new SecurityManager(
+                this.provider, accessor.Object, this.SettingsStorage);
+            await securityManager.SetPasswordAsync(user.Id, TestHelper.CorrectPassword);
+            var result = await securityManager.ValidatePasswordAsync(user.Id, TestHelper.CorrectPassword);
+            var newSessionResult = await securityManager.NewSessionAsync(result.Result);
+            await securityManager.RefreshSessionAsync(newSessionResult.Result.RefreshToken);
+            
+            // Act
+            // ReSharper disable once PossibleInvalidOperationException
+            var hasSession = await securityManager.HasSession(user.Id, newSessionResult.Result.SessionTokenId.Value);
+            
+            // Assert
+            Assert.False(hasSession.Success);
+        }
+        
+        [Fact]
+        public async void DoubleRefresh()
+        {
+            // Arrange
+            User user;
+            using (var conn = this.provider.Create())
+            {
+                conn.Connect();
+                user = TestHelper.CreateRandomUser(DefaultRoles.CreatorRole, this.defaultInstance.Id, conn);
+            }
+            var accessor = new Mock<IUserCredentialsAccessor>();
+            accessor
+                .Setup(x => x.GetUserCredentials())
+                .Returns(new UserCredentials(user));
+            var securityManager = new SecurityManager(
+                this.provider, accessor.Object, this.SettingsStorage);
+            await securityManager.SetPasswordAsync(user.Id, TestHelper.CorrectPassword);
+            var result = await securityManager.ValidatePasswordAsync(user.Id, TestHelper.CorrectPassword);
+            var newSessionResult = await securityManager.NewSessionAsync(result.Result);
+            await securityManager.RefreshSessionAsync(newSessionResult.Result.RefreshToken);
+            
+            // Act
+            var refreshResult = await securityManager.RefreshSessionAsync(newSessionResult.Result.RefreshToken);
+            
+            // Assert
+            Assert.False(refreshResult.Success);
         }
 
         [Theory]
@@ -188,9 +291,12 @@ namespace DeliveryTracker.Tests.Identification
             string password
             )
         {
-            var ps = new PasswordSettings(min, max, upper, lower, digit, alphabet, sameCharactersInRow);
+            var ps = new PasswordSettings(SettingsName.Password, min, max, upper, lower, digit, alphabet, sameCharactersInRow);
+            var settingsStorage = new SettingsStorage()
+                .RegisterSettings(ps)
+                .RegisterSettings(this.DefaultTokenSettings);
             var securityManager = new SecurityManager(
-                this.provider, this.DefaultTokenSettings, ps);
+                this.provider, this.accessorMock.Object, settingsStorage);
             // Arrange
             User user;
             using (var conn = this.provider.Create())
@@ -206,5 +312,6 @@ namespace DeliveryTracker.Tests.Identification
             Assert.False(result.Success);
             Assert.All(result.Errors, e => Assert.Equal(ErrorCode.IncorrectPassword, e.Code));
         }
+
     }
 }

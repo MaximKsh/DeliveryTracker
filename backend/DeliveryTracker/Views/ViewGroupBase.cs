@@ -48,7 +48,7 @@ namespace DeliveryTracker.Views
             NpgsqlConnectionWrapper oc = null)
         {
             var parameters = new Dictionary<string, string[]>().ToImmutableDictionary();
-            var credentials = this.Accessor.UserCredentials;
+            var credentials = this.Accessor.GetUserCredentials();
             var digest = new Dictionary<string, ViewDigest>(this.Views.Count);
             using (var conn = oc ?? this.Cp.Create())
             {
@@ -107,7 +107,7 @@ namespace DeliveryTracker.Views
                 return new ServiceResult<IList<IDictionaryObject>>(ErrorFactory.ViewNotFound(this.Name, viewName));
             }
             
-            var credentials = this.Accessor.UserCredentials;
+            var credentials = this.Accessor.GetUserCredentials();
             using (var conn = oc ?? this.Cp.Create())
             {
                 conn.Connect();

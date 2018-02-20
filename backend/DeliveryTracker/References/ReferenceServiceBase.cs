@@ -140,7 +140,7 @@ namespace DeliveryTracker.References
                 return new ServiceResult<T>(validationResult.Error);
             }
 
-            var credentials = this.Accessor.UserCredentials;
+            var credentials = this.Accessor.GetUserCredentials();
             if (!this.CanCreate(newData, credentials))
             {
                 return new ServiceResult<T>(ErrorFactory.AccessDenied());
@@ -197,7 +197,7 @@ namespace DeliveryTracker.References
         /// <inheritdoc />
         public virtual async Task<ServiceResult<T>> GetAsync(Guid id, NpgsqlConnectionWrapper oc = null)
         {
-            var credentials = this.Accessor.UserCredentials;
+            var credentials = this.Accessor.GetUserCredentials();
             if (!this.CanGet(id, credentials))
             {
                 return new ServiceResult<T>(ErrorFactory.AccessDenied());
@@ -241,7 +241,7 @@ namespace DeliveryTracker.References
                 return new ServiceResult<T>(validationResult.Error);
             }
 
-            var credentials = this.Accessor.UserCredentials;
+            var credentials = this.Accessor.GetUserCredentials();
             if (!this.CanEdit(newData, credentials))
             {
                 return new ServiceResult<T>(ErrorFactory.AccessDenied());
@@ -296,7 +296,7 @@ namespace DeliveryTracker.References
         /// <inheritdoc />
         public virtual async Task<ServiceResult> DeleteAsync(Guid id, NpgsqlConnectionWrapper oc = null)
         {
-            var credentials = this.Accessor.UserCredentials;
+            var credentials = this.Accessor.GetUserCredentials();
             if (!this.CanDelete(id, credentials))
             {
                 return new ServiceResult(ErrorFactory.AccessDenied());

@@ -1,13 +1,14 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
+using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.References;
 using DeliveryTracker.Validation;
 using DeliveryTracker.Views;
+using DeliveryTrackerWeb.Middleware;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,19 +34,24 @@ namespace DeliveryTrackerWeb.Tests
 
             services
                 .TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            
+
             services
+                .AddDeliveryTrackerCommon()
                 .AddDeliveryTrackerDatabase()
                 .AddDeliveryTrackerIdentification(this.configuration)
-                .AddDeliveryTrackerInstances(this.configuration)
+                .AddDeliveryTrackerInstances()
                 .AddDeliveryTrackerReferences()
                 .AddDeliveryTrackerViews()
                 ;
         }
 
         // ReSharper disable once UnusedMember.Global
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, ISettingsStorage settingsStorage)
         {
+            settingsStorage
+                .AddDeliveryTrackerIdentificationSettings(this.configuration)
+                .AddDeliveryTrackerInstancesSettings(this.configuration);
+            
             app.UseExceptionHandler(conf =>
             {
                 conf.Run(async context =>
@@ -59,6 +65,7 @@ namespace DeliveryTrackerWeb.Tests
                 });
             });
             app.UseAuthentication();
+            app.UseMiddleware<CheckSessionMiddleware>();
             app.UseMvc();
         }
 

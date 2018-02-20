@@ -19,7 +19,7 @@ namespace DeliveryTracker.Tests.References
                 var defaultInstance = TestHelper.CreateRandomInstance(conn);
                 var me = TestHelper.CreateRandomUser(DefaultRoles.ManagerRole, defaultInstance.Id, conn);
                 accessor
-                    .Setup(x => x.UserCredentials)
+                    .Setup(x => x.GetUserCredentials())
                     .Returns(new UserCredentials(me));
             }
             this.paymentTypeService = new PaymentTypeReferenceService(this.Cp, accessor.Object);

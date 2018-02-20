@@ -1,13 +1,15 @@
 ﻿using System.Collections.Immutable;
+using DeliveryTracker.Common;
 
 namespace DeliveryTracker.Identification
 {
     /// <summary>
     /// Настройки корректности пароля
     /// </summary>
-    public sealed class PasswordSettings
+    public sealed class PasswordSettings : ISettings
     {
         public PasswordSettings(
+            string name,
             int minLength,
             int maxLength,
             bool atLeastOneUpperCase, 
@@ -16,6 +18,7 @@ namespace DeliveryTracker.Identification
             string alphabet,
             int sameCharactersInARow)
         {
+            this.Name = name;
             this.MinLength = minLength;
             this.MaxLength = maxLength;
             this.AtLeastOneUpperCase = atLeastOneUpperCase;
@@ -26,6 +29,9 @@ namespace DeliveryTracker.Identification
             this.SameCharactersInARow = sameCharactersInARow;
         }
     
+        /// <inheritdoc />
+        public string Name { get; }
+        
         /// <summary>
         /// Минимальная длина пароля.
         /// </summary>
@@ -66,6 +72,5 @@ namespace DeliveryTracker.Identification
         /// Максимальное количество одинаковых символов подряд.
         /// </summary>
         public int SameCharactersInARow { get; }
-        
     }
 }

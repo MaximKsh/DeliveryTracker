@@ -118,7 +118,7 @@ namespace DeliveryTrackerWeb.Controllers
             }
             else if (!string.IsNullOrWhiteSpace(code))
             {
-                var credentials = this.accessor.UserCredentials;
+                var credentials = this.accessor.GetUserCredentials();
                 var idByCode = await this.userManager.GetIdAsync(code, credentials.InstanceId);
                 if (!idByCode.HasValue)
                 {

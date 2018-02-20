@@ -1,19 +1,26 @@
-﻿namespace DeliveryTracker.Instances
+﻿using DeliveryTracker.Common;
+
+namespace DeliveryTracker.Instances
 {
     /// <summary>
     /// Настройки для приглашений.
     /// </summary>
-    public sealed class InvitationSettings
+    public sealed class InvitationSettings : ISettings
     {
         public InvitationSettings(
+            string name,
             int expiresInDays,
             int codeLength,
             string alphabet)
         {
+            this.Name = name;
             this.ExpiresInDays = expiresInDays;
             this.CodeLength = codeLength;
             this.Alphabet = alphabet;
         }
+
+        /// <inheritdoc /> 
+        public string Name { get; }
         
         /// <summary>
         /// Срок истечения приглашения в днях
@@ -29,5 +36,6 @@
         /// Символы, из которых может состоять код приглашения.
         /// </summary>
         public string Alphabet { get; }
+
     }
 }

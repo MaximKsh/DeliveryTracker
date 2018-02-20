@@ -1,4 +1,5 @@
 using System.Text;
+using DeliveryTracker.Common;
 using Microsoft.IdentityModel.Tokens;
 
 namespace DeliveryTracker.Identification
@@ -6,7 +7,7 @@ namespace DeliveryTracker.Identification
     /// <summary>
     /// Информация для JWT-токенов
     /// </summary>
-    public sealed class TokenSettings
+    public sealed class TokenSettings : ISettings
     {
         /// <summary>
         /// Приватный ключ для токена.
@@ -14,6 +15,7 @@ namespace DeliveryTracker.Identification
         private readonly string key;
         
         public TokenSettings(
+            string name,
             string key,
             string issuer,
             string audience,
@@ -21,6 +23,7 @@ namespace DeliveryTracker.Identification
             int clockCkew,
             bool requireHttps)
         {
+            this.Name = name;
             this.key = key;
             this.Issuer = issuer;
             this.Audience = audience;
@@ -29,6 +32,9 @@ namespace DeliveryTracker.Identification
             this.RequireHttps = requireHttps;
         }
 
+        /// <inheritdoc />
+        public string Name { get; }
+        
         /// <summary>
         /// Издатель токена.
         /// </summary>
@@ -60,5 +66,6 @@ namespace DeliveryTracker.Identification
         /// <returns></returns>
         public SymmetricSecurityKey GetSymmetricSecurityKey() =>
             new SymmetricSecurityKey(Encoding.ASCII.GetBytes(this.key));
+
     }
 }

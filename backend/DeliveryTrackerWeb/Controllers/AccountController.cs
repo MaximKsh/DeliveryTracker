@@ -13,6 +13,9 @@ namespace DeliveryTrackerWeb.Controllers
     [Route("api/account")]
     public class AccountController : Controller
     {
+        
+        private static readonly string AuthHeader = HttpRequestHeader.Authorization.ToString();
+        
         private readonly IAccountService accountService;
 
         private readonly ISecurityManager securityManager;
@@ -24,6 +27,7 @@ namespace DeliveryTrackerWeb.Controllers
         }
         
         // account/login
+        // account/refresh
         // account/about
         // account/edit
         // account/change_password
@@ -45,16 +49,70 @@ namespace DeliveryTrackerWeb.Controllers
             var result = await this.accountService.LoginWithRegistrationAsync(codePassword);
             if (!result.Success)
             {
-                return this.Unauthorized();
+                return this.Forbid();
             }
-            var token = this.securityManager.AcquireToken(result.Result.Credentials);
+            var sessionResult = await this.securityManager.NewSessionAsync(result.Result.Credentials);
+            if (!sessionResult.Success)
+            {
+                return this.StatusCode((int)HttpStatusCode.Unauthorized, new AccountResponse(sessionResult.Errors));
+            }
+
+            var session = sessionResult.Result;
             var statusCode = result.Result.Registered
                 ? (int)HttpStatusCode.Created
                 : (int)HttpStatusCode.OK;
             return this.StatusCode(statusCode, new AccountResponse
             {
                 User = result.Result.User,
-                Token = token,
+                Token = session.SessionToken,
+                RefreshToken = session.RefreshToken,
+            });
+        }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh(
+            [FromBody] AccountRequest request)
+        {
+            // Несмотря на то, что нет [Authorize] нужен токен
+            // Не нужна проверка токена целиком для запуска метода.
+            // Однако наличие в DI корректных UserCredentials необходимо
+            if (!this.Request.Headers.ContainsKey(AuthHeader))
+            {
+                return this.Unauthorized();
+            }
+            
+            var validationResult = new ParametersValidator()
+                .AddNotNullOrWhitespaceRule(nameof(request.RefreshToken), request.RefreshToken)
+                .Validate();
+            if (!this.Request.Headers.ContainsKey(AuthHeader))
+            {
+                return this.Forbid();
+            }    
+            
+            if (!validationResult.Success)
+            {
+                return this.BadRequest(new AccountResponse(validationResult.Error));
+            }
+            
+            var result = await this.securityManager.RefreshSessionAsync(request.RefreshToken);
+            if (!result.Success)
+            {
+                return this.Forbid();
+            }
+
+            var session = result.Result;
+
+            var accountGetResult = await this.accountService.GetAsync();
+            if (!accountGetResult.Success)
+            {
+                return this.Forbid();
+            }
+            
+            return this.Ok( new AccountResponse
+            {
+                User = accountGetResult.Result.User,
+                Token = session.SessionToken,
+                RefreshToken = session.RefreshToken,
             });
         }
         

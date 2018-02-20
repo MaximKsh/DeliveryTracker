@@ -36,7 +36,7 @@ namespace DeliveryTrackerWeb.Tests
                 .Build();
             this.Server = new TestServer(new WebHostBuilder()
                 .UseConfiguration(config)
-                .UseStartup<Startup>());
+                .UseStartup<TestStartup>());
 
             
         }

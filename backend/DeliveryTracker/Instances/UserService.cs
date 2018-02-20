@@ -35,7 +35,7 @@ namespace DeliveryTracker.Instances
         /// <inheritdoc />
         public async Task<ServiceResult<User>> GetAsync(Guid userId, NpgsqlConnectionWrapper oc = null)
         {
-            var credentials = this.credentialsAccessor.UserCredentials;
+            var credentials = this.credentialsAccessor.GetUserCredentials();
             if (credentials.Valid)
             {
                 return await this.userManager.GetAsync(userId, credentials.InstanceId, oc);    
@@ -46,7 +46,7 @@ namespace DeliveryTracker.Instances
         /// <inheritdoc />
         public async Task<ServiceResult<User>> GetAsync(string code, NpgsqlConnectionWrapper oc = null)
         {
-            var credentials = this.credentialsAccessor.UserCredentials;
+            var credentials = this.credentialsAccessor.GetUserCredentials();
             if (credentials.Valid)
             {
                 return await this.userManager.GetAsync(code, credentials.InstanceId, oc);    
@@ -57,7 +57,10 @@ namespace DeliveryTracker.Instances
         /// <inheritdoc />
         public async Task<ServiceResult<User>> EditAsync(User newData, NpgsqlConnectionWrapper oc = null)
         {
-            var credentials = this.credentialsAccessor.UserCredentials;
+            var credentials = this.credentialsAccessor.GetUserCredentials();
+            
+            // TODO: Изменять менеджеров может только создатель
+            
             if (credentials.Valid)
             {
                 newData.InstanceId = credentials.InstanceId;
@@ -69,7 +72,10 @@ namespace DeliveryTracker.Instances
         /// <inheritdoc />
         public async Task<ServiceResult> DeleteAsync(Guid userId, NpgsqlConnectionWrapper oc = null)
         {
-            var credentials = this.credentialsAccessor.UserCredentials;
+            // TODO: Удалять менеджеров может только создатель
+            
+            
+            var credentials = this.credentialsAccessor.GetUserCredentials();
             if (credentials.Valid)
             {
                 return await this.userManager.DeleteAsync(userId, credentials.InstanceId, oc);  

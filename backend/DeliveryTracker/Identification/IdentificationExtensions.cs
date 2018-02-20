@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Security.Claims;
+using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
@@ -10,6 +13,8 @@ namespace DeliveryTracker.Identification
 {
     public static class IdentifiactionExtensions
     {
+        #region Registration
+        
         public static IServiceCollection AddDeliveryTrackerIdentification(
             this IServiceCollection services, 
             IConfiguration configuration)
@@ -22,10 +27,6 @@ namespace DeliveryTracker.Identification
                 ;
 
             var tokenSettings = IdentificationHelper.ReadTokenSettingsFromConf(configuration);
-            services.AddSingleton(tokenSettings);
-
-            var passwordSettings = IdentificationHelper.ReadPasswordSettingsFromConf(configuration);
-            services.AddSingleton(passwordSettings);
 
             services.AddAuthorization(options =>
             {
@@ -65,6 +66,25 @@ namespace DeliveryTracker.Identification
             return services;
         }
 
+        public static ISettingsStorage AddDeliveryTrackerIdentificationSettings(
+            this ISettingsStorage storage, 
+            IConfiguration configuration)
+        {
+            
+            var tokenSettings = IdentificationHelper.ReadTokenSettingsFromConf(configuration);
+            var refreshTokenSettings = IdentificationHelper.ReadRefreshTokenSettingsFromConf(configuration);
+            var passwordSettings = IdentificationHelper.ReadPasswordSettingsFromConf(configuration);
+
+            return storage
+                .RegisterSettings(tokenSettings)
+                .RegisterSettings(refreshTokenSettings)
+                .RegisterSettings(passwordSettings);
+        }
+        
+        #endregion
+        
+        #region IDataReader
+        
         public static User GetUser(this IDataReader reader)
         {
             var idx = 0;
@@ -85,5 +105,62 @@ namespace DeliveryTracker.Identification
                 PhoneNumber = reader.GetValueOrDefault<string>(idx++),
             };
         }
+
+        public static Session GetSession(this IDataReader reader)
+        {
+            var idx = 0;
+            return reader.GetSession(ref idx);
+        }
+        
+        public static Session GetSession(this IDataReader reader, ref int idx)
+        {
+            idx++;
+            return new Session
+            {
+                UserId = reader.GetGuid(idx++),
+                SessionTokenId = reader.GetValueOrDefault<Guid?>(idx++),
+                RefreshTokenId = reader.GetValueOrDefault<Guid?>(idx++),
+                LastActivity = reader.GetValueOrDefault<DateTime?>(idx++),
+            };
+        }
+        
+        #endregion
+        
+
+        public static UserCredentials ToUserCredentials(
+            this IEnumerable<Claim> claims)
+        {
+            var id = Guid.Empty;
+            var code = string.Empty;
+            var instanceId = Guid.Empty;
+            var role = string.Empty;
+            foreach (var claim in claims)
+            {
+                switch (claim.Type)
+                {
+                    case DeliveryTrackerClaims.Id when Guid.TryParse(claim.Value, out var uid):
+                        id = uid;
+                        break;
+                    case DeliveryTrackerClaims.Code:
+                        code = claim.Value;
+                        break;
+                    case DeliveryTrackerClaims.InstanceId when Guid.TryParse(claim.Value, out var iid):
+                        instanceId = iid;
+                        break;
+                    case DeliveryTrackerClaims.Role:
+                        role = claim.Value;
+                        break;
+                }
+            }
+            
+            return new UserCredentials(
+                id,
+                code,
+                role,
+                instanceId);
+        }
+        
+        
+        
     }
 }

@@ -27,15 +27,13 @@ namespace DeliveryTracker.Tests.Instances
             }
             var accessor = new Mock<IUserCredentialsAccessor>();
             accessor
-                .Setup(x => x.UserCredentials)
+                .Setup(x => x.GetUserCredentials())
                 .Returns(new UserCredentials(this.me));
             
             var services = new ServiceCollection();
             this.serviceProvider = services
                 .AddSingleton(this.Cp)
-                .AddSingleton(this.DefaultInvitationSettings)
-                .AddSingleton(this.DefaultPasswordSettings)
-                .AddSingleton(this.DefaultTokenSettings)
+                .AddSingleton(this.SettingsStorage)
                 .AddSingleton(accessor.Object)
                 .AddSingleton(TestHelper.CreateLoggerMock<IInvitationService>().Object)
                 .AddSingleton(TestHelper.CreateLoggerMock<IAccountService>().Object)

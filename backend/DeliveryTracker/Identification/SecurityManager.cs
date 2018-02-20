@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
@@ -37,15 +38,44 @@ where id = @id
 returning code, role, instance_id
 ;";
 
+        private static readonly string SqlUpsertSession = $@"
+insert into ""sessions""({IdentificationHelper.GetSessionColumns()})
+values ({IdentificationHelper.GetSessionColumns("@")})
+on conflict(user_id) do update set
+    session_token_id = @session_token_id,
+    refresh_token_id = @refresh_token_id,
+    last_activity = now() AT TIME ZONE 'UTC'
+returning {IdentificationHelper.GetSessionColumns()};
+";
+        
+        private static readonly string SqlHasSessionToken = $@"
+update ""sessions""
+set ""last_activity"" = now() AT TIME ZONE 'UTC'
+where ""user_id"" = @user_id
+returning ""session_token_id""; 
+";
+        
+        private static readonly string SqlHasSessionRefreshToken = $@"
+update ""sessions""
+set ""last_activity"" = now() AT TIME ZONE 'UTC'
+where ""user_id"" = @user_id
+returning ""refresh_token_id""; 
+";
+        
         #endregion
         
         #region fields
         
-        public const string AuthType = "Token";
+        public const string SesssionTokenAuthType = "Token";
+        public const string RefreshTokenAuthType = "RefreshToken";
 
         private readonly IPostgresConnectionProvider cp;
 
-        private readonly TokenSettings tokenSettings;
+        private readonly IUserCredentialsAccessor accessor;
+        
+        private readonly TokenSettings sessionTokenSettings;
+        
+        private readonly TokenSettings refreshTokenSettings;
 
         private readonly PasswordSettings passwordSettings;
         
@@ -57,12 +87,14 @@ returning code, role, instance_id
         
         public SecurityManager(
             IPostgresConnectionProvider cp,
-            TokenSettings tokenSettings,
-            PasswordSettings passwordSettings)
+            IUserCredentialsAccessor accessor,
+            ISettingsStorage settingsStorage)
         {
             this.cp = cp;
-            this.tokenSettings = tokenSettings;
-            this.passwordSettings = passwordSettings;
+            this.accessor = accessor;
+            this.sessionTokenSettings = settingsStorage.GetSettings<TokenSettings>(SettingsName.SessionToken);
+            this.refreshTokenSettings = settingsStorage.GetSettings<TokenSettings>(SettingsName.RefreshToken);
+            this.passwordSettings = settingsStorage.GetSettings<PasswordSettings>(SettingsName.Password);
         }
 
         #endregion
@@ -145,37 +177,72 @@ returning code, role, instance_id
             }
         }
 
-        /// <inheritdoc />
-        public string AcquireToken(UserCredentials credentials)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(DeliveryTrackerClaims.Id, credentials.Id.ToString()),
-                new Claim(DeliveryTrackerClaims.Code, credentials.Code),
-                new Claim(DeliveryTrackerClaims.Role, credentials.Role),
-                new Claim(DeliveryTrackerClaims.InstanceId, credentials.InstanceId.ToString()),
-            };
-
-            var identity = new ClaimsIdentity(
-                claims,
-                AuthType,
-                ClaimsIdentity.DefaultNameClaimType,
-                ClaimsIdentity.DefaultRoleClaimType);
-
-            var now = DateTime.UtcNow;
-            var jwt = new JwtSecurityToken(
-                issuer: this.tokenSettings.Issuer,
-                audience: this.tokenSettings.Audience,
-                notBefore: now,
-                claims: identity.Claims,
-                expires: now.AddMinutes(this.tokenSettings.Lifetime),
-                signingCredentials: new SigningCredentials(
-                    this.tokenSettings.GetSymmetricSecurityKey(),
-                    SecurityAlgorithms.HmacSha256));
-
-            return new JwtSecurityTokenHandler().WriteToken(jwt);
-        }
         
+        /// <inheritdoc />
+        public async Task<ServiceResult<Session>> NewSessionAsync(
+            UserCredentials credentials,
+            NpgsqlConnectionWrapper outerConnection = null)
+        {
+            var sessionToken = NewToken(credentials, this.sessionTokenSettings, out var sessionTokenId);
+            var refreshToken = NewToken(credentials, this.refreshTokenSettings, out var refreshTokenId);
+            Session session;
+            
+            using (var conn = outerConnection?.Connect() ?? this.cp.Create().Connect())
+            {
+                using (var command = conn.CreateCommand())
+                {
+                    command.CommandText = SqlUpsertSession;
+                    command.Parameters.Add(new NpgsqlParameter("id", Guid.NewGuid()));
+                    command.Parameters.Add(new NpgsqlParameter("user_id", credentials.Id));
+                    command.Parameters.Add(new NpgsqlParameter("session_token_id", sessionTokenId));
+                    command.Parameters.Add(new NpgsqlParameter("refresh_token_id", refreshTokenId));
+                    command.Parameters.Add(new NpgsqlParameter("last_activity", DateTime.UtcNow));
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        await reader.ReadAsync();
+                        session = reader.GetSession();
+                    }
+
+                }
+            }
+
+            session.SessionToken = sessionToken;
+            session.RefreshToken = refreshToken;
+            
+            return new ServiceResult<Session>(session);
+        }
+
+        /// <inheritdoc />
+        public async Task<ServiceResult<Session>> RefreshSessionAsync(
+            string refreshToken,
+            NpgsqlConnectionWrapper outerConnection = null)
+        {
+            var result = await this.ValidateRefreshTokenAsync(refreshToken, outerConnection);
+
+            return result.Success
+                ? await this.NewSessionAsync(result.Result)
+                : new ServiceResult<Session>(result.Errors);
+        }
+
+        /// <inheritdoc />
+        public async Task<ServiceResult> HasSession(
+            Guid userId,
+            Guid sessionTokenId,
+            NpgsqlConnectionWrapper outerConnection = null)
+        {
+            using (var conn = outerConnection?.Connect() ?? this.cp.Create().Connect())
+            {
+                using (var command = conn.CreateCommand())
+                {
+                    command.CommandText = SqlHasSessionToken;
+                    command.Parameters.Add(new NpgsqlParameter("user_id", userId));
+                    return (await command.ExecuteScalarAsync()).Equals(sessionTokenId)
+                        ? new ServiceResult()
+                        : new ServiceResult(ErrorFactory.AccessDenied());
+                }
+            }
+        }
+
         #endregion
 
         #region private
@@ -313,6 +380,98 @@ returning code, role, instance_id
             }
         }
 
+        private static string NewToken(
+            UserCredentials credentials,
+            TokenSettings settings,
+            out Guid tokenId)
+        {
+            tokenId = Guid.NewGuid();
+            var claims = new List<Claim>
+            {
+                new Claim(DeliveryTrackerClaims.TokenId, tokenId.ToString()),
+                new Claim(DeliveryTrackerClaims.Id, credentials.Id.ToString()),
+                new Claim(DeliveryTrackerClaims.Code, credentials.Code),
+                new Claim(DeliveryTrackerClaims.Role, credentials.Role),
+                new Claim(DeliveryTrackerClaims.InstanceId, credentials.InstanceId.ToString()),
+            };
+
+            var identity = new ClaimsIdentity(
+                claims,
+                RefreshTokenAuthType,
+                ClaimsIdentity.DefaultNameClaimType,
+                ClaimsIdentity.DefaultRoleClaimType);
+
+            var now = DateTime.UtcNow;
+            var jwt = new JwtSecurityToken(
+                issuer: settings.Issuer,
+                audience: settings.Audience,
+                notBefore: now,
+                claims: identity.Claims,
+                expires: now.AddMinutes(settings.Lifetime),
+                signingCredentials: new SigningCredentials(
+                    settings.GetSymmetricSecurityKey(),
+                    SecurityAlgorithms.HmacSha256));
+
+            return new JwtSecurityTokenHandler().WriteToken(jwt);
+        }
+        
+        private async Task<ServiceResult<UserCredentials>> ValidateRefreshTokenAsync(
+            string refreshToken,
+            NpgsqlConnectionWrapper outerConnection = null)
+        {
+            var validationParameters =
+                new TokenValidationParameters
+                {
+                    ValidIssuer = this.refreshTokenSettings.Issuer,
+                    ValidAudiences = new[] { this.refreshTokenSettings.Audience },
+                    IssuerSigningKeys = new[] { this.refreshTokenSettings.GetSymmetricSecurityKey() },
+                    ValidateLifetime = true,
+                };
+            
+            try
+            {
+                var handler = new JwtSecurityTokenHandler();
+                var user = handler.ValidateToken(refreshToken, validationParameters, out var _);
+                
+                var tokenCredentials = user.Claims.ToUserCredentials();
+                var currentCredentials = this.accessor.GetUserCredentials();
+                var refreshTokenIdClaim = user.Claims.FirstOrDefault(p => p.Type == DeliveryTrackerClaims.TokenId);
+
+                var success = tokenCredentials.Valid
+                              && currentCredentials == tokenCredentials
+                              && refreshTokenIdClaim != null
+                              && Guid.TryParse(refreshTokenIdClaim.Value, out var refreshTokenId)
+                              && await this.HasSessionWithRefreshTokenAsync(
+                                  tokenCredentials.Id,
+                                  refreshTokenId,
+                                  outerConnection);
+                
+                return success
+                    ? new ServiceResult<UserCredentials>(tokenCredentials) 
+                    : new ServiceResult<UserCredentials>(ErrorFactory.AccessDenied());
+            }
+            catch (SecurityTokenValidationException)
+            {
+                return new ServiceResult<UserCredentials>(ErrorFactory.AccessDenied());
+            }
+        }
+
+        private async Task<bool> HasSessionWithRefreshTokenAsync(
+            Guid userId,
+            Guid tokenId,
+            NpgsqlConnectionWrapper outerConnection = null)
+        {
+            using (var conn = outerConnection?.Connect() ?? this.cp.Create().Connect())
+            {
+                using (var command = conn.CreateCommand())
+                {
+                    command.CommandText = SqlHasSessionRefreshToken;
+                    command.Parameters.Add(new NpgsqlParameter("user_id", userId));
+                    return (await command.ExecuteScalarAsync()).Equals(tokenId);
+                }
+            }
+        }
+        
         #endregion
     }
 }

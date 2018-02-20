@@ -95,7 +95,7 @@ where id = @id
         /// <inheritdoc />
         public async Task<ServiceResult<InstanceServiceResult>> GetAsync(NpgsqlConnectionWrapper oc = null)
         {
-            var instanceId = this.accessor.UserCredentials.InstanceId;
+            var instanceId = this.accessor.GetUserCredentials().InstanceId;
             using (var connWrapper = oc ?? this.cp.Create())
             {
                 connWrapper.Connect();

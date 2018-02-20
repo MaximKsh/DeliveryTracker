@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DeliveryTracker.Common;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.Validation;
@@ -43,38 +44,21 @@ namespace DeliveryTracker.Tests.Instances
             };
             
             this.creatorCredentialsMock
-                .Setup(x => x.UserCredentials)
+                .Setup(x => x.GetUserCredentials())
                 .Returns(new UserCredentials(this.creator));
             this.managerCredentialsMock
-                .Setup(x => x.UserCredentials)
+                .Setup(x => x.GetUserCredentials())
                 .Returns(new UserCredentials(this.manager));
             this.performerCredentialsMock
-                .Setup(x => x.UserCredentials)
+                .Setup(x => x.GetUserCredentials())
                 .Returns(new UserCredentials(this.performer));
             
             
             this.defaultInvitationService = new InvitationService(
                 this.Cp, 
-                this.DefaultInvitationSettings, 
+                this.SettingsStorage, 
                 this.creatorCredentialsMock.Object,
                 null);
-        }
-
-        [Fact]
-        public void DefaultSettingsGeneratesAcceptableUnique()
-        {
-            // Arrange
-            var size = 1000;
-            var codes = new HashSet<string>((int)(1.5 * size));
-            
-            // Act
-            foreach(var _ in Enumerable.Range(0, size))
-            {
-                codes.Add(this.defaultInvitationService.GenerateCode());
-            }
-            
-            // Assert
-            Assert.Equal(size, codes.Count);
         }
 
         [Fact]
@@ -99,10 +83,13 @@ namespace DeliveryTracker.Tests.Instances
         {
             // Arrange
             var invitationSettings = new InvitationSettings(
+                SettingsName.Invitation,
                 1,
                 codeLength,
                 alphabet);
-            var invitationService = new InvitationService(this.Cp, invitationSettings, null, null);
+            var settingsStorage = new SettingsStorage()
+                .RegisterSettings(invitationSettings);
+            var invitationService = new InvitationService(this.Cp, settingsStorage, null, null);
 
             // Act
             var code = invitationService.GenerateCode();
@@ -121,7 +108,7 @@ namespace DeliveryTracker.Tests.Instances
         {
             // Arrange
             var accesor = this.accessors[accesorIndex];
-            var invitationService = new InvitationService(this.Cp, this.DefaultInvitationSettings, accesor, null);
+            var invitationService = new InvitationService(this.Cp, this.SettingsStorage, accesor, null);
             var userData = new User
             {
                 Role = role,
@@ -144,7 +131,7 @@ namespace DeliveryTracker.Tests.Instances
         {
             // Arrange
             var accesor = this.accessors[accesorIndex];
-            var invitationService = new InvitationService(this.Cp, this.DefaultInvitationSettings, accesor, null);
+            var invitationService = new InvitationService(this.Cp, this.SettingsStorage, accesor, null);
             var userData = new User
             {
                 Role = role,

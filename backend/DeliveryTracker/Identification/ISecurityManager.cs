@@ -46,10 +46,35 @@ namespace DeliveryTracker.Identification
             NpgsqlConnectionWrapper outerConnection = null);
 
         /// <summary>
-        /// Выписать токен для пользователя по предоставленным Credentials
+        /// Создать новую сессию.
         /// </summary>
         /// <param name="credentials"></param>
+        /// <param name="outerConnection"></param>
         /// <returns></returns>
-        string AcquireToken(UserCredentials credentials);
+        Task<ServiceResult<Session>> NewSessionAsync(
+            UserCredentials credentials,
+            NpgsqlConnectionWrapper outerConnection = null);
+
+        /// <summary>
+        /// Обновить сессию по долгоживущему токену.
+        /// </summary>
+        /// <param name="refreshToken"></param>
+        /// <param name="outerConnection"></param>
+        /// <returns></returns>
+        Task<ServiceResult<Session>> RefreshSessionAsync(
+            string refreshToken,
+            NpgsqlConnectionWrapper outerConnection = null);
+
+        /// <summary>
+        /// Проверить, существует ли указанная сессия
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="sessionTokenId"></param>
+        /// <param name="outerConnection"></param>
+        /// <returns></returns>
+        Task<ServiceResult> HasSession(
+            Guid userId,
+            Guid sessionTokenId,
+            NpgsqlConnectionWrapper outerConnection = null);
     }
 }

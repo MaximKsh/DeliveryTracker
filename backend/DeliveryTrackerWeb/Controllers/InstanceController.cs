@@ -1,3 +1,4 @@
+using System.Net;
 using System.Threading.Tasks;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
@@ -96,12 +97,19 @@ namespace DeliveryTrackerWeb.Controllers
                 return this.BadRequest(new InstanceResponse(result.Errors));
             }
 
-            var token = this.securityManager.AcquireToken(result.Result.Credentials);
-            return this.Ok(new InstanceResponse
+            var sessionResult = await this.securityManager.NewSessionAsync(result.Result.Credentials);
+            if (!sessionResult.Success)
+            {
+                return this.StatusCode((int)HttpStatusCode.Unauthorized, new AccountResponse(sessionResult.Errors));
+            }
+
+            var session = sessionResult.Result;
+            return this.StatusCode((int)HttpStatusCode.Created, new InstanceResponse
             {
                 Instance = result.Result.Instance,
                 Creator = result.Result.User,
-                Token = token,
+                Token = session.SessionToken,
+                RefreshToken = session.RefreshToken,
             });
         }
 

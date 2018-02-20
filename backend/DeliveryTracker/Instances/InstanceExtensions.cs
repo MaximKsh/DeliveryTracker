@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using Microsoft.Extensions.Configuration;
@@ -11,8 +12,7 @@ namespace DeliveryTracker.Instances
         #region IServiceCollection
         
         public static IServiceCollection AddDeliveryTrackerInstances(
-            this IServiceCollection services,
-            IConfiguration configuration)
+            this IServiceCollection services)
         {
             services
                 .AddSingleton<IInvitationService, InvitationService>()
@@ -20,10 +20,19 @@ namespace DeliveryTracker.Instances
                 .AddSingleton<IInstanceService, InstanceService>()
                 .AddSingleton<IUserService, UserService>();
 
-            var invitationSettings = InstanceHelper.ReadInvitationSettingsFromConf(configuration);
-            services.AddSingleton(invitationSettings);
-            
             return services;
+        }
+        
+        public static ISettingsStorage AddDeliveryTrackerInstancesSettings(
+            this ISettingsStorage storage, 
+            IConfiguration configuration)
+        {
+            
+            var invitationSettings = InstanceHelper.ReadInvitationSettingsFromConf(configuration);
+
+            return storage
+                    .RegisterSettings(invitationSettings)
+                ;
         }
         
         #endregion

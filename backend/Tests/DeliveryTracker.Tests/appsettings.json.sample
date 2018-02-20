@@ -10,13 +10,22 @@
     }
   },
   
-  "AuthInfo": {
+  "SessionTokenSettings": {
     "Key": "mysupersecret_secretkey!123",
     "Issuer": "DeliveryTracker",
     "Audience": "http://localhost:5000",
     "Lifetime": 1,
     "ClockCkew": 1,
     "RequireHttps": false
+  },
+
+  "RefreshTokenSettings": {
+    "Key": "mysupersecret_secretkey!321",
+    "Issuer": "DeliveryTracker",
+    "Audience": "http://localhost:5000",
+    "Lifetime": 100,
+    "ClockCkew": 1,
+    "RequireHttps": true
   },
   
   "PasswordSettings": {

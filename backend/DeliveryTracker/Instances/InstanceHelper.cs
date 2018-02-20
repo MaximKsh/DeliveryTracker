@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DeliveryTracker.Common;
 using Microsoft.Extensions.Configuration;
 
 namespace DeliveryTracker.Instances
@@ -44,6 +45,7 @@ namespace DeliveryTracker.Instances
         public static InvitationSettings ReadInvitationSettingsFromConf(IConfiguration configuration)
         {
             return new InvitationSettings(
+                    SettingsName.Invitation,
                     configuration.GetValue("InvitationSettings:ExpiresInDays", 3),
                     configuration.GetValue("InvitationSettings:CodeLength", 6),
                     configuration.GetValue("InvitationSettings:Alphabet", "23456789qwertyupasdfghkzxbnmQWERTYUPASDFGHKZXVBNM"))
