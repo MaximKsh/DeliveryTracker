@@ -14,8 +14,24 @@ namespace DeliveryTracker.Identification
         #region sql
         
         private static readonly string SqlCreate = @"
-insert into users (" + IdentificationHelper.GetUserColumns() + @")
-values (" + IdentificationHelper.GetUserColumns("@") + @")
+insert into users (
+    id, 
+    code, 
+    role,
+    instance_id,
+    surname, 
+    name, 
+    patronymic,
+    phone_number)
+values (
+    @id, 
+    @code, 
+    @role,
+    @instance_id,
+    @surname, 
+    @name, 
+    @patronymic,
+    @phone_number)
 returning " + IdentificationHelper.GetUserColumns() + ";";
 
         private static readonly string SqlUpdate = @"

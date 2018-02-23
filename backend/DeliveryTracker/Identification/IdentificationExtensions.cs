@@ -4,6 +4,7 @@ using System.Data;
 using System.Security.Claims;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
+using DeliveryTracker.Geopositioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -93,7 +94,7 @@ namespace DeliveryTracker.Identification
         
         public static User GetUser(this IDataReader reader, ref int idx)
         {
-            return new User
+            var user = new User
             {
                 Id = reader.GetGuid(idx++),
                 Code = reader.GetString(idx++),
@@ -104,6 +105,19 @@ namespace DeliveryTracker.Identification
                 Patronymic = reader.GetValueOrDefault<string>(idx++),
                 PhoneNumber = reader.GetValueOrDefault<string>(idx++),
             };
+            var lon = reader.GetValueOrDefault<double?>(idx++);
+            var lat = reader.GetValueOrDefault<double?>(idx++);
+            if (lat.HasValue
+                && lon.HasValue)
+            {
+                user.Geoposition = new Geoposition
+                {
+                    Longitude = lon.Value,
+                    Latitude = lat.Value,
+                };
+            }
+
+            return user;
         }
 
         public static Session GetSession(this IDataReader reader)

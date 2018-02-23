@@ -17,7 +17,9 @@ namespace DeliveryTracker.Identification
             "surname", 
             "name", 
             "patronymic", 
-            "phone_number", 
+            "phone_number",
+            "ST_X(geoposition::geometry)",
+            "ST_Y(geoposition::geometry)",
         }.AsReadOnly();
         
         public static string GetUserColumns(string prefix = null)

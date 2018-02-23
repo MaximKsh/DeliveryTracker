@@ -83,10 +83,10 @@ namespace DeliveryTracker.Identification
         /// <summary>
         /// Текущая позиция. Актуально только для исполнителя.
         /// </summary>
-        public Geoposition Position 
+        public Geoposition Geoposition 
         {
-            get => this.GetObject<Geoposition>(nameof(this.Position));
-            set => this.Set(nameof(this.Position), value);
+            get => this.GetObject<Geoposition>(nameof(this.Geoposition));
+            set => this.Set(nameof(this.Geoposition), value);
         }
 
     }
