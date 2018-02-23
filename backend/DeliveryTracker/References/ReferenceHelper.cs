@@ -60,6 +60,8 @@ namespace DeliveryTracker.References
             addressColumnList.AddRange(new []
             {
                 "raw_address",
+                "ST_X(geoposition::geometry)",
+                "ST_Y(geoposition::geometry)",
             });
             AddressColumnList = addressColumnList.AsReadOnly();
         }

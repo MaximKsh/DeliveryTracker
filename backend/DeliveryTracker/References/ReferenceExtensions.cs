@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using DeliveryTracker.Database;
+using DeliveryTracker.Geopositioning;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DeliveryTracker.References
@@ -69,6 +70,17 @@ namespace DeliveryTracker.References
             reader.SetReferenceBaseFields(address, ref idx);
             reader.SetCollectionReferenceBaseFields(address, ref idx);
             address.RawAddress = reader.GetValueOrDefault<string>(idx++);
+            var lon = reader.GetValueOrDefault<double?>(idx++);
+            var lat = reader.GetValueOrDefault<double?>(idx++);
+            if (lat.HasValue
+                && lon.HasValue)
+            {
+                address.Geoposition = new Geoposition
+                {
+                    Longitude = lon.Value,
+                    Latitude = lat.Value,
+                };
+            }
             return address;
         }
         

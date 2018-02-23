@@ -11,10 +11,18 @@ if __name__ == '__main__':
     conn = psycopg2.connect(connection_string)
     cur = conn.cursor()
 
+    cur.execute("""select extname from pg_extension where extname <> 'plpgsql';""")
+    queries = []
+    for row in cur:
+        queries.append('drop extension if exists "' + row[0] + '" cascade;\n')
+    full_query = ''.join(queries)
+    print(full_query)
+    cur.execute(full_query)
+
     cur.execute(""" select tablename from pg_tables where "schemaname" = 'public';""")
     queries = []
     for row in cur:
-        queries.append('drop table ' + row[0] + ' cascade;\n')
+        queries.append('drop table if exists ' + row[0] + ' cascade;\n')
     full_query = ''.join(queries)
     print(full_query)
     cur.execute(full_query)

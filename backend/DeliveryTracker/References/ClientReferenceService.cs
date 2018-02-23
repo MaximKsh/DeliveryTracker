@@ -21,15 +21,20 @@ values (" + ReferenceHelper.GetClientColumns("@") + @")
 returning " + ReferenceHelper.GetClientColumns() + ";";
 
         private static readonly string SqlCreateAddresses = @"
-insert into addresses (" + ReferenceHelper.GetAddressColumns() + @")
+insert into client_addresses (
+    id,
+    instance_id,
+    parent_id,
+    raw_address)
 values {0}
 returning " + ReferenceHelper.GetAddressColumns() + ";";
 
         private static readonly string SqlAddressValues = @"
-(" + ReferenceHelper.GetAddressColumns("@n{0}_") + @")";
-        
-        
-        
+(
+    @n{0}_id,
+    @n{0}_instance_id,
+    @n{0}_parent_id,
+    @n{0}_raw_address)";
         
 
         private static readonly string SqlGet = @"
@@ -39,7 +44,7 @@ where id = @id and instance_id = @instance_id
 ;";
         private static readonly string SqlGetAddresses = @"
 select " + ReferenceHelper.GetAddressColumns() + @"
-from addresses
+from client_addresses
 where instance_id = @instance_id and parent_id = @id;";
 
         private static readonly string SqlGetFull = 
@@ -56,13 +61,17 @@ where id = @id and instance_id = @instance_id
 returning " + ReferenceHelper.GetClientColumns() + @";";
         
         private static readonly string SqlCreateAddressesReturning1 = @"
-insert into addresses (" + ReferenceHelper.GetAddressColumns() + @")
+insert into client_addresses (
+    id,
+    instance_id,
+    parent_id,
+    raw_address)
 values {0}
 returning 1;
 ";
         
         private static readonly string SqlUpdateAddress = @"
-update addresses
+update client_addresses
 set
 {0}
 where id = @n{1}_address_id and instance_id = @instance_id and parent_id = @id
@@ -70,7 +79,7 @@ returning 1;
 ";
         
         private static readonly string SqlDeleteAddresses = @"
-delete from addresses
+delete from client_addresses
 where ARRAY[id] <@ @address_ids and instance_id = @instance_id and parent_id = @id
 returning 1
 ;";
@@ -78,7 +87,7 @@ returning 1
         
         
         private const string SqlDelete = @"
-delete from addresses
+delete from client_addresses
 where instance_id = @instance_id and parent_id = @id
 returning 1
 ;
