@@ -56,6 +56,9 @@ namespace DeliveryTrackerWeb.Tests
         protected static string AccountUrl(string command) =>
             $"/api/account/{command}";
         
+        protected static string GeopositioningUrl(string command) =>
+            $"/api/geopositioning/{command}";
+        
         protected static string InstanceUrl(string command) =>
             $"/api/instance/{command}";
         

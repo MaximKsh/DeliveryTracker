@@ -1,4 +1,6 @@
-﻿namespace DeliveryTracker.Common
+﻿using DeliveryTracker.Common;
+
+namespace DeliveryTracker.Geopositioning
 {
     public sealed class Geoposition : DictionaryObject
     {

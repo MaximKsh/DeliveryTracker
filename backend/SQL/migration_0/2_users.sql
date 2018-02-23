@@ -9,6 +9,7 @@ CREATE TABLE public.users
     name CITEXT,
     patronymic CITEXT,
     phone_number VARCHAR(20),
+    geoposition GEOGRAPHY(POINT),
     CONSTRAINT users_instances_id_fk FOREIGN KEY (instance_id) REFERENCES instances (id)
 );
 CREATE UNIQUE INDEX users_code_uindex ON public.users (code);

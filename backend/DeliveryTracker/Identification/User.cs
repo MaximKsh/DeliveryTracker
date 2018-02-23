@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using DeliveryTracker.Common;
+using DeliveryTracker.Geopositioning;
 
 namespace DeliveryTracker.Identification
 {

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
+using DeliveryTracker.Geopositioning;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.References;
@@ -41,6 +42,7 @@ namespace DeliveryTrackerWeb
                 .AddDeliveryTrackerCommon()
                 .AddDeliveryTrackerDatabase()
                 .AddDeliveryTrackerIdentification(this.configuration)
+                .AddDeliveryTrackerGeopositioning()
                 .AddDeliveryTrackerInstances()
                 .AddDeliveryTrackerReferences()
                 .AddDeliveryTrackerViews()
