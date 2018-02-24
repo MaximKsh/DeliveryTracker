@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.Validation;
@@ -46,10 +47,21 @@ namespace DeliveryTracker.Tests.Instances
             this.accountService = this.serviceProvider.GetService<IAccountService>();
         }
 
+        public static IEnumerable<object[]> DataForRegister()
+        {
+            yield return new object[]
+            {
+                DefaultRoles.ManagerRole
+            };
+            yield return new object[]
+            {
+                DefaultRoles.PerformerRole
+            };
+        }
+        
         [Theory]
-        [InlineData(DefaultRoles.ManagerRole)]
-        [InlineData(DefaultRoles.PerformerRole)]
-        public async void Register(string role)
+        [MemberData(nameof(DataForRegister))]
+        public async void Register(Guid role)
         {
             // Arrange
             var codePassword = new CodePassword

@@ -70,7 +70,7 @@ namespace DeliveryTracker.Instances
                 CreatorId = reader.GetGuid(idx++),
                 Created = reader.GetDateTime(idx++),
                 Expires = reader.GetDateTime(idx++),
-                Role = reader.GetString(idx++),
+                Role = reader.GetGuid(idx++),
                 InstanceId = reader.GetGuid(idx++),
                 PreliminaryUser = new User()
                 {

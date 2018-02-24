@@ -19,7 +19,7 @@ namespace DeliveryTracker.Identification
         public UserCredentials(
             Guid id,
             string code,
-            string role,
+            Guid role,
             Guid instanceId)
         {
             this.Id = id;
@@ -39,9 +39,9 @@ namespace DeliveryTracker.Identification
         public string Code { get; }
         
         /// <summary>
-        /// Роль пользователя.
+        /// ID роли пользователя.
         /// </summary>
-        public string Role { get; }
+        public Guid Role { get; }
         
         /// <summary>
         /// ID инстанса пользователя.
@@ -98,7 +98,7 @@ namespace DeliveryTracker.Identification
             {
                 var hashCode = this.Id.GetHashCode();
                 hashCode = (hashCode * 397) ^ (this.Code != null ? this.Code.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (this.Role != null ? this.Role.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (this.Role.GetHashCode());
                 hashCode = (hashCode * 397) ^ this.InstanceId.GetHashCode();
                 return hashCode;
             }

@@ -151,7 +151,7 @@ returning ""refresh_token_id"";
             {
                 Guid instanceId;
                 string code;
-                string role;
+                Guid role;
                 
                 using (var command = connWrapper.CreateCommand())
                 {
@@ -163,7 +163,7 @@ returning ""refresh_token_id"";
                         if (await reader.ReadAsync())
                         {
                             code = reader.GetString(0);
-                            role = reader.GetString(1);
+                            role = reader.GetGuid(1);
                             instanceId = reader.GetGuid(2);
                         }
                         else
@@ -349,7 +349,7 @@ returning ""refresh_token_id"";
                 
                 Guid id;
                 Guid instanceId;
-                var role = string.Empty;
+                Guid role;
                 var code = string.Empty;
                 var passwordHash = string.Empty;
                 using (var command = connWrapper.CreateCommand())
@@ -363,7 +363,7 @@ returning ""refresh_token_id"";
                             id = reader.GetGuid(0);
                             code = reader.GetString(1);
                             instanceId = reader.GetGuid(2);
-                            role = reader.GetString(3);
+                            role = reader.GetGuid(3);
                             passwordHash = reader.GetValueOrDefault<string>(4);
                         }
                     }
@@ -391,7 +391,7 @@ returning ""refresh_token_id"";
                 new Claim(DeliveryTrackerClaims.TokenId, tokenId.ToString()),
                 new Claim(DeliveryTrackerClaims.Id, credentials.Id.ToString()),
                 new Claim(DeliveryTrackerClaims.Code, credentials.Code),
-                new Claim(DeliveryTrackerClaims.Role, credentials.Role),
+                new Claim(DeliveryTrackerClaims.Role, credentials.Role.ToString()),
                 new Claim(DeliveryTrackerClaims.InstanceId, credentials.InstanceId.ToString()),
             };
 

@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
@@ -201,11 +202,11 @@ namespace DeliveryTrackerWeb.Tests
                         Name = CorrectInstanceName,
                     }
                 });
-            SetToken(client, createResult.Result.Token);
+            SetToken(client, createResult.Result.Token);   
             return (client, createResult.Result.Instance, createResult.Result.Creator, createResult.Result.Token);
         }
 
-        protected async Task<(HttpClient, User)> CreateUserViaInvitation(HttpClient client, string role)
+        protected async Task<(HttpClient, User)> CreateUserViaInvitation(HttpClient client, Guid role)
         {
             var inviteResult = await RequestPost<InvitationResponse>(
                 client,

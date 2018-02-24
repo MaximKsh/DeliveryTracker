@@ -100,11 +100,28 @@ namespace DeliveryTracker.Tests.Instances
             
         }
 
+        public static IEnumerable<object[]> DataForCreateInvitation()
+        {
+            yield return new object[]
+            {
+                0,
+                DefaultRoles.ManagerRole
+            };
+            yield return new object[]
+            {
+                0,
+                DefaultRoles.PerformerRole
+            };
+            yield return new object[]
+            {
+                1,
+                DefaultRoles.PerformerRole
+            };
+        }
+        
         [Theory]
-        [InlineData(0, DefaultRoles.ManagerRole)]
-        [InlineData(0, DefaultRoles.PerformerRole)]
-        [InlineData(1, DefaultRoles.PerformerRole)]
-        public async void CreateInvitation(int accesorIndex, string role)
+        [MemberData(nameof(DataForCreateInvitation))]
+        public async void CreateInvitation(int accesorIndex, Guid role)
         {
             // Arrange
             var accesor = this.accessors[accesorIndex];
@@ -121,13 +138,38 @@ namespace DeliveryTracker.Tests.Instances
             Assert.True(result.Success);
         }
         
+        public static IEnumerable<object[]> DataForCreateInvitationAccessError()
+        {
+            yield return new object[]
+            {
+                0,
+                DefaultRoles.CreatorRole
+            };
+            yield return new object[]
+            {
+                1,
+                DefaultRoles.CreatorRole
+            };
+            yield return new object[]
+            {
+                2,
+                DefaultRoles.CreatorRole
+            };
+            yield return new object[]
+            {
+                2,
+                DefaultRoles.ManagerRole
+            };
+            yield return new object[]
+            {
+                2,
+                DefaultRoles.PerformerRole
+            };
+        }
+        
         [Theory]
-        [InlineData(0, DefaultRoles.CreatorRole)]
-        [InlineData(1, DefaultRoles.CreatorRole)]
-        [InlineData(2, DefaultRoles.CreatorRole)]
-        [InlineData(2, DefaultRoles.ManagerRole)]
-        [InlineData(2, DefaultRoles.PerformerRole)]
-        public async void CreateInvitationAccessError(int accesorIndex, string role)
+        [MemberData(nameof(DataForCreateInvitationAccessError))]
+        public async void CreateInvitationAccessError(int accesorIndex, Guid role)
         {
             // Arrange
             var accesor = this.accessors[accesorIndex];

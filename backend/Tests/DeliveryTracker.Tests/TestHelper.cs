@@ -76,7 +76,7 @@ returning {InstanceHelper.GetInstanceColumns()}
             }
         }
 
-        public static User CreateRandomUser(string role, Guid instanceId, NpgsqlConnectionWrapper conn)
+        public static User CreateRandomUser(Guid role, Guid instanceId, NpgsqlConnectionWrapper conn)
         {
             using (var command = conn.CreateCommand())
             {

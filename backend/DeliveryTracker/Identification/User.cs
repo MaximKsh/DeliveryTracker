@@ -29,9 +29,9 @@ namespace DeliveryTracker.Identification
         /// <summary>
         /// Роль пользователя.
         /// </summary>
-        public string Role 
+        public Guid Role 
         {
-            get => this.Get<string>(nameof(this.Role));
+            get => this.Get<Guid>(nameof(this.Role));
             set => this.Set(nameof(this.Role), value);
         }
         

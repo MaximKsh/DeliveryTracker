@@ -75,16 +75,15 @@ namespace DeliveryTracker.Tests.Identification
         }
         
         [Theory]
-        [InlineData(false, null, null, null, null, null)]
-        [InlineData(true, "Petrov", "Ivan", null, null, null)]
-        [InlineData(false, null, null, "4231", "123", null)]
+        [InlineData(false, null, null, null, null)]
+        [InlineData(true, "Petrov", "Ivan", null, null)]
+        [InlineData(false, null, null, "4231", "123")]
         public async void AddUserWrongData(
             bool useInstanceId, 
             string surname, 
             string name, 
             string patronymic,
-            string phoneNumber,
-            string role)
+            string phoneNumber)
         {
             // Arrange
             var user = new User
@@ -96,7 +95,7 @@ namespace DeliveryTracker.Tests.Identification
                 Name = name,
                 Patronymic = patronymic,
                 PhoneNumber = phoneNumber,
-                Role = role,
+                Role = Guid.NewGuid(),
             };
             
             // Act

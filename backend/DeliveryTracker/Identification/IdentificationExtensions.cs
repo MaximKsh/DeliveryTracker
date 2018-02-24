@@ -98,7 +98,7 @@ namespace DeliveryTracker.Identification
             {
                 Id = reader.GetGuid(idx++),
                 Code = reader.GetString(idx++),
-                Role = reader.GetString(idx++),
+                Role = reader.GetGuid(idx++),
                 InstanceId = reader.GetGuid(idx++),
                 Surname = reader.GetValueOrDefault<string>(idx++),
                 Name = reader.GetValueOrDefault<string>(idx++),
@@ -147,7 +147,7 @@ namespace DeliveryTracker.Identification
             var id = Guid.Empty;
             var code = string.Empty;
             var instanceId = Guid.Empty;
-            var role = string.Empty;
+            var role = Guid.Empty;
             foreach (var claim in claims)
             {
                 switch (claim.Type)
@@ -161,8 +161,8 @@ namespace DeliveryTracker.Identification
                     case DeliveryTrackerClaims.InstanceId when Guid.TryParse(claim.Value, out var iid):
                         instanceId = iid;
                         break;
-                    case DeliveryTrackerClaims.Role:
-                        role = claim.Value;
+                    case DeliveryTrackerClaims.Role when Guid.TryParse(claim.Value, out var rid):
+                        role = rid;
                         break;
                 }
             }
