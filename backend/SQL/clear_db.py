@@ -17,7 +17,8 @@ if __name__ == '__main__':
         queries.append('drop extension if exists "' + row[0] + '" cascade;\n')
     full_query = ''.join(queries)
     print(full_query)
-    cur.execute(full_query)
+    if full_query != '':
+        cur.execute(full_query)
 
     cur.execute(""" select tablename from pg_tables where "schemaname" = 'public';""")
     queries = []
@@ -25,7 +26,9 @@ if __name__ == '__main__':
         queries.append('drop table if exists ' + row[0] + ' cascade;\n')
     full_query = ''.join(queries)
     print(full_query)
-    cur.execute(full_query)
+    
+    if full_query != '':
+        cur.execute(full_query)
      
     conn.commit()
     cur.close()
