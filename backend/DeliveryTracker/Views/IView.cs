@@ -8,23 +8,24 @@ using DeliveryTracker.Identification;
 namespace DeliveryTracker.Views
 {
     public interface IView
-    {
-        
+    {        
         /// <summary>
         /// Название представления.
         /// </summary>
         string Name { get; }
 
         /// <summary>
-        /// Строка локализации для представления.
+        /// Получить дайджест представления.
         /// </summary>
-        string Caption { get; }
+        /// <param name="oc"></param>
+        /// <param name="userCredentials"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
+            NpgsqlConnectionWrapper oc,
+            UserCredentials userCredentials,
+            IImmutableDictionary<string, string[]> parameters);
         
-        /// <summary>
-        /// Тип объекта, возвращаемый представлением.
-        /// </summary>
-        string EntityType { get; }
-
         /// <summary>
         /// Получить результат представления.
         /// </summary>

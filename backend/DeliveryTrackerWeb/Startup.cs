@@ -12,7 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using DeliveryTracker.Validation;
 using DeliveryTracker.Views;
 using DeliveryTrackerWeb.Middleware;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Newtonsoft.Json;

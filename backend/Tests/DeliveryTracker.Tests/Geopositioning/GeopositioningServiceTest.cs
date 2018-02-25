@@ -1,9 +1,7 @@
-﻿using System;
-using DeliveryTracker.Geopositioning;
+﻿using DeliveryTracker.Geopositioning;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.Validation;
-using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 

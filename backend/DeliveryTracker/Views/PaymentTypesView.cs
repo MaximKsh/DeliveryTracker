@@ -30,13 +30,24 @@ where instance_id = @instance_id
         /// <inheritdoc />
         public string Name { get; } = nameof(PaymentTypesView);
         
-        
         /// <inheritdoc />
-        public string Caption { get; } = LocalizationAlias.Views.PaymentTypesView;
-
-        
-        /// <inheritdoc />
-        public string EntityType { get; } = nameof(PaymentType);
+        public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
+            NpgsqlConnectionWrapper oc,
+            UserCredentials userCredentials,
+            IImmutableDictionary<string, string[]> parameters)
+        {
+            var result = await this.GetCountAsync(oc, userCredentials, parameters);
+            if (!result.Success)
+            {
+                return new ServiceResult<ViewDigest>(result.Errors);
+            }
+            return new ServiceResult<ViewDigest>(new ViewDigest
+            {
+                Caption = LocalizationAlias.Views.PaymentTypesView,
+                Count = result.Result,
+                EntityType = nameof(PaymentType),
+            });
+        }
         
         /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(

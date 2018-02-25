@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
@@ -32,13 +31,24 @@ where instance_id = @instance_id
         /// <inheritdoc />
         public string Name { get; } = nameof(ProductsView);
         
-        
         /// <inheritdoc />
-        public string Caption { get; } = LocalizationAlias.Views.ProductsView;
-        
-        
-        /// <inheritdoc />
-        public string EntityType { get; } = nameof(Product);
+        public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
+            NpgsqlConnectionWrapper oc,
+            UserCredentials userCredentials,
+            IImmutableDictionary<string, string[]> parameters)
+        {
+            var result = await this.GetCountAsync(oc, userCredentials, parameters);
+            if (!result.Success)
+            {
+                return new ServiceResult<ViewDigest>(result.Errors);
+            }
+            return new ServiceResult<ViewDigest>(new ViewDigest
+            {
+                Caption = LocalizationAlias.Views.ProductsView,
+                Count = result.Result,
+                EntityType = nameof(Product),
+            });
+        }
         
         /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(NpgsqlConnectionWrapper oc,

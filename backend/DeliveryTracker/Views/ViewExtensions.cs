@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-using DeliveryTracker.Identification;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace DeliveryTracker.Views
 {

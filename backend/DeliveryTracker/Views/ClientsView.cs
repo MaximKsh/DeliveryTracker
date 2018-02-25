@@ -31,11 +31,24 @@ where instance_id = @instance_id
         public string Name { get; } = nameof(ClientsView);
 
         /// <inheritdoc />
-        public string Caption { get; } = LocalizationAlias.Views.ClientsView;
+        public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
+            NpgsqlConnectionWrapper oc,
+            UserCredentials userCredentials,
+            IImmutableDictionary<string, string[]> parameters)
+        {
+            var result = await this.GetCountAsync(oc, userCredentials, parameters);
+            if (!result.Success)
+            {
+                return new ServiceResult<ViewDigest>(result.Errors);
+            }
+            return new ServiceResult<ViewDigest>(new ViewDigest
+            {
+                Caption = LocalizationAlias.Views.ClientsView,
+                Count = result.Result,
+                EntityType = nameof(Client),
+            });
+        }
 
-        /// <inheritdoc />
-        public string EntityType { get; } = nameof(Client);
-        
         /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
             NpgsqlConnectionWrapper oc,

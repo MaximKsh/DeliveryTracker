@@ -39,14 +39,25 @@ where instance_id = @instance_id and role = @role
         
         /// <inheritdoc />
         public string Name { get; } = nameof(ManagersView);
-        
-        
-        /// <inheritdoc />
-        public string Caption { get; } = LocalizationAlias.Views.ManagersView;
-        
-        /// <inheritdoc />
-        public string EntityType { get; } = nameof(User);
 
+        /// <inheritdoc />
+        public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
+            NpgsqlConnectionWrapper oc,
+            UserCredentials userCredentials,
+            IImmutableDictionary<string, string[]> parameters)
+        {
+            var result = await this.GetCountAsync(oc, userCredentials, parameters);
+            if (!result.Success)
+            {
+                return new ServiceResult<ViewDigest>(result.Errors);
+            }
+            return new ServiceResult<ViewDigest>(new ViewDigest
+            {
+                Caption = LocalizationAlias.Views.ManagersView,
+                Count = result.Result,
+                EntityType = nameof(User),
+            });
+        }
         
         /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(NpgsqlConnectionWrapper oc,
