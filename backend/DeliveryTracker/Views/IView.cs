@@ -19,6 +19,11 @@ namespace DeliveryTracker.Views
         /// Строка локализации для представления.
         /// </summary>
         string Caption { get; }
+        
+        /// <summary>
+        /// Тип объекта, возвращаемый представлением.
+        /// </summary>
+        string EntityType { get; }
 
         /// <summary>
         /// Получить результат представления.

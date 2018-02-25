@@ -36,6 +36,10 @@ where instance_id = @instance_id
         /// <inheritdoc />
         public string Caption { get; } = LocalizationAlias.Views.ProductsView;
         
+        
+        /// <inheritdoc />
+        public string EntityType { get; } = nameof(Product);
+        
         /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,

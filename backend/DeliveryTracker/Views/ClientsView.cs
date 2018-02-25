@@ -34,6 +34,9 @@ where instance_id = @instance_id
         public string Caption { get; } = LocalizationAlias.Views.ClientsView;
 
         /// <inheritdoc />
+        public string EntityType { get; } = nameof(Client);
+        
+        /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
             NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,

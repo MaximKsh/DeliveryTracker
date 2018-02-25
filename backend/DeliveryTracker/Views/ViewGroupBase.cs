@@ -68,6 +68,7 @@ namespace DeliveryTracker.Views
                     {
                         Caption = view.Value.Caption,
                         Count = result.Result,
+                        EntityType = view.Value.EntityType,
                     };
                 }    
             }

@@ -45,6 +45,10 @@ where instance_id = @instance_id and role = @role
         public string Caption { get; } = LocalizationAlias.Views.ManagersView;
         
         /// <inheritdoc />
+        public string EntityType { get; } = nameof(User);
+
+        
+        /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
             IImmutableDictionary<string, string[]> parameters)

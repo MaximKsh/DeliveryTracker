@@ -34,6 +34,10 @@ where instance_id = @instance_id
         /// <inheritdoc />
         public string Caption { get; } = LocalizationAlias.Views.PaymentTypesView;
 
+        
+        /// <inheritdoc />
+        public string EntityType { get; } = nameof(PaymentType);
+        
         /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
             NpgsqlConnectionWrapper oc,
