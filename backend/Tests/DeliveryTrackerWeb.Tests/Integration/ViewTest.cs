@@ -58,7 +58,7 @@ namespace DeliveryTrackerWeb.Tests.Integration
                 client,
                 ViewUrl("UserViewGroup/PerformersView"));
             Assert.Equal(HttpStatusCode.OK, performersResult.StatusCode);
-            Assert.Equal(1, performersResult.Result.ViewResult.Count());
+            Assert.Single(performersResult.Result.ViewResult);
             
             var invitationResult = await RequestGet<ViewResponse>(
                 client,
@@ -109,19 +109,19 @@ namespace DeliveryTrackerWeb.Tests.Integration
                 client,
                 ViewUrl("ReferenceViewGroup/ClientsView"));
             Assert.Equal(HttpStatusCode.OK, clientsResult.StatusCode);
-            Assert.Equal(1, clientsResult.Result.ViewResult.Count());
+            Assert.Single(clientsResult.Result.ViewResult);
             
             var productsResult = await RequestGet<ViewResponse>(
                 client,
                 ViewUrl("ReferenceViewGroup/ProductsView"));
             Assert.Equal(HttpStatusCode.OK, productsResult.StatusCode);
-            Assert.Equal(1, productsResult.Result.ViewResult.Count());
+            Assert.Single(productsResult.Result.ViewResult);
             
             var paymentTypeResult = await RequestGet<ViewResponse>(
                 client,
                 ViewUrl("ReferenceViewGroup/PaymentTypesView"));
             Assert.Equal(HttpStatusCode.OK, paymentTypeResult.StatusCode);
-            Assert.Equal(1, paymentTypeResult.Result.ViewResult.Count());
+            Assert.Single(paymentTypeResult.Result.ViewResult);
             
             
             var digestResult = await RequestGet<ViewResponse>(
