@@ -16,6 +16,7 @@ namespace DeliveryTracker.References
                 .AddSingleton<IReferenceService, PaymentTypeReferenceService>()
                 .AddSingleton<IReferenceService, ProductReferenceService>()
                 .AddSingleton<IReferenceService, ClientReferenceService>()
+                .AddSingleton<IReferenceService, WarehouseReferenceService>()
                 ;
 
         }
@@ -113,6 +114,32 @@ namespace DeliveryTracker.References
             reader.SetReferenceBaseFields(pt, ref idx);
             pt.Name = reader.GetValueOrDefault<string>(idx++);
             return pt;
+        }
+        
+        public static Warehouse GetWarehouse(this IDataReader reader)
+        {
+            var idx = 0;
+            return reader.GetWarehouse(ref idx);
+        }
+        
+        public static Warehouse GetWarehouse(this IDataReader reader, ref int idx)
+        {
+            var warehouse = new Warehouse();
+            reader.SetReferenceBaseFields(warehouse, ref idx);
+            warehouse.Name = reader.GetValueOrDefault<string>(idx++);
+            warehouse.RawAddress = reader.GetValueOrDefault<string>(idx++);
+            var lon = reader.GetValueOrDefault<double?>(idx++);
+            var lat = reader.GetValueOrDefault<double?>(idx++);
+            if (lat.HasValue
+                && lon.HasValue)
+            {
+                warehouse.Geoposition = new Geoposition
+                {
+                    Longitude = lon.Value,
+                    Latitude = lat.Value,
+                };
+            }
+            return warehouse;
         }
         
         #endregion

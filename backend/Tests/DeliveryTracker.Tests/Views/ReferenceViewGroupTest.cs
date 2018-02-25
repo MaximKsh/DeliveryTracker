@@ -40,6 +40,7 @@ namespace DeliveryTracker.Tests.Views
                 .AddSingleton<IReferenceService<Product>, ProductReferenceService>()
                 .AddSingleton<IReferenceService<Client>, ClientReferenceService>()
                 .AddSingleton<IReferenceService<PaymentType>, PaymentTypeReferenceService>()
+                .AddSingleton<IReferenceService<Warehouse>, WarehouseReferenceService>()
                 .AddSingleton<IViewService, ViewService>()
                 .AddSingleton<IViewGroup, ReferenceViewGroup>()
                 .BuildServiceProvider();
@@ -59,7 +60,7 @@ namespace DeliveryTracker.Tests.Views
             
             // Assert
             Assert.Equal(
-                new [] {"ClientsView", "ProductsView", "PaymentTypesView"}.OrderBy(p => p), 
+                new [] {"ClientsView", "ProductsView", "PaymentTypesView", "WarehousesView"}.OrderBy(p => p), 
                 viewsList.OrderBy(p => p));
         }
         
@@ -148,6 +149,31 @@ namespace DeliveryTracker.Tests.Views
             // Act
             var abstractResult = await viewGroup.ExecuteViewAsync(
                 "ClientsView", 
+                new Dictionary<string, string[]>().ToImmutableDictionary());
+
+            // Assert
+            Assert.True(abstractResult.Success);
+            Assert.Equal(4, abstractResult.Result.Count);
+        }
+        
+        [Fact]
+        public async void Warehouses()
+        {
+            // Arrange
+            var service = this.serviceProvider.GetService<IReferenceService<Warehouse>>();
+            var elem = new Warehouse
+            {
+                Name = "Dom1",
+            };
+            await service.CreateAsync(elem);
+            await service.CreateAsync(elem);
+            await service.CreateAsync(elem);
+            await service.CreateAsync(elem);
+            var viewGroup = this.viewService.GetViewGroup("ReferenceViewGroup").Result;
+            
+            // Act
+            var abstractResult = await viewGroup.ExecuteViewAsync(
+                "WarehousesView", 
                 new Dictionary<string, string[]>().ToImmutableDictionary());
 
             // Assert

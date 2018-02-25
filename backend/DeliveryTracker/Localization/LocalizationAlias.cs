@@ -121,6 +121,7 @@
             public const string Clients = Pref + "Clients";
             public const string Products = Pref + "Products";
             public const string PaymentTypes = Pref + "PaymentTypes";
+            public const string Warehouses = Pref + "Warehouses";
         }
         
         #endregion
@@ -139,6 +140,7 @@
             public const string PaymentTypesView = Pref + "PaymentTypesView";
             public const string PerformersView = Pref + "PerformersView";
             public const string ProductsView = Pref + "ProductsView";
+            public const string WarehousesView = Pref + "WarehousesView";
         }
         
         #endregion

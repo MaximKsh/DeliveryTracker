@@ -21,6 +21,7 @@ namespace DeliveryTracker.References
         public static readonly IReadOnlyList<string> PaymentTypeColumnList;
         public static readonly IReadOnlyList<string> ClientColumnList;
         public static readonly IReadOnlyList<string> AddressColumnList;
+        public static readonly IReadOnlyList<string> WarehouseColumnList;
 
         static ReferenceHelper()
         {
@@ -64,6 +65,17 @@ namespace DeliveryTracker.References
                 "ST_Y(geoposition::geometry)",
             });
             AddressColumnList = addressColumnList.AsReadOnly();
+            
+            var warehouseColumnList = new List<string>();
+            warehouseColumnList.AddRange(BaseColumnList);
+            warehouseColumnList.AddRange(new []
+            {
+                "name",
+                "raw_address",
+                "ST_X(geoposition::geometry)",
+                "ST_Y(geoposition::geometry)",
+            });
+            WarehouseColumnList = warehouseColumnList.AsReadOnly();
         }
         
         
@@ -78,6 +90,9 @@ namespace DeliveryTracker.References
         
         public static string GetAddressColumns(string prefix = null)=>
             GetColumnsInternal(AddressColumnList, prefix);
+        
+        public static string GetWarehouseColumns(string prefix = null)=>
+            GetColumnsInternal(WarehouseColumnList, prefix);
 
         private static string GetColumnsInternal(IEnumerable<string> source, string prefix = null)
         {
