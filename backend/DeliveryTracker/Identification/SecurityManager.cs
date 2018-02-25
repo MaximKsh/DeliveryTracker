@@ -236,7 +236,7 @@ returning ""refresh_token_id"";
                 {
                     command.CommandText = SqlHasSessionToken;
                     command.Parameters.Add(new NpgsqlParameter("user_id", userId));
-                    return (await command.ExecuteScalarAsync()).Equals(sessionTokenId)
+                    return (await command.ExecuteScalarAsync())?.Equals(sessionTokenId) == true
                         ? new ServiceResult()
                         : new ServiceResult(ErrorFactory.AccessDenied());
                 }
