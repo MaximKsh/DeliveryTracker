@@ -12,6 +12,8 @@ namespace DeliveryTracker.Views
 {
     public class InvitationsView : IView
     {
+        #region sql
+        
         private static readonly string SqlGet = $@"
 select
     {InstanceHelper.GetInvitationColumns()}
@@ -26,6 +28,26 @@ from invitations
 where instance_id = @instance_id
 ;
 ";
+
+        #endregion
+        
+        #region fields
+        
+        private readonly int order;
+        
+        #endregion
+        
+        #region constuctor
+        
+        public InvitationsView(
+            int order)
+        {
+            this.order = order;
+        }
+        
+        #endregion
+        
+        #region implementation
         
         /// <inheritdoc />
         public string Name { get; } = nameof(InvitationsView);
@@ -46,6 +68,8 @@ where instance_id = @instance_id
                 Caption = LocalizationAlias.Views.InvitationsView,
                 Count = result.Result,
                 EntityType = nameof(Invitation),
+                Order = this.order,
+                IconName = "Я не знаю"
             });
         }
         
@@ -87,5 +111,7 @@ where instance_id = @instance_id
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }
+        
+        #endregion
     }
 }

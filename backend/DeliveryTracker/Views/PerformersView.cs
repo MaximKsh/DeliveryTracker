@@ -11,6 +11,8 @@ namespace DeliveryTracker.Views
 {
     public class PerformersView : IView
     {
+        #region sql
+        
         private static readonly string SqlGet = $@"
 select
     {IdentificationHelper.GetUserColumns()}
@@ -26,6 +28,25 @@ where instance_id = @instance_id and role = @role
 ;
 ";
         
+        #endregion
+        
+        #region fields
+        
+        private readonly int order;
+        
+        #endregion
+        
+        #region constuctor
+        
+        public PerformersView(
+            int order)
+        {
+            this.order = order;
+        }
+        
+        #endregion
+        
+        #region implementation
         
         /// <inheritdoc />
         public string Name { get; } = nameof(PerformersView);
@@ -46,6 +67,8 @@ where instance_id = @instance_id and role = @role
                 Caption = LocalizationAlias.Views.PerformersView,
                 Count = result.Result,
                 EntityType = nameof(User),
+                Order = this.order,
+                IconName = "Я хз"
             });
         }
         
@@ -87,5 +110,7 @@ where instance_id = @instance_id and role = @role
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }
+        
+        #endregion
     }
 }

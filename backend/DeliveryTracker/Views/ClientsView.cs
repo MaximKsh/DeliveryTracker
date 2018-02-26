@@ -12,6 +12,8 @@ namespace DeliveryTracker.Views
 {
     public class ClientsView : IView
     {
+        #region sql
+        
         private static readonly string SqlGet = $@"
 select
     {ReferenceHelper.GetClientColumns()}
@@ -26,6 +28,25 @@ from clients
 where instance_id = @instance_id
 ;
 ";
+        #endregion
+        
+        #region fields
+        
+        private readonly int order;
+        
+        #endregion
+        
+        #region constuctor
+        
+        public ClientsView(
+            int order)
+        {
+            this.order = order;
+        }
+        
+        #endregion
+        
+        #region implementation
         
         /// <inheritdoc />
         public string Name { get; } = nameof(ClientsView);
@@ -46,6 +67,8 @@ where instance_id = @instance_id
                 Caption = LocalizationAlias.Views.ClientsView,
                 Count = result.Result,
                 EntityType = nameof(Client),
+                Order = this.order,
+                IconName = "Я не знаю"
             });
         }
 
@@ -87,5 +110,7 @@ where instance_id = @instance_id
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }
+        
+        #endregion
     }
 }

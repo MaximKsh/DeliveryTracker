@@ -15,11 +15,11 @@ namespace DeliveryTracker.Views
         {
             var dict = new Dictionary<string, IView>();
             
-            var managersView = new ManagersView();
+            var managersView = new ManagersView(0);
             dict[managersView.Name] = managersView;
-            var performersView = new PerformersView();
+            var performersView = new PerformersView(1);
             dict[performersView.Name] = performersView;
-            var invitationsView = new InvitationsView();
+            var invitationsView = new InvitationsView(2);
             dict[invitationsView.Name] = invitationsView;
 
             this.Views = dict.ToImmutableDictionary();

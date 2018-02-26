@@ -11,6 +11,8 @@ namespace DeliveryTracker.Views
 {
     public class ManagersView : IView
     {
+        #region sql
+        
         private static readonly string SqlGet = $@"
 (
     select
@@ -35,7 +37,26 @@ from users
 where instance_id = @instance_id and role = @role
 ;
 ";
+        #endregion
         
+        
+        #region fields
+        
+        private readonly int order;
+        
+        #endregion
+        
+        #region constuctor
+        
+        public ManagersView(
+            int order)
+        {
+            this.order = order;
+        }
+        
+        #endregion
+        
+        #region implementation
         
         /// <inheritdoc />
         public string Name { get; } = nameof(ManagersView);
@@ -56,6 +77,8 @@ where instance_id = @instance_id and role = @role
                 Caption = LocalizationAlias.Views.ManagersView,
                 Count = result.Result,
                 EntityType = nameof(User),
+                Order = this.order,
+                IconName = "1111"
             });
         }
         
@@ -98,5 +121,7 @@ where instance_id = @instance_id and role = @role
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync() + 1);
             }
         }
+        
+        #endregion
     }
 }

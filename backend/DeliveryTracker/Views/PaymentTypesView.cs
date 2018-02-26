@@ -12,6 +12,8 @@ namespace DeliveryTracker.Views
 {
     public class PaymentTypesView : IView
     {
+        #region sql
+        
         private static readonly string SqlGet = $@"
 select
     {ReferenceHelper.GetPaymentTypeColumns()}
@@ -26,6 +28,25 @@ from payment_types
 where instance_id = @instance_id
 ;
 ";
+        #endregion
+        
+        #region fields
+        
+        private readonly int order;
+        
+        #endregion
+        
+        #region constuctor
+        
+        public PaymentTypesView(
+            int order)
+        {
+            this.order = order;
+        }
+        
+        #endregion
+        
+        #region implementation
         
         /// <inheritdoc />
         public string Name { get; } = nameof(PaymentTypesView);
@@ -46,6 +67,8 @@ where instance_id = @instance_id
                 Caption = LocalizationAlias.Views.PaymentTypesView,
                 Count = result.Result,
                 EntityType = nameof(PaymentType),
+                Order = this.order,
+                IconName = "g"
             });
         }
         
@@ -87,5 +110,7 @@ where instance_id = @instance_id
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }
+        
+        #endregion
     }
 }

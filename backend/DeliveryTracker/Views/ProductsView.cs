@@ -12,6 +12,8 @@ namespace DeliveryTracker.Views
 {
     public class ProductsView : IView
     {
+        #region sql
+        
         private static readonly string SqlGet = $@"
 select
     {ReferenceHelper.GetProductColumns()}
@@ -26,7 +28,25 @@ from products
 where instance_id = @instance_id
 ;
 ";
+        #endregion
         
+        #region fields
+        
+        private readonly int order;
+        
+        #endregion
+        
+        #region constuctor
+        
+        public ProductsView(
+            int order)
+        {
+            this.order = order;
+        }
+        
+        #endregion
+        
+        #region implementation
         
         /// <inheritdoc />
         public string Name { get; } = nameof(ProductsView);
@@ -47,6 +67,8 @@ where instance_id = @instance_id
                 Caption = LocalizationAlias.Views.ProductsView,
                 Count = result.Result,
                 EntityType = nameof(Product),
+                Order = this.order,
+                IconName = "1"
             });
         }
         
@@ -86,5 +108,7 @@ where instance_id = @instance_id
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }
+        
+        #endregion
     }
 }
