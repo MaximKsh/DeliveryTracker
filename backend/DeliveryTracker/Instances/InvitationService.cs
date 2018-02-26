@@ -277,7 +277,7 @@ where expires < (now() AT TIME ZONE 'UTC');
                     command.Parameters.Add(new NpgsqlParameter("creator_id", creatorId));
                     command.Parameters.Add(new NpgsqlParameter("created", DateTime.UtcNow));
                     command.Parameters.Add(new NpgsqlParameter(
-                        "expires", DateTime.UtcNow.AddDays(this.invitationSettings.ExpiresInDays)));
+                        "expires", DateTime.UtcNow.Date.AddDays(this.invitationSettings.ExpiresInDays)));
                     command.Parameters.Add(new NpgsqlParameter("role", preliminaryUserData.Role));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                     command.Parameters.Add(new NpgsqlParameter("surname", preliminaryUserData.Surname).CanBeNull());
