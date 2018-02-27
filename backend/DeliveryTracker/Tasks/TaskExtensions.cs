@@ -12,5 +12,22 @@ namespace DeliveryTracker.Tasks
             
             return services;
         }
+
+        public static TaskState GetState(
+            this TaskInfo tInfo)
+        {
+            return DefaultTaskStates.AllTaskStates.TryGetValue(tInfo.TaskStateId, out var state)
+                ? state
+                : new TaskState(tInfo.TaskStateId, tInfo.TaskStateName, tInfo.TaskStateCaption);
+        }
+
+        public static void SetState(
+            this TaskInfo tInfo,
+            TaskState state)
+        {
+            tInfo.TaskStateId = state.Id;
+            tInfo.TaskStateName = state.Name;
+            tInfo.TaskStateCaption = state.Caption;
+        }
     }
 }
