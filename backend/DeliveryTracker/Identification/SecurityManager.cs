@@ -48,14 +48,23 @@ on conflict(user_id) do update set
 returning {IdentificationHelper.GetSessionColumns()};
 ";
         
-        private static readonly string SqlHasSessionToken = $@"
+        private static readonly string SqlHasSessionToken = @"
+update ""users""
+set ""last_activity"" = now() AT TIME ZONE 'UTC'
+where ""id"" = @user_id
+;
 update ""sessions""
 set ""last_activity"" = now() AT TIME ZONE 'UTC'
 where ""user_id"" = @user_id
-returning ""session_token_id""; 
+returning ""session_token_id""
+; 
 ";
         
-        private static readonly string SqlHasSessionRefreshToken = $@"
+        private static readonly string SqlHasSessionRefreshToken = @"
+update ""users""
+set ""last_activity"" = now() AT TIME ZONE 'UTC'
+where ""id"" = @user_id
+;
 update ""sessions""
 set ""last_activity"" = now() AT TIME ZONE 'UTC'
 where ""user_id"" = @user_id

@@ -101,6 +101,7 @@ namespace DeliveryTracker.Identification
                 Role = reader.GetGuid(idx++),
                 InstanceId = reader.GetGuid(idx++),
                 Surname = reader.GetValueOrDefault<string>(idx++),
+                LastActivity = reader.GetDateTime(idx++),
                 Name = reader.GetValueOrDefault<string>(idx++),
                 Patronymic = reader.GetValueOrDefault<string>(idx++),
                 PhoneNumber = reader.GetValueOrDefault<string>(idx++),
