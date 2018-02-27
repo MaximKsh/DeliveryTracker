@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using DeliveryTracker.Common;
 using DeliveryTracker.Geopositioning;
+using Newtonsoft.Json;
 
 namespace DeliveryTracker.Identification
 {
@@ -17,6 +18,21 @@ namespace DeliveryTracker.Identification
             set => this.Set(nameof(this.Id), value);
         }
 
+        /// <summary>
+        /// Инстанс пользователя.
+        /// </summary>
+        public Guid InstanceId 
+        {
+            get => this.Get<Guid>(nameof(this.InstanceId));
+            set => this.Set(nameof(this.InstanceId), value);
+        }
+        
+        /// <summary>
+        /// Дата последней активности пользователя. Не сериализуется.
+        /// </summary>
+        [JsonIgnore]
+        public DateTime LastActivity { get; set; }
+        
         /// <summary>
         /// Код пользователя.
         /// </summary>
@@ -70,15 +86,6 @@ namespace DeliveryTracker.Identification
             get => this.Get<string>(nameof(this.PhoneNumber));
             set => this.Set(nameof(this.PhoneNumber), value);
         }
-
-        /// <summary>
-        /// Инстанс пользователя.
-        /// </summary>
-        public Guid InstanceId 
-        {
-            get => this.Get<Guid>(nameof(this.InstanceId));
-            set => this.Set(nameof(this.InstanceId), value);
-        }
         
         /// <summary>
         /// Текущая позиция. Актуально только для исполнителя.
@@ -89,5 +96,23 @@ namespace DeliveryTracker.Identification
             set => this.Set(nameof(this.Geoposition), value);
         }
 
+        /// <summary>
+        /// Пользователь сейчас активен.
+        /// </summary>
+        [JsonProperty]
+        public bool Online
+        {
+            get
+            {
+                var online = OnlineChecker.IsOnline(this);
+                this.Set(nameof(this.Online), online);
+                return online;
+            }
+        }
+
+        protected override void BeforeGetDictionary()
+        {
+            this.Set(nameof(this.Online), OnlineChecker.IsOnline(this));
+        }
     }
 }

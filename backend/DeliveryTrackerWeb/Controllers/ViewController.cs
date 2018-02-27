@@ -107,11 +107,12 @@ namespace DeliveryTrackerWeb.Controllers
             {
                 return this.BadRequest(new ViewResponse(result.Errors));
             }
-            
-            return this.Ok(new ViewResponse
+
+            var response = new ViewResponse
             {
                 ViewResult = result.Result.Select(p => p.GetDictionary()),
-            });
+            };
+            return this.Ok(response);
         }
     }
 }

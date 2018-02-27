@@ -12,7 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using DeliveryTracker.Validation;
 using DeliveryTracker.Views;
 using DeliveryTrackerWeb.Middleware;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Newtonsoft.Json;
@@ -97,7 +96,7 @@ namespace DeliveryTrackerWeb
                 p =>
                 {
                     p.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
-                    p.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Ignore;
+                    p.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Include;
                     p.SerializerSettings.MissingMemberHandling = MissingMemberHandling.Ignore;
                     p.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
                     p.SerializerSettings.Formatting = Formatting.None;

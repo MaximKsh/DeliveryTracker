@@ -10,6 +10,8 @@
     }
   },
   
+  "UserOnlineTimeout": 30000,
+  
   "SessionTokenSettings": {
     "Key": "mysupersecret_secretkey!123",
     "Issuer": "DeliveryTracker",

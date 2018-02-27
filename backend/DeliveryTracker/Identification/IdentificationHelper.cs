@@ -14,6 +14,7 @@ namespace DeliveryTracker.Identification
             "code", 
             "role",
             "instance_id",
+            "last_activity",
             "surname", 
             "name", 
             "patronymic", 

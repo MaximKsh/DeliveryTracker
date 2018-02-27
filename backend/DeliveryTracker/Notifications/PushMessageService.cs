@@ -3,15 +3,18 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 
+
+
 namespace DeliveryTracker.Notifications
 {
     public class PushMessageService
     {
+        // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
         private readonly HttpClient client;
 
-        private string key =
-                "AAAArOgs9hw:APA91bGac5xib4PP18a_w5HV03uhTkdmMixv2IvXgPv6soDDzHWorT7AYfyCMTDzuZMgeMOQskTluBO-WT2yP9yb9mTDZ-mYgJLPmcpQmFwle0YAsb40UDy7FmX5eZ_-yw55qHRf7xdl"
-            ;
+       // private const string Key =
+       //         "AAAArOgs9hw:APA91bGac5xib4PP18a_w5HV03uhTkdmMixv2IvXgPv6soDDzHWorT7AYfyCMTDzuZMgeMOQskTluBO-WT2yP9yb9mTDZ-mYgJLPmcpQmFwle0YAsb40UDy7FmX5eZ_-yw55qHRf7xdl"
+       //     ;
         
         public PushMessageService()
         {
@@ -20,7 +23,9 @@ namespace DeliveryTracker.Notifications
 
         }
 
+#pragma warning disable 1998
         public async Task<ServiceResult> SendMessage(
+#pragma warning restore 1998
             Guid? taskId = null)
         {
             /*

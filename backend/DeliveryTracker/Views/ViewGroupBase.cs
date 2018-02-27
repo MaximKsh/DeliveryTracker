@@ -55,20 +55,13 @@ namespace DeliveryTracker.Views
                 conn.Connect();
                 foreach (var view in this.Views)
                 {
-                    var result = await view.Value.GetCountAsync(
-                        conn,
-                        credentials,
-                        parameters);
+                    var result = await view.Value.GetViewDigestAsync(conn, credentials, parameters);
                     if (!result.Success)
                     {
                         return new ServiceResult<Dictionary<string, ViewDigest>>(result.Errors);
                     }
 
-                    digest[view.Key] = new ViewDigest
-                    {
-                        Caption = view.Value.Caption,
-                        Count = result.Result,
-                    };
+                    digest[view.Key] = result.Result;
                 }    
             }
             

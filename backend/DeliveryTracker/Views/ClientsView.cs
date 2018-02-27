@@ -12,6 +12,8 @@ namespace DeliveryTracker.Views
 {
     public class ClientsView : IView
     {
+        #region sql
+        
         private static readonly string SqlGet = $@"
 select
     {ReferenceHelper.GetClientColumns()}
@@ -26,12 +28,49 @@ from clients
 where instance_id = @instance_id
 ;
 ";
+        #endregion
+        
+        #region fields
+        
+        private readonly int order;
+        
+        #endregion
+        
+        #region constuctor
+        
+        public ClientsView(
+            int order)
+        {
+            this.order = order;
+        }
+        
+        #endregion
+        
+        #region implementation
         
         /// <inheritdoc />
         public string Name { get; } = nameof(ClientsView);
 
         /// <inheritdoc />
-        public string Caption { get; } = LocalizationAlias.Views.ClientsView;
+        public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
+            NpgsqlConnectionWrapper oc,
+            UserCredentials userCredentials,
+            IImmutableDictionary<string, string[]> parameters)
+        {
+            var result = await this.GetCountAsync(oc, userCredentials, parameters);
+            if (!result.Success)
+            {
+                return new ServiceResult<ViewDigest>(result.Errors);
+            }
+            return new ServiceResult<ViewDigest>(new ViewDigest
+            {
+                Caption = LocalizationAlias.Views.ClientsView,
+                Count = result.Result,
+                EntityType = nameof(Client),
+                Order = this.order,
+                IconName = "Я не знаю"
+            });
+        }
 
         /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
@@ -71,5 +110,7 @@ where instance_id = @instance_id
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }
+        
+        #endregion
     }
 }

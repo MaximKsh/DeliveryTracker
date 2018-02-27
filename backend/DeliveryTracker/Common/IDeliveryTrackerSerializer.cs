@@ -1,6 +1,4 @@
-﻿using Remotion.Linq.Clauses;
-
-namespace DeliveryTracker.Common
+﻿namespace DeliveryTracker.Common
 {
     public interface IDeliveryTrackerSerializer
     {

@@ -95,7 +95,7 @@ namespace DeliveryTrackerWeb.Tests
                 p =>
                 {
                     p.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
-                    p.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Ignore;
+                    p.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Include;
                     p.SerializerSettings.MissingMemberHandling = MissingMemberHandling.Ignore;
                     p.SerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
                     p.SerializerSettings.Formatting = Formatting.None;

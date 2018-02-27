@@ -12,6 +12,8 @@ namespace DeliveryTracker.Views
 {
     public class PaymentTypesView : IView
     {
+        #region sql
+        
         private static readonly string SqlGet = $@"
 select
     {ReferenceHelper.GetPaymentTypeColumns()}
@@ -26,14 +28,50 @@ from payment_types
 where instance_id = @instance_id
 ;
 ";
+        #endregion
+        
+        #region fields
+        
+        private readonly int order;
+        
+        #endregion
+        
+        #region constuctor
+        
+        public PaymentTypesView(
+            int order)
+        {
+            this.order = order;
+        }
+        
+        #endregion
+        
+        #region implementation
         
         /// <inheritdoc />
         public string Name { get; } = nameof(PaymentTypesView);
         
-        
         /// <inheritdoc />
-        public string Caption { get; } = LocalizationAlias.Views.PaymentTypesView;
-
+        public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
+            NpgsqlConnectionWrapper oc,
+            UserCredentials userCredentials,
+            IImmutableDictionary<string, string[]> parameters)
+        {
+            var result = await this.GetCountAsync(oc, userCredentials, parameters);
+            if (!result.Success)
+            {
+                return new ServiceResult<ViewDigest>(result.Errors);
+            }
+            return new ServiceResult<ViewDigest>(new ViewDigest
+            {
+                Caption = LocalizationAlias.Views.PaymentTypesView,
+                Count = result.Result,
+                EntityType = nameof(PaymentType),
+                Order = this.order,
+                IconName = "g"
+            });
+        }
+        
         /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
             NpgsqlConnectionWrapper oc,
@@ -72,5 +110,7 @@ where instance_id = @instance_id
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }
+        
+        #endregion
     }
 }
