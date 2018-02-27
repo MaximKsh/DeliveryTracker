@@ -9,6 +9,9 @@
       "Default": "Warning"
     }
   },
+
+
+  "UserOnlineTimeout": 60000,
   
   "SessionTokenSettings": {
     "Key": "mysupersecret_secretkey!123",

@@ -7,9 +7,9 @@ namespace DeliveryTracker.Identification
     {
         private static readonly object LockObj = new object();
 
-        private const int DefaultTimeoutInSeconds = 60;
+        private const int DefaultTimeoutMillis = 60_000;
 
-        private static int customTimeoutInSeconds = -1;
+        private static int customTimeoutMillis = -1;
 
         private static readonly Lazy<int> TimeoutLazy;
 
@@ -18,9 +18,9 @@ namespace DeliveryTracker.Identification
             TimeoutLazy = new Lazy<int>(
                 () =>
                 {
-                    var timeout = customTimeoutInSeconds;
+                    var timeout = customTimeoutMillis;
                     return timeout == -1
-                        ? DefaultTimeoutInSeconds
+                        ? DefaultTimeoutMillis
                         : timeout;
                 },
                 LazyThreadSafetyMode.PublicationOnly);
@@ -34,13 +34,13 @@ namespace DeliveryTracker.Identification
                 throw new ArgumentOutOfRangeException($"{nameof(timeoutInSeconds)} must be greater than 0.");
             }
             
-            if (customTimeoutInSeconds == -1)
+            if (customTimeoutMillis == -1)
             {
                 lock (LockObj)
                 {
-                    if (customTimeoutInSeconds == -1)
+                    if (customTimeoutMillis == -1)
                     {
-                        Interlocked.Exchange(ref customTimeoutInSeconds, timeoutInSeconds);
+                        Interlocked.Exchange(ref customTimeoutMillis, timeoutInSeconds);
                         return true;
                     }
                 }

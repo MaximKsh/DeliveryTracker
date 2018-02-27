@@ -71,6 +71,11 @@ namespace DeliveryTracker.Identification
             this ISettingsStorage storage, 
             IConfiguration configuration)
         {
+            var onlineTimeout = configuration.GetValue("UserOnlineTimeout", -1);
+            if (onlineTimeout != -1)
+            {
+                OnlineChecker.Set(onlineTimeout);
+            }
             
             var tokenSettings = IdentificationHelper.ReadTokenSettingsFromConf(configuration);
             var refreshTokenSettings = IdentificationHelper.ReadRefreshTokenSettingsFromConf(configuration);
@@ -100,8 +105,8 @@ namespace DeliveryTracker.Identification
                 Code = reader.GetString(idx++),
                 Role = reader.GetGuid(idx++),
                 InstanceId = reader.GetGuid(idx++),
-                Surname = reader.GetValueOrDefault<string>(idx++),
                 LastActivity = reader.GetDateTime(idx++),
+                Surname = reader.GetValueOrDefault<string>(idx++),
                 Name = reader.GetValueOrDefault<string>(idx++),
                 Patronymic = reader.GetValueOrDefault<string>(idx++),
                 PhoneNumber = reader.GetValueOrDefault<string>(idx++),

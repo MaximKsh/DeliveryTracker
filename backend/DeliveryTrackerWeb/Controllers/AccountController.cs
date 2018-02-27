@@ -26,11 +26,21 @@ namespace DeliveryTrackerWeb.Controllers
             this.securityManager = securityManager;
         }
         
+        // account/check
         // account/login
         // account/refresh
         // account/about
         // account/edit
         // account/change_password
+
+        [HttpGet("check")]
+        [Authorize]
+        public IActionResult Check()
+        {
+            // Проверка валидности токена.
+            // Если токен невалиден, вернется 403.
+            return this.Ok();
+        }
         
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] AccountRequest request)

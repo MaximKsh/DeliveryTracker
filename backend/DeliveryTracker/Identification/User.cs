@@ -28,14 +28,10 @@ namespace DeliveryTracker.Identification
         }
         
         /// <summary>
-        /// Инстанс пользователя.
+        /// Дата последней активности пользователя. Не сериализуется.
         /// </summary>
         [JsonIgnore]
-        public DateTime LastActivity
-        {
-            get => this.Get<DateTime>(nameof(this.LastActivity));
-            set => this.Set(nameof(this.LastActivity), value);
-        }
+        public DateTime LastActivity { get; set; }
         
         /// <summary>
         /// Код пользователя.
@@ -103,7 +99,20 @@ namespace DeliveryTracker.Identification
         /// <summary>
         /// Пользователь сейчас активен.
         /// </summary>
-        public bool Online => OnlineChecker.IsOnline(this);
+        [JsonProperty]
+        public bool Online
+        {
+            get
+            {
+                var online = OnlineChecker.IsOnline(this);
+                this.Set(nameof(this.Online), online);
+                return online;
+            }
+        }
 
+        protected override void BeforeGetDictionary()
+        {
+            this.Set(nameof(this.Online), OnlineChecker.IsOnline(this));
+        }
     }
 }

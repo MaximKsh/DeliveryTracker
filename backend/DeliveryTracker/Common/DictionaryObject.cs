@@ -26,6 +26,7 @@ namespace DeliveryTracker.Common
 
         public IDictionary<string, object> GetDictionary()
         {
+            this.BeforeGetDictionary();
             foreach (var k in this.dictionary.Keys.ToArray())
             {
                 var v = this.dictionary[k];
@@ -53,6 +54,7 @@ namespace DeliveryTracker.Common
                 }
             }
             
+            this.AfterGetDictionary();
             return this.dictionary;
         }
         
@@ -60,6 +62,16 @@ namespace DeliveryTracker.Common
         
         #region protected
 
+        protected virtual void BeforeGetDictionary()
+        {
+            
+        }
+
+        protected virtual void AfterGetDictionary()
+        {
+            
+        }
+        
         protected T Get<T>(
             string key,
             T defaultValue = default)
