@@ -19,7 +19,7 @@ namespace DeliveryTracker.Views
             dict[paymentTypeView.Name] = paymentTypeView;
             var clientsView = new ClientsView(3);
             dict[clientsView.Name] = clientsView;
-            var warehousesView = new WarehousesView();
+            var warehousesView = new WarehousesView(4);
             dict[warehousesView.Name] = warehousesView;
 
             this.Views = dict.ToImmutableDictionary();
