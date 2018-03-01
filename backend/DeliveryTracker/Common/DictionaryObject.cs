@@ -7,35 +7,43 @@ using Newtonsoft.Json.Linq;
 
 namespace DeliveryTracker.Common
 {
-    public abstract class DictionaryObject : IDictionaryObject
+    public class DictionaryObject : IDictionaryObject
     {
         #region fields
         
-        private IDictionary<string, object> dictionary = 
+        protected IDictionary<string, object> Dictionary = 
             new Dictionary<string, object>();
         
         #endregion
         
         #region public
         
-        public void SetDictionary(
+        public virtual void SetDictionary(
             IDictionary<string, object> dict)
         {
-            this.dictionary = dict ?? throw new ArgumentNullException();
+            this.Dictionary = dict ?? throw new ArgumentNullException();
         }
 
-        public IDictionary<string, object> GetDictionary()
+        public virtual IDictionary<string, object> GetDictionary()
         {
-            this.BeforeGetDictionary();
-            foreach (var k in this.dictionary.Keys.ToArray())
+            foreach (var k in this.Dictionary.Keys.ToArray())
             {
-                var v = this.dictionary[k];
-                if(v is IDictionaryObject dictObj)
+                var v = this.Dictionary[k];
+                if (v is IDictionaryObject dictObj)
                 {
-                    this.dictionary[k] = dictObj.GetDictionary();
+                    this.Dictionary[k] = dictObj.GetDictionary();
                 }
+                else if (v is IDictionary<string, IDictionaryObject> dictField)
+                {
+                    var newDict = new Dictionary<string, IDictionary<string, object>>((int)(1.5 * dictField.Count));
+                    foreach (var pair in dictField)
+                    {
+                        newDict[pair.Key] = pair.Value.GetDictionary();
+                    }
 
-                if (v is IList list)
+                    this.Dictionary[k] = newDict;
+                }
+                else if (v is IList list)
                 {
                     var newList = new List<object>(list.Count);
                     foreach (var elem in list)
@@ -50,33 +58,29 @@ namespace DeliveryTracker.Common
                         }
                     }
 
-                    this.dictionary[k] = newList;
+                    this.Dictionary[k] = newList;
                 }
             }
             
-            this.AfterGetDictionary();
-            return this.dictionary;
+            return this.Dictionary;
         }
-        
+
+        public T Cast<T>() where T : IDictionaryObject, new()
+        {
+            var newObj = new T();
+            newObj.SetDictionary(this.Dictionary);
+            return newObj;
+        }
+
         #endregion
         
         #region protected
 
-        protected virtual void BeforeGetDictionary()
-        {
-            
-        }
-
-        protected virtual void AfterGetDictionary()
-        {
-            
-        }
-        
-        protected T Get<T>(
+        protected virtual T Get<T>(
             string key,
             T defaultValue = default)
         {
-            if (!this.dictionary.TryGetValue(key, out var obj))
+            if (!this.Dictionary.TryGetValue(key, out var obj))
             {
                 return defaultValue;
             }
@@ -94,7 +98,7 @@ namespace DeliveryTracker.Common
             try
             {
                 var result = (T) converter.ConvertFrom(obj);
-                this.dictionary[key] = result;
+                this.Dictionary[key] = result;
                 return result;
             }
             catch (Exception)
@@ -103,11 +107,11 @@ namespace DeliveryTracker.Common
             }
         }
         
-        protected T GetObject<T>(
+        protected virtual T GetObject<T>(
             string key,
             T defaultValue = default)  where T : IDictionaryObject, new ()
         {
-            if (!this.dictionary.TryGetValue(key, out var obj))
+            if (!this.Dictionary.TryGetValue(key, out var obj))
             {
                 return defaultValue;
             }
@@ -120,22 +124,48 @@ namespace DeliveryTracker.Common
                     return value;
                 case JObject jobj:
                     var result = jobj.ToObject<T>();
-                    this.dictionary[key] = result;
+                    this.Dictionary[key] = result;
                     return result;
                 case IDictionary<string, object> dict:
                     var deserialized = new T();
                     deserialized.SetDictionary(dict);
-                    this.dictionary[key] = deserialized;
+                    this.Dictionary[key] = deserialized;
                     return deserialized;
             }
             return defaultValue;
         }
+
+        protected virtual IDictionary<string, IDictionaryObject> GetDictionaryField(
+            string key,
+            IDictionary<string, IDictionaryObject> defaultValue = default)
+        {
+            if (!this.Dictionary.TryGetValue(key, out var obj))
+            {
+                return defaultValue;
+            }
+
+            switch (obj)
+            {
+                case null:
+                    return defaultValue;
+                case JObject jobj:
+                    var result = new Dictionary<string, IDictionaryObject>((int)(1.5 * jobj.Count));
+                    foreach (var pair in jobj)
+                    {
+                    }
+                    this.Dictionary[key] = result;
+                    return result;
+                case IDictionary<string, IDictionaryObject> dict:
+                    return dict;
+            }
+            return defaultValue;
+        }
         
-        protected IList<T> GetList<T>(
+        protected virtual IList<T> GetList<T>(
             string key,
             IList<T> defaultValue = default)  where T : IDictionaryObject, new ()
         {
-            if (!this.dictionary.TryGetValue(key, out var obj))
+            if (!this.Dictionary.TryGetValue(key, out var obj))
             {
                 return defaultValue;
             }
@@ -152,7 +182,7 @@ namespace DeliveryTracker.Common
                         result.Add(item.ToObject<T>());
                     }
                     
-                    this.dictionary[key] = result;
+                    this.Dictionary[key] = result;
                     return result;
                 }
                 case IList<IDictionary<string, object>> listDict:
@@ -165,7 +195,7 @@ namespace DeliveryTracker.Common
                         result.Add(deserialized);
                     }
 
-                    this.dictionary[key] = result;
+                    this.Dictionary[key] = result;
                     return result;
                 }
             }
@@ -173,11 +203,11 @@ namespace DeliveryTracker.Common
             return defaultValue;
         }
         
-        protected void Set(
+        protected virtual void Set(
             string key,
             object value)
         {
-            this.dictionary[key] = value;
+            this.Dictionary[key] = value;
         }
         
         #endregion

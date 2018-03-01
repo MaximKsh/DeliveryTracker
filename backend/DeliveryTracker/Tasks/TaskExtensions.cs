@@ -6,10 +6,6 @@ namespace DeliveryTracker.Tasks
     {
         public static IServiceCollection AddDeliveryTrackerTaskStates(this IServiceCollection services)
         {
-            services
-                .AddScoped<TaskService>()
-                .AddScoped<TaskStateCache>();
-            
             return services;
         }
 

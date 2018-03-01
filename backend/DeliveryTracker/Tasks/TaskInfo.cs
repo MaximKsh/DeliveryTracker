@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using DeliveryTracker.Common;
 
 namespace DeliveryTracker.Tasks
@@ -183,6 +184,15 @@ namespace DeliveryTracker.Tasks
         {
             get => this.Get<Guid?>(nameof(this.PaymentTypeId));
             set => this.Set(nameof(this.PaymentTypeId), value);
+        }
+
+        /// <summary>
+        /// Список товаров.
+        /// </summary>
+        public IList<Guid> Products
+        {
+            get => this.Get<IList<Guid>>(nameof(this.Products));
+            set => this.Set(nameof(this.Products), value);
         }
         
         /// <summary>

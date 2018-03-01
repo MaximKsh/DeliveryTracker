@@ -95,6 +95,7 @@ namespace DeliveryTrackerWeb
             services.AddMvc().AddJsonOptions(
                 p =>
                 {
+                    p.SerializerSettings.Converters.Add(new DictionaryObjectJsonConverter());
                     p.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                     p.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Include;
                     p.SerializerSettings.MissingMemberHandling = MissingMemberHandling.Ignore;

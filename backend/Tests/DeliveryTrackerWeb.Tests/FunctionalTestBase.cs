@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using DeliveryTracker.Common;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTrackerWeb.Tests.Validation;
@@ -23,6 +24,7 @@ namespace DeliveryTrackerWeb.Tests
         static FunctionalTestBase()
         {
             Settings.Converters.Add(new ErrorJsonConverter());
+            Settings.Converters.Add(new DictionaryObjectJsonConverter());
             Settings.NullValueHandling = NullValueHandling.Ignore;
             Settings.DefaultValueHandling = DefaultValueHandling.Ignore;
             Settings.MissingMemberHandling = MissingMemberHandling.Ignore;

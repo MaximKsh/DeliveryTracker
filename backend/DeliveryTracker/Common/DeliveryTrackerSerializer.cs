@@ -26,21 +26,21 @@ namespace DeliveryTracker.Common
         
         /// <inheritdoc />
         public string SerializeJson(
-            object obj) => JsonConvert.SerializeObject(obj);
+            object obj) => JsonConvert.SerializeObject(obj, this.settings);
 
         /// <inheritdoc />
         public string SerializeJson(
-            IDictionaryObject obj) => JsonConvert.SerializeObject(obj.GetDictionary());
+            IDictionaryObject obj) => JsonConvert.SerializeObject(obj.GetDictionary(), this.settings);
 
         /// <inheritdoc />
         public T DeserializeJson<T>(
-            string serialized) => JsonConvert.DeserializeObject<T>(serialized);
+            string serialized) => JsonConvert.DeserializeObject<T>(serialized, this.settings);
 
         /// <inheritdoc />
         public T DeserializeJsonDictionaryObject<T>(
             string serialized) where T : IDictionaryObject, new()
         {
-            var dict = JsonConvert.DeserializeObject<IDictionary<string, object>>(serialized);
+            var dict = JsonConvert.DeserializeObject<IDictionary<string, object>>(serialized, this.settings);
             var obj = new T();
             obj.SetDictionary(dict);
             return obj;

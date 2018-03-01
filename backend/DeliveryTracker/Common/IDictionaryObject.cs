@@ -8,5 +8,7 @@ namespace DeliveryTracker.Common
             IDictionary<string, object> dict);
 
         IDictionary<string, object> GetDictionary();
+
+        T Cast<T>() where T : IDictionaryObject, new();
     }
 }
