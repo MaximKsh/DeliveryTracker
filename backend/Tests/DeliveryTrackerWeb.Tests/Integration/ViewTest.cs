@@ -104,6 +104,15 @@ namespace DeliveryTrackerWeb.Tests.Integration
                 {
                     Entity = new PaymentType { Name = "Visa", }.GetDictionary()
                 });
+            
+            await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl("Warehouse/create"),
+                new ReferenceRequest
+                {
+                    Entity = new Warehouse { Name = "Warehouse1", }.GetDictionary()
+                });
+
 
             var clientsResult = await RequestGet<ViewResponse>(
                 client,
@@ -122,13 +131,17 @@ namespace DeliveryTrackerWeb.Tests.Integration
                 ViewUrl("ReferenceViewGroup/PaymentTypesView"));
             Assert.Equal(HttpStatusCode.OK, paymentTypeResult.StatusCode);
             Assert.Single(paymentTypeResult.Result.ViewResult);
-            
+            var warehouseResult = await RequestGet<ViewResponse>(
+                client,
+                ViewUrl("ReferenceViewGroup/WarehousesView"));
+            Assert.Equal(HttpStatusCode.OK, warehouseResult.StatusCode);
+            Assert.Single(warehouseResult.Result.ViewResult);
             
             var digestResult = await RequestGet<ViewResponse>(
                 client,
                 ViewUrl("ReferenceViewGroup/digest"));
             Assert.Equal(HttpStatusCode.OK, digestResult.StatusCode);
-            Assert.Equal(3, digestResult.Result.Digest.Count);
+            Assert.Equal(4, digestResult.Result.Digest.Count);
             Assert.Equal(1, digestResult.Result.Digest["ClientsView"].Count);
             Assert.Equal(1, digestResult.Result.Digest["ProductsView"].Count);
             Assert.Equal(1, digestResult.Result.Digest["PaymentTypesView"].Count);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Text;
 using DeliveryTracker.Database;
@@ -10,7 +11,6 @@ namespace DeliveryTracker.References
 {
     public class WarehouseReferenceService : ReferenceServiceBase<Warehouse>
     {
-        
         #region sql
         
         private static readonly string SqlCreate = @"
@@ -39,6 +39,11 @@ returning " + ReferenceHelper.GetWarehouseColumns() + ";";
 select " + ReferenceHelper.GetWarehouseColumns() + @"
 from warehouses
 where id = @id and instance_id = @instance_id;";
+        
+        private static readonly string SqlGetList = @"
+select " + ReferenceHelper.GetWarehouseColumns() + @"
+from warehouses
+where id = ANY (@ids) and instance_id = @instance_id;";
         
         private const string SqlDelete = @"
 delete from warehouses
@@ -109,6 +114,15 @@ where id = @id and instance_id = @instance_id
             return null;
         }
 
+        protected override ExecutionParameters SetCommandGetList(
+            NpgsqlCommand command,
+            IEnumerable<Guid> ids,
+            UserCredentials credentials)
+        {
+            command.CommandText = SqlGetList;
+            return null;
+        }
+
         protected override ExecutionParameters SetCommandDelete(
             NpgsqlCommand command,
             Guid id,
@@ -122,6 +136,20 @@ where id = @id and instance_id = @instance_id
             IDataReader reader,
             ReferenceServiceExecutionContext ctx) =>
             reader.GetWarehouse();
+
+        protected override IList<Warehouse> ReadList(
+            IDataReader reader,
+            ReferenceServiceExecutionContext ctx)
+        {
+            var list = new List<Warehouse>();
+            while (reader.Read())
+            {
+                list.Add(reader.GetWarehouse());
+            }
+
+            return list;
+        }
+            
 
         #endregion
     }

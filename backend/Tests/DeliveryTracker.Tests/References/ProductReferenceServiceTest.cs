@@ -1,4 +1,7 @@
-﻿using DeliveryTracker.Identification;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using DeliveryTracker.Identification;
 using DeliveryTracker.References;
 using DeliveryTracker.Validation;
 using Moq;
@@ -71,6 +74,29 @@ namespace DeliveryTracker.Tests.References
             Assert.Equal(product.Description, getResult.Result.Description);
             Assert.Equal(product.Cost, getResult.Result.Cost);
             Assert.Equal(product.VendorCode, getResult.Result.VendorCode);
+        }
+        
+        [Fact]
+        public async void GetList()
+        {
+            // Arrange    
+            var ids = new List<Guid>();
+            for (var i = 0; i < 10; i++)
+            {
+                var entity = new Product
+                {
+                    Name = i.ToString()
+                };
+                var createResult = await this.productService.CreateAsync(entity);  
+                ids.Add(createResult.Result.Id);
+            }
+            
+            // Act
+            var getResult = await this.productService.GetAsync(ids);
+
+            // Assert
+            Assert.True(getResult.Success, getResult.Errors.ErrorsToString());
+            Assert.Equal(ids.OrderBy(p => p), getResult.Result.Select(p => p.Id).OrderBy(p => p));
         }
         
         [Fact]

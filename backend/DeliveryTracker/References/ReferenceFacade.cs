@@ -70,6 +70,19 @@ namespace DeliveryTracker.References
             }
             return new ServiceResult<ReferenceEntityBase>(ErrorFactory.ReferenceTypeNotFound(type));
         }
+        
+        /// <inheritdoc />
+        public async Task<ServiceResult<IList<ReferenceEntityBase>>> GetAsync(
+            string type,
+            IList<Guid> ids,
+            NpgsqlConnectionWrapper oc = null)
+        {
+            if (this.services.TryGetValue(type, out var service))
+            {
+                return await service.GetAsync(ids, oc);
+            }
+            return new ServiceResult<IList<ReferenceEntityBase>>(ErrorFactory.ReferenceTypeNotFound(type));
+        }
 
         /// <inheritdoc />
         public async Task<ServiceResult<ReferenceEntityBase>> EditAsync(

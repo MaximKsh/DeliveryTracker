@@ -117,14 +117,14 @@ namespace DeliveryTracker.Common
             string key,
             T defaultValue = default)
         {
-            if (!this.BeforeGet(key, defaultValue, out var substitutedValue))
+            if (this.BeforeGet(key, defaultValue, out var substitutedValue))
             {
                 return substitutedValue;
             }
 
             var result = base.Get(key, defaultValue);
 
-            if (!this.AfterGet(key, result, defaultValue, out substitutedValue))
+            if (this.AfterGet(key, result, defaultValue, out substitutedValue))
             {
                 return substitutedValue;
             }
@@ -136,14 +136,14 @@ namespace DeliveryTracker.Common
             string key,
             T defaultValue = default)
         {
-            if (!this.BeforeGetObject(key, defaultValue, out var substitutedValue))
+            if (this.BeforeGetObject(key, defaultValue, out var substitutedValue))
             {
                 return substitutedValue;
             }
 
             var result = base.GetObject(key, defaultValue);
             
-            if (!this.AfterGetObject(key, result, defaultValue, out substitutedValue))
+            if (this.AfterGetObject(key, result, defaultValue, out substitutedValue))
             {
                 return substitutedValue;
             }
@@ -155,14 +155,14 @@ namespace DeliveryTracker.Common
             string key,
             IList<T> defaultValue = default)
         {
-            if (!this.BeforeGetList(key, defaultValue, out var substitutedValue))
+            if (this.BeforeGetList(key, defaultValue, out var substitutedValue))
             {
                 return substitutedValue;
             }
 
             var result = base.GetList(key, defaultValue);
 
-            if (!this.AfterGetList(key, result, defaultValue, out substitutedValue))
+            if (this.AfterGetList(key, result, defaultValue, out substitutedValue))
             {
                 return substitutedValue;
             }

@@ -1,4 +1,7 @@
-﻿using DeliveryTracker.Identification;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using DeliveryTracker.Identification;
 using DeliveryTracker.References;
 using DeliveryTracker.Validation;
 using Moq;
@@ -8,7 +11,7 @@ namespace DeliveryTracker.Tests.References
 {
     public class WarehouseReferenceServiceTest: DeliveryTrackerConnectionTestBase
     {
-        private readonly IReferenceService<Warehouse> productService;
+        private readonly IReferenceService<Warehouse> warehouseService;
 
         public WarehouseReferenceServiceTest()
         {
@@ -22,7 +25,7 @@ namespace DeliveryTracker.Tests.References
                     .Setup(x => x.GetUserCredentials())
                     .Returns(new UserCredentials(me));
             }
-            this.productService = new WarehouseReferenceService(this.Cp, accessor.Object);
+            this.warehouseService = new WarehouseReferenceService(this.Cp, accessor.Object);
         }
 
         [Fact]
@@ -36,7 +39,7 @@ namespace DeliveryTracker.Tests.References
             };
             
             // Act
-            var createResult = await this.productService.CreateAsync(warehouse);
+            var createResult = await this.warehouseService.CreateAsync(warehouse);
             
             // Assert
             Assert.True(createResult.Success, createResult.Errors.ErrorsToString());
@@ -53,10 +56,10 @@ namespace DeliveryTracker.Tests.References
                 Name = "Dom1",
                 RawAddress = "123",
             };
-            var createResult = await this.productService.CreateAsync(warehouse);
+            var createResult = await this.warehouseService.CreateAsync(warehouse);
             
             // Act
-            var getResult = await this.productService.GetAsync(createResult.Result.Id);
+            var getResult = await this.warehouseService.GetAsync(createResult.Result.Id);
             
             // Assert
             Assert.True(getResult.Success, createResult.Errors.ErrorsToString());
@@ -71,7 +74,7 @@ namespace DeliveryTracker.Tests.References
             {
                 Name = "Dom1",
             };
-            var createResult = await this.productService.CreateAsync(warehouse);
+            var createResult = await this.warehouseService.CreateAsync(warehouse);
             var newWarehouse = new Warehouse()
             {
                 Id = createResult.Result.Id,
@@ -79,13 +82,35 @@ namespace DeliveryTracker.Tests.References
             };
             
             // Act
-            var editResult = await this.productService.EditAsync(newWarehouse);
+            var editResult = await this.warehouseService.EditAsync(newWarehouse);
             
             // Assert
             Assert.True(editResult.Success, createResult.Errors.ErrorsToString());
             Assert.Equal(newWarehouse.Name, editResult.Result.Name);
         }
         
+        [Fact]
+        public async void GetList()
+        {
+            // Arrange    
+            var ids = new List<Guid>();
+            for (var i = 0; i < 10; i++)
+            {
+                var entity = new Warehouse
+                {
+                    Name = i.ToString()
+                };
+                var createResult = await this.warehouseService.CreateAsync(entity);  
+                ids.Add(createResult.Result.Id);
+            }
+            
+            // Act
+            var getResult = await this.warehouseService.GetAsync(ids);
+            
+            // Assert
+            Assert.True(getResult.Success, getResult.Errors.ErrorsToString());
+            Assert.Equal(ids.OrderBy(p => p), getResult.Result.Select(p => p.Id).OrderBy(p => p));
+        }
         
         [Fact]
         public async void Delete()
@@ -95,10 +120,10 @@ namespace DeliveryTracker.Tests.References
             {
                 Name = "Dom3",
             };
-            var createResult = await this.productService.CreateAsync(product);
+            var createResult = await this.warehouseService.CreateAsync(product);
             
             // Act
-            var deleteResult = await this.productService.DeleteAsync(createResult.Result.Id);
+            var deleteResult = await this.warehouseService.DeleteAsync(createResult.Result.Id);
             
             // Assert
             Assert.True(deleteResult.Success, deleteResult.Errors.ErrorsToString());

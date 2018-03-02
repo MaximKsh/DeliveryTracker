@@ -6,6 +6,10 @@ namespace DeliveryTracker.Tasks
     {
         public static IServiceCollection AddDeliveryTrackerTaskStates(this IServiceCollection services)
         {
+            services
+                .AddSingleton<ITaskTransitionManager, TaskTransitionManager>()
+                ;
+            
             return services;
         }
 

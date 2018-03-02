@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Text;
 using DeliveryTracker.Database;
@@ -28,6 +29,11 @@ returning " + ReferenceHelper.GetProductColumns() + ";";
 select " + ReferenceHelper.GetProductColumns() + @"
 from products
 where id = @id and instance_id = @instance_id;";
+        
+        private static readonly string SqlGetList = @"
+select " + ReferenceHelper.GetProductColumns() + @"
+from products
+where id = ANY(@ids) and instance_id = @instance_id;";
         
         private const string SqlDelete = @"
 delete from products
@@ -106,6 +112,15 @@ where id = @id and instance_id = @instance_id
             command.CommandText = SqlGet;
             return null;
         }
+        
+        protected override ExecutionParameters SetCommandGetList(
+            NpgsqlCommand command,
+            IEnumerable<Guid> ids,
+            UserCredentials credentials)
+        {
+            command.CommandText = SqlGetList;
+            return null;
+        }
 
         protected override ExecutionParameters SetCommandDelete(
             NpgsqlCommand command,
@@ -119,6 +134,20 @@ where id = @id and instance_id = @instance_id
         protected override Product Read(IDataReader reader, ReferenceServiceExecutionContext ctx)
         {
             return reader.GetProduct();
+        }
+        
+        
+        protected override IList<Product> ReadList(
+            IDataReader reader,
+            ReferenceServiceExecutionContext ctx)
+        {
+            var list = new List<Product>();
+            while (reader.Read())
+            {
+                list.Add(reader.GetProduct());
+            }
+
+            return list;
         }
 
         #endregion
