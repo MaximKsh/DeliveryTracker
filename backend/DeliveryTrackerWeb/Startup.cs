@@ -6,6 +6,7 @@ using DeliveryTracker.Geopositioning;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.References;
+using DeliveryTracker.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,6 +46,7 @@ namespace DeliveryTrackerWeb
                 .AddDeliveryTrackerInstances()
                 .AddDeliveryTrackerReferences()
                 .AddDeliveryTrackerViews()
+                .AddDeliveryTrackerTasks()
                 ;
         }
 

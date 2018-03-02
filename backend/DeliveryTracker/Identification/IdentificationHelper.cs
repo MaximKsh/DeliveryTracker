@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DeliveryTracker.Common;
+using DeliveryTracker.Database;
 using Microsoft.Extensions.Configuration;
 
 namespace DeliveryTracker.Identification
@@ -23,12 +24,8 @@ namespace DeliveryTracker.Identification
             "ST_Y(geoposition::geometry)",
         }.AsReadOnly();
         
-        public static string GetUserColumns(string prefix = null)
-        {
-            prefix = prefix ?? string.Empty;
-            return string.Join("," + Environment.NewLine, UserColumnList.Select(p => prefix + p));
-        }
-        
+        public static string GetUserColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(UserColumnList, prefix);
         
         public static readonly IReadOnlyList<string> SessionColumnList = new List<string>
         {
@@ -39,11 +36,9 @@ namespace DeliveryTracker.Identification
             "last_activity"
         }.AsReadOnly();
         
-        public static string GetSessionColumns(string prefix = null)
-        {
-            prefix = prefix ?? string.Empty;
-            return string.Join("," + Environment.NewLine, SessionColumnList.Select(p => prefix + p));
-        }
+        public static string GetSessionColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(SessionColumnList, prefix);
+        
         
         
         public static PasswordSettings ReadPasswordSettingsFromConf(IConfiguration configuration)

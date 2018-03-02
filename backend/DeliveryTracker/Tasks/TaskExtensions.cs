@@ -1,13 +1,14 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Data;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DeliveryTracker.Tasks
 {
     public static class TaskExtensions
     {
-        public static IServiceCollection AddDeliveryTrackerTaskStates(this IServiceCollection services)
+        public static IServiceCollection AddDeliveryTrackerTasks(this IServiceCollection services)
         {
             services
-                .AddSingleton<ITaskTransitionManager, TaskTransitionManager>()
+                .AddSingleton<ITaskStateTransitionManager, TaskStateTransitionManager>()
                 ;
             
             return services;
@@ -29,5 +30,27 @@ namespace DeliveryTracker.Tasks
             tInfo.TaskStateName = state.Name;
             tInfo.TaskStateCaption = state.Caption;
         }
+        
+        #region IDataReader
+        
+        public static TaskStateTransition GetTaskStateTransition(this IDataReader reader)
+        {
+            var idx = 0;
+            return reader.GetTaskStateTransition(ref idx);
+        }
+        
+        public static TaskStateTransition GetTaskStateTransition(this IDataReader reader, ref int idx)
+        {
+            return new TaskStateTransition
+            {
+                Id = reader.GetGuid(idx++),
+                Role = reader.GetGuid(idx++),
+                InitialState = reader.GetGuid(idx++),
+                FinalState = reader.GetGuid(idx++),
+                ButtonCaption = reader.GetString(idx++),
+            };
+        }
+        
+        #endregion
     }
 }

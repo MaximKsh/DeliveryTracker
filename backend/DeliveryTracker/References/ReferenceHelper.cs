@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DeliveryTracker.Database;
 
 namespace DeliveryTracker.References
 {
@@ -79,26 +80,23 @@ namespace DeliveryTracker.References
         }
         
         
-        public static string GetProductColumns(string prefix = null)=>
-            GetColumnsInternal(ProductColumnList, prefix);
+        public static string GetProductColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(ProductColumnList, prefix);
         
-        public static string GetPaymentTypeColumns(string prefix = null) =>
-            GetColumnsInternal(PaymentTypeColumnList, prefix);
         
-        public static string GetClientColumns(string prefix = null)=>
-            GetColumnsInternal(ClientColumnList, prefix);
+        public static string GetPaymentTypeColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(PaymentTypeColumnList, prefix);
         
-        public static string GetAddressColumns(string prefix = null)=>
-            GetColumnsInternal(AddressColumnList, prefix);
         
-        public static string GetWarehouseColumns(string prefix = null)=>
-            GetColumnsInternal(WarehouseColumnList, prefix);
-
-        private static string GetColumnsInternal(IEnumerable<string> source, string prefix = null)
-        {
-            prefix = prefix ?? string.Empty;
-            return string.Join("," + Environment.NewLine, source.Select(p => prefix + p));
-        }
+        public static string GetClientColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(ClientColumnList, prefix);
         
+        
+        public static string GetAddressColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(AddressColumnList, prefix);
+        
+        
+        public static string GetWarehouseColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(WarehouseColumnList, prefix);
     }
 }
