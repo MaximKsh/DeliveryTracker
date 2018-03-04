@@ -404,6 +404,29 @@ namespace DeliveryTracker.Validation
                 });
         
         /// <summary>
+        /// Возникла ошибка при создании задания.
+        /// </summary>
+        /// <returns></returns>
+        public static IError TaskCreationError() =>
+            new Error(
+                ErrorCode.TaskCreationError,
+                LocalizationAlias.Error.TaskCreationError);
+        
+        /// <summary>
+        /// Возникла ошибка при редактировании задания.
+        /// </summary>
+        /// <returns></returns>
+        public static IError TaskEditError(Guid taskId) =>
+            new Error(
+                ErrorCode.TaskEditError,
+                LocalizationAlias.Error.TaskEditError,
+                new Dictionary<string, string>
+                {
+                    [nameof(taskId)] = taskId.ToString(),
+                });
+        
+        
+        /// <summary>
         /// Задание не найдено.
         /// </summary>
         /// <returns></returns>

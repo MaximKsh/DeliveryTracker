@@ -290,15 +290,18 @@ where id = @id and instance_id = @instance_id
                 using (var command = connWrapper.CreateCommand())
                 {
                     var builder = new StringBuilder();
-                     
+                    var parametersCounter = 0; 
+                    
                     command.Parameters.Add(new NpgsqlParameter("id", user.Id));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", user.InstanceId));
-                    command.AppendIfNotDefault(builder, "surname", user.Surname);
-                    command.AppendIfNotDefault(builder, "name", user.Name);
-                    command.AppendIfNotDefault(builder, "patronymic", user.Patronymic);
-                    command.AppendIfNotDefault(builder, "phone_number", user.PhoneNumber);
-                    
-                    command.CommandText = string.Format(SqlUpdate, builder.ToString());
+                    parametersCounter += command.AppendIfNotDefault(builder, "surname", user.Surname);
+                    parametersCounter += command.AppendIfNotDefault(builder, "name", user.Name);
+                    parametersCounter += command.AppendIfNotDefault(builder, "patronymic", user.Patronymic);
+                    parametersCounter += command.AppendIfNotDefault(builder, "phone_number", user.PhoneNumber);
+
+                    command.CommandText = parametersCounter != 0
+                        ? string.Format(SqlUpdate, builder.ToString())
+                        : SqlGet;
                     try
                     {
                         using (var reader = await command.ExecuteReaderAsync())

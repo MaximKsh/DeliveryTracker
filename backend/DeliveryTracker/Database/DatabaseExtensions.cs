@@ -4,6 +4,7 @@ using System.Data;
 using System.Text;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace DeliveryTracker.Database
 {
@@ -22,6 +23,19 @@ namespace DeliveryTracker.Database
         {
             parameter.Value = parameter.Value ?? DBNull.Value;
             parameter.IsNullable = true;
+            return parameter;
+        }
+        
+        public static NpgsqlParameter WithType(this NpgsqlParameter parameter, NpgsqlDbType dbType)
+        {
+            parameter.NpgsqlDbType = dbType;
+            return parameter;
+        }
+        
+        public static NpgsqlParameter WithArrayType(this NpgsqlParameter parameter, NpgsqlDbType dbType)
+        {
+            // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
+            parameter.NpgsqlDbType = NpgsqlDbType.Array | dbType;
             return parameter;
         }
         

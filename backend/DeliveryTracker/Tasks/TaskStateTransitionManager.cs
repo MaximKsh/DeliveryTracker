@@ -39,14 +39,14 @@ where role = @role and initial_state = @initial_state and final_state = @final_s
 ";
         
         private static readonly string SqlGetTransition = $@"
-select {TaskHelper.GetTaskStateTransitionColuns()}
+select {TaskHelper.GetTaskStateTransitionColumns()}
 from ""task_state_transitions""
 where role = @role and initial_state = @initial_state and final_state = @final_state
 ;
 ";
         
         private static readonly string SqlGetTransitions = $@"
-select {TaskHelper.GetTaskStateTransitionColuns()}
+select {TaskHelper.GetTaskStateTransitionColumns()}
 from ""task_state_transitions""
 where role = @role and initial_state = @initial_state
 ;

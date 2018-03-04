@@ -31,6 +31,8 @@
             public const string ReferenceTypeNotFound = Pref + "ReferenceTypeNotFound";
             public const string RoleNotFound = Pref + "RoleNotFound";
             public const string ServerError = Pref + "ServerError";
+            public const string TaskCreationError = Pref + "TaskCreationError";
+            public const string TaskEditError = Pref + "TaskEditError";
             public const string TaskNotFound = Pref + "TaskNotFound";
             public const string UserCreationError = Pref + "UserCreationError";
             public const string UserDeleted = Pref + "UserDeleted";

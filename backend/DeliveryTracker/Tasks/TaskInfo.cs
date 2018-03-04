@@ -185,15 +185,6 @@ namespace DeliveryTracker.Tasks
             get => this.Get<Guid?>(nameof(this.PaymentTypeId));
             set => this.Set(nameof(this.PaymentTypeId), value);
         }
-
-        /// <summary>
-        /// Список товаров.
-        /// </summary>
-        public IList<Guid> Products
-        {
-            get => this.Get<IList<Guid>>(nameof(this.Products));
-            set => this.Set(nameof(this.Products), value);
-        }
         
         /// <summary>
         /// Стоимость товаров. 
@@ -211,6 +202,15 @@ namespace DeliveryTracker.Tasks
         {
             get => this.Get<decimal?>(nameof(this.DeliveryCost));
             set => this.Set(nameof(this.DeliveryCost), value);
+        }
+
+        /// <summary>
+        /// Список товаров и количество.
+        /// </summary>
+        public IList<TaskProduct> TaskProducts
+        {
+            get => this.GetList<TaskProduct>(nameof(this.TaskProducts));
+            set => this.Set(nameof(this.TaskProducts), value);
         }
     }
 }

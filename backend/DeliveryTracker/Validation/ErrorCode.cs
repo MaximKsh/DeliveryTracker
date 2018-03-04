@@ -124,6 +124,16 @@
         public const string IncorrectTaskStateTransition = "IncorrectTaskStateTransition";
         
         /// <summary>
+        /// Код ошибки: ошибка создания задания.
+        /// </summary>
+        public const string TaskCreationError = "TaskCreationError";
+        
+        /// <summary>
+        /// Код ошибки: ошибка редактирования задания.
+        /// </summary>
+        public const string TaskEditError = "TaskEditError";
+        
+        /// <summary>
         /// Код ошибки: задание не найдено.
         /// </summary>
         public const string TaskNotFound = "TaskNotFound";

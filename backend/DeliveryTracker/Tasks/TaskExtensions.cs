@@ -1,4 +1,6 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
+using DeliveryTracker.Database;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DeliveryTracker.Tasks
@@ -9,6 +11,7 @@ namespace DeliveryTracker.Tasks
         {
             services
                 .AddSingleton<ITaskStateTransitionManager, TaskStateTransitionManager>()
+                .AddSingleton<ITaskManager, TaskManager>()
                 ;
             
             return services;
@@ -48,6 +51,61 @@ namespace DeliveryTracker.Tasks
                 InitialState = reader.GetGuid(idx++),
                 FinalState = reader.GetGuid(idx++),
                 ButtonCaption = reader.GetString(idx++),
+            };
+        }
+        
+        public static TaskInfo GetTaskInfo(this IDataReader reader)
+        {
+            var idx = 0;
+            return reader.GetTaskInfo(ref idx);
+        }
+        
+        public static TaskInfo GetTaskInfo(this IDataReader reader, ref int idx)
+        {
+            var taskInfo = new TaskInfo
+            {
+                Id = reader.GetGuid(idx++),
+                InstanceId = reader.GetGuid(idx++),
+                TaskStateId = reader.GetGuid(idx++),
+                AuthorId = reader.GetGuid(idx++),
+                PerformerId = reader.GetValueOrDefault<Guid?>(idx++),
+                TaskNumber = reader.GetValueOrDefault<string>(idx++),
+                Created = reader.GetValueOrDefault<DateTime?>(idx++),
+                StateChangedLastTime = reader.GetValueOrDefault<DateTime?>(idx++),
+                Receipt = reader.GetValueOrDefault<DateTime?>(idx++),
+                ReceiptActual = reader.GetValueOrDefault<DateTime?>(idx++),
+                DeliveryFrom = reader.GetValueOrDefault<DateTime?>(idx++),
+                DeliveryTo = reader.GetValueOrDefault<DateTime?>(idx++),
+                DeliveryActual = reader.GetValueOrDefault<DateTime>(idx++),
+                Comment = reader.GetValueOrDefault<string>(idx++),
+                WarehouseId = reader.GetValueOrDefault<Guid?>(idx++),
+                ClientId = reader.GetValueOrDefault<Guid?>(idx++),
+                ClientAddressId = reader.GetValueOrDefault<Guid?>(idx++),
+                PaymentTypeId = reader.GetValueOrDefault<Guid?>(idx++),
+                Cost = reader.GetValueOrDefault<decimal?>(idx++),
+                DeliveryCost = reader.GetValueOrDefault<decimal?>(idx++),
+            };
+            
+            if (DefaultTaskStates.AllTaskStates.TryGetValue(taskInfo.TaskStateId, out var state))
+            {
+                taskInfo.SetState(state);
+            }
+
+            return taskInfo;
+        }
+        
+        public static TaskProduct GetTaskProduct(this IDataReader reader)
+        {
+            var idx = 0;
+            return reader.GetTaskProduct(ref idx);
+        }
+        
+        public static TaskProduct GetTaskProduct(this IDataReader reader, ref int idx)
+        {
+            return new TaskProduct
+            {
+                ProductId = reader.GetGuid(idx++),
+                Quantity = reader.GetInt32(idx++),
             };
         }
         
