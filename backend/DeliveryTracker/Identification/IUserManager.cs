@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
@@ -34,6 +35,18 @@ namespace DeliveryTracker.Identification
         /// <param name="oc">Открытое соединение с базой</param>
         /// <returns>Пользователь или список ошибок.</returns>
         Task<ServiceResult<User>> GetAsync(Guid userId, Guid instanceId, NpgsqlConnectionWrapper oc = null);
+
+        /// <summary>
+        /// Получить нескольких пользователей по id.
+        /// </summary>
+        /// <param name="userIds"></param>
+        /// <param name="instanceId"></param>
+        /// <param name="oc"></param>
+        /// <returns></returns>
+        Task<ServiceResult<IList<User>>> GetAsync(
+            ICollection<Guid> userIds,
+            Guid instanceId,
+            NpgsqlConnectionWrapper oc = null);
         
         /// <summary>
         /// Получить пользователя из инстанса по коду.

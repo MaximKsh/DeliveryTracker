@@ -79,7 +79,7 @@ namespace DeliveryTracker.References
 
         protected abstract ExecutionParameters SetCommandGetList(
             NpgsqlCommand command, 
-            IEnumerable<Guid> ids, 
+            ICollection<Guid> ids, 
             UserCredentials credentials);
         
         protected abstract ExecutionParameters SetCommandDelete(
@@ -121,7 +121,7 @@ namespace DeliveryTracker.References
             return credentials.Valid;
         }
         
-        protected virtual bool CanGetList(IEnumerable<Guid> ids, UserCredentials credentials)
+        protected virtual bool CanGetList(ICollection<Guid> ids, UserCredentials credentials)
         {
             return credentials.Valid;
         }
@@ -246,7 +246,7 @@ namespace DeliveryTracker.References
         }
 
         /// <inheritdoc />
-        public virtual async Task<ServiceResult<IList<T>>> GetAsync(IList<Guid> ids, NpgsqlConnectionWrapper oc = null)
+        public virtual async Task<ServiceResult<IList<T>>> GetAsync(ICollection<Guid> ids, NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.Accessor.GetUserCredentials();
             if (!this.CanGetList(ids, credentials))
@@ -260,7 +260,7 @@ namespace DeliveryTracker.References
                 using (var command = conn.CreateCommand())
                 {
                     // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
-                    command.Parameters.Add(new NpgsqlParameter("ids", ids) { NpgsqlDbType = NpgsqlDbType.Array | NpgsqlDbType.Uuid});
+                    command.Parameters.Add(new NpgsqlParameter("ids", ids).WithArrayType(NpgsqlDbType.Uuid));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", credentials.InstanceId));
 
                     var parameters = this.SetCommandGetList(command, ids, credentials);
@@ -412,7 +412,7 @@ namespace DeliveryTracker.References
         
         /// <inheritdoc />  
         async Task<ServiceResult<IList<ReferenceEntityBase>>> IReferenceService.GetAsync(
-            IList<Guid> ids,
+            ICollection<Guid> ids,
             NpgsqlConnectionWrapper oc)
         {
             var result = await this.GetAsync(ids, oc);

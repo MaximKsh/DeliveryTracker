@@ -36,7 +36,7 @@ namespace DeliveryTracker.References
         /// <param name="oc"></param>
         /// <returns></returns>
         new Task<ServiceResult<IList<T>>> GetAsync(
-            IList<Guid> ids, 
+            ICollection<Guid> ids, 
             NpgsqlConnectionWrapper oc = null);
 
         /// <summary>

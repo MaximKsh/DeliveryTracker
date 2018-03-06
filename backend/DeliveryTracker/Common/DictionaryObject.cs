@@ -15,7 +15,7 @@ namespace DeliveryTracker.Common
             new Dictionary<string, object>();
         
         #endregion
-        
+
         #region public
         
         public virtual void SetDictionary(
@@ -135,9 +135,10 @@ namespace DeliveryTracker.Common
             return defaultValue;
         }
 
-        protected virtual IDictionary<string, IDictionaryObject> GetDictionaryField(
+        protected virtual IDictionary<string, T> GetDictionaryField <T> (
             string key,
-            IDictionary<string, IDictionaryObject> defaultValue = default)
+            IDictionary<string, T> defaultValue = default)
+            where T : IDictionaryObject, new ()
         {
             if (!this.Dictionary.TryGetValue(key, out var obj))
             {
@@ -148,15 +149,19 @@ namespace DeliveryTracker.Common
             {
                 case null:
                     return defaultValue;
+                case IDictionary<string, T> dict:
+                    return dict;
                 case JObject jobj:
-                    var result = new Dictionary<string, IDictionaryObject>((int)(1.5 * jobj.Count));
+                    var result = new Dictionary<string, T>((int)(1.5 * jobj.Count));
                     foreach (var pair in jobj)
                     {
+                        var dictionary = pair.Value.ToObject<IDictionary<string, object>>();
+                        var dictObj = new T();
+                        dictObj.SetDictionary(dictionary);
+                        result.Add(pair.Key, dictObj);
                     }
                     this.Dictionary[key] = result;
                     return result;
-                case IDictionary<string, IDictionaryObject> dict:
-                    return dict;
             }
             return defaultValue;
         }
@@ -172,6 +177,8 @@ namespace DeliveryTracker.Common
 
             switch (obj)
             {
+                case null:
+                    return null;
                 case IList<T> value:
                     return value;
                 case IList<JToken> jsonObjectList:

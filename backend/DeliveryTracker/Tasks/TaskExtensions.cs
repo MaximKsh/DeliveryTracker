@@ -12,6 +12,7 @@ namespace DeliveryTracker.Tasks
             services
                 .AddSingleton<ITaskStateTransitionManager, TaskStateTransitionManager>()
                 .AddSingleton<ITaskManager, TaskManager>()
+                .AddSingleton<ITaskService, TaskService>()
                 ;
             
             return services;

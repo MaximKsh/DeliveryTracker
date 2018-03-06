@@ -12,15 +12,15 @@ namespace DeliveryTracker.Tasks
             set => this.Set(nameof(this.TaskInfo), value);
         }
         
-        public IDictionary<string, IDictionaryObject> LinkedReferences
+        public IDictionary<string, DictionaryObject> LinkedReferences
         {
-            get => this.GetDictionaryField(nameof(this.LinkedReferences));
+            get => this.GetDictionaryField<DictionaryObject>(nameof(this.LinkedReferences));
             set => this.Set(nameof(this.LinkedReferences), value);
         }
 
-        public IList<User> LinkedUsers
+        public IDictionary<string, User> LinkedUsers
         {
-            get => this.GetList<User>(nameof(this.LinkedUsers));
+            get => this.GetDictionaryField<User>(nameof(this.LinkedUsers));
             set => this.Set(nameof(this.LinkedUsers), value);
         }
 

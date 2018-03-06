@@ -74,7 +74,7 @@ namespace DeliveryTracker.References
         /// <inheritdoc />
         public async Task<ServiceResult<IList<ReferenceEntityBase>>> GetAsync(
             string type,
-            IList<Guid> ids,
+            ICollection<Guid> ids,
             NpgsqlConnectionWrapper oc = null)
         {
             if (this.services.TryGetValue(type, out var service))

@@ -116,7 +116,7 @@ where id = @id and instance_id = @instance_id
 
         protected override ExecutionParameters SetCommandGetList(
             NpgsqlCommand command,
-            IEnumerable<Guid> ids,
+            ICollection<Guid> ids,
             UserCredentials credentials)
         {
             command.CommandText = SqlGetList;

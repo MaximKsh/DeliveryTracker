@@ -416,13 +416,14 @@ namespace DeliveryTracker.Validation
         /// Возникла ошибка при редактировании задания.
         /// </summary>
         /// <returns></returns>
-        public static IError TaskEditError(Guid taskId) =>
+        public static IError TaskEditError(Guid taskId, string comment = null) =>
             new Error(
                 ErrorCode.TaskEditError,
                 LocalizationAlias.Error.TaskEditError,
                 new Dictionary<string, string>
                 {
                     [nameof(taskId)] = taskId.ToString(),
+                    [nameof(comment)] = comment ?? string.Empty
                 });
         
         

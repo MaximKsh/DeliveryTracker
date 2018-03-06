@@ -61,6 +61,16 @@ namespace DeliveryTracker.Tasks
         /// <param name="oc"></param>
         /// <returns></returns>
         Task<ServiceResult> FillProductsAsync(
+            TaskInfo taskInfo,
+            NpgsqlConnectionWrapper oc = null);
+        
+        /// <summary>
+        /// Заполнить информацию о заданиях списком товаров.
+        /// </summary>
+        /// <param name="taskInfo"></param>
+        /// <param name="oc"></param>
+        /// <returns></returns>
+        Task<ServiceResult> FillProductsAsync(
             IList<TaskInfo> taskInfo,
             NpgsqlConnectionWrapper oc = null);
         

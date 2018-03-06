@@ -48,7 +48,7 @@ namespace DeliveryTracker.References
         /// <returns></returns>
         Task<ServiceResult<IList<ReferenceEntityBase>>> GetAsync(
             string type,
-            IList<Guid> ids, 
+            ICollection<Guid> ids, 
             NpgsqlConnectionWrapper oc = null);
         
         /// <summary>

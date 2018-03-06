@@ -18,7 +18,7 @@ namespace DeliveryTrackerWeb.Tests.Integration
         public async void Foo()
         {
             var pack = new TaskPackage();
-            pack.LinkedReferences = new Dictionary<string, IDictionaryObject>();
+            pack.LinkedReferences = new Dictionary<string, DictionaryObject>();
             var paymentType = new PaymentType
             {
                 Id = Guid.NewGuid(),
@@ -42,6 +42,12 @@ namespace DeliveryTrackerWeb.Tests.Integration
 
             var pack2 = JsonConvert.DeserializeObject<TaskPackage>(json, settings);
             var packDic = JsonConvert.DeserializeObject<IDictionary<string, object>>(json);
+
+            var LIST = pack2.LinkedReferences;
+            
+            var pack3 = new TaskPackage();
+            pack3.SetDictionary(packDic);
+
         }
 
 

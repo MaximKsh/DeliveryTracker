@@ -60,6 +60,12 @@ delete from task_products
 where id = ANY(@ids)
 ;
 ";
+        private static readonly string SqlGetOneTaskProducts = $@"
+select {TaskHelper.GetTaskProductsColumns()}
+from task_products
+where task_id = @id and instance_id = @instance_id
+;";
+        
 
         private static readonly string SqlGetTaskProducts = $@"
 select {TaskHelper.GetTaskProductsColumns()}, task_id
@@ -388,6 +394,32 @@ where ""id"" = @id and instance_id = @instance_id
                             {
                                 ti.TaskProducts.Add(taskProduct);        
                             }
+                        }
+                    }
+                }
+            }
+
+            return new ServiceResult();
+        }
+        
+        public async Task<ServiceResult> FillProductsAsync(
+            TaskInfo taskInfo,
+            NpgsqlConnectionWrapper oc = null)
+        {
+            var instanceId = taskInfo.InstanceId;
+            taskInfo.TaskProducts = new List<TaskProduct>();
+            using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
+            {
+                using (var command = connWrapper.CreateCommand())
+                {
+                    command.CommandText = SqlGetOneTaskProducts;
+                    command.Parameters.Add(new NpgsqlParameter("id", taskInfo.Id));
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            taskInfo.TaskProducts.Add(reader.GetTaskProduct());
                         }
                     }
                 }

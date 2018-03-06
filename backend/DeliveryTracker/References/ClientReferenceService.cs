@@ -276,7 +276,7 @@ returning 1
         
         protected override ExecutionParameters SetCommandGetList(
             NpgsqlCommand command,
-            IEnumerable<Guid> ids,
+            ICollection<Guid> ids,
             UserCredentials credentials)
         {
             command.CommandText = SqlGetListFull;

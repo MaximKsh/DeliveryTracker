@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Validation;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace DeliveryTracker.Identification
 {
@@ -45,6 +47,11 @@ returning " + IdentificationHelper.GetUserColumns() + ";";
 select " + IdentificationHelper.GetUserColumns() + @"
 from users
 where id = @id and instance_id = @instance_id;";
+        
+        private static readonly string SqlGetList = @"
+select " + IdentificationHelper.GetUserColumns() + @"
+from users
+where id = ANY(@ids) and instance_id = @instance_id;";
         
         private static readonly string SqlGetByCode = @"
 select " + IdentificationHelper.GetUserColumns() + @"
@@ -154,6 +161,44 @@ where id = @id and instance_id = @instance_id
             return new ServiceResult<User>(ErrorFactory.UserNotFound(userId));
         }
 
+        /// <inheritdoc />
+        public async Task<ServiceResult<IList<User>>> GetAsync(
+            ICollection<Guid> userIds,
+            Guid instanceId,
+            NpgsqlConnectionWrapper oc = null)
+        {
+            if (userIds.Count == 0)
+            {
+                return new ServiceResult<IList<User>>(new List<User>());
+            }
+            
+            var validationResult = new ParametersValidator()
+                .AddNotEmptyGuidRule("instanceId", instanceId)
+                .Validate();
+            if (!validationResult.Success)
+            {
+                return new ServiceResult<IList<User>>(validationResult.Error);
+            }
+
+            var list = new List<User>(userIds.Count);
+            using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
+            {
+                using (var command = connWrapper.CreateCommand())
+                {
+                    command.CommandText = SqlGet;
+                    command.Parameters.Add(new NpgsqlParameter("ids", userIds).WithArrayType(NpgsqlDbType.Uuid));
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            list.Add(reader.GetUser());
+                        }
+                    }
+                }
+            }
+            return new ServiceResult<IList<User>>(list);
+        }
         
         /// <inheritdoc />
         public async Task<ServiceResult<User>> GetAsync(string code, Guid instanceId, NpgsqlConnectionWrapper oc = null)

@@ -10,8 +10,8 @@ namespace DeliveryTracker.Tasks
     {
         Task<ServiceResult<bool>> CanTransit(
             Guid taskId,
+            Guid userId,
             Guid transitionId,
-            Guid role,
             NpgsqlConnectionWrapper oc = null);
         
         Task<ServiceResult<bool>> HasTransition(
@@ -29,6 +29,11 @@ namespace DeliveryTracker.Tasks
         Task<ServiceResult<IList<TaskStateTransition>>> GetTransitions(
             Guid role,
             Guid initialState, 
+            NpgsqlConnectionWrapper oc = null);
+        
+        Task<ServiceResult<IList<TaskStateTransition>>> GetTransitions(
+            Guid role,
+            ICollection<Guid> initialState, 
             NpgsqlConnectionWrapper oc = null);
     }
 }

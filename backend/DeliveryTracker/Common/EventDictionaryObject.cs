@@ -81,6 +81,25 @@ namespace DeliveryTracker.Common
             return false;
         }
         
+        protected virtual bool BeforeGetDictionaryField<T>(
+            string key,
+            IDictionary<string, T> defaultValue, 
+            out IDictionary<string, T> substitutedValue) where T : IDictionaryObject, new ()
+        {
+            substitutedValue = defaultValue;
+            return false;
+        }
+
+        protected virtual bool AfterGetDictionaryField<T>(
+            string key,
+            IDictionary<string, T> resultValue,
+            IDictionary<string, T> defaultValue,
+            out IDictionary<string, T> substitutedValue) where T : IDictionaryObject, new ()
+        {
+            substitutedValue = defaultValue;
+            return false;
+        }
+        
         protected virtual bool BeforeGetList<T>(
             string key,
             IList<T> defaultValue, 
@@ -144,6 +163,25 @@ namespace DeliveryTracker.Common
             var result = base.GetObject(key, defaultValue);
             
             if (this.AfterGetObject(key, result, defaultValue, out substitutedValue))
+            {
+                return substitutedValue;
+            }
+            
+            return result;
+        }
+
+        protected override IDictionary<string, T> GetDictionaryField<T>(
+            string key,
+            IDictionary<string, T> defaultValue = default)
+        {
+            if (this.BeforeGetDictionaryField(key, defaultValue, out var substitutedValue))
+            {
+                return substitutedValue;
+            }
+
+            var result = base.GetDictionaryField(key, defaultValue);
+            
+            if (this.AfterGetDictionaryField(key, result, defaultValue, out substitutedValue))
             {
                 return substitutedValue;
             }

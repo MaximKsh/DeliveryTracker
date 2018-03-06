@@ -6,6 +6,7 @@ using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Validation;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace DeliveryTracker.Tasks
 {
@@ -21,12 +22,18 @@ where relname = 'task_state_transitions'
 ";
         
         private const string SqlCanTransit = @"
+with u as 
+(
+    select role, instance_id
+    from ""users""
+    where ""id"" = @userId
+)
 select null
 from ""tasks""
-where ""id"" = @task_id and exists(
+where ""id"" = @task_id and ""instance_id"" = u.instance_id and exists(
     select null
     from ""task_state_transitions""
-    where ""id"" = @transition_id and ""role"" = @role and ""initial_state"" = ""tasks"".""state_id""
+    where ""id"" = @transition_id and ""role"" = u.role and ""initial_state"" = ""tasks"".""state_id""
 )
 ;
 ";
@@ -49,6 +56,13 @@ where role = @role and initial_state = @initial_state and final_state = @final_s
 select {TaskHelper.GetTaskStateTransitionColumns()}
 from ""task_state_transitions""
 where role = @role and initial_state = @initial_state
+;
+";
+        
+        private static readonly string SqlGetTransitionsMany = $@"
+select {TaskHelper.GetTaskStateTransitionColumns()}
+from ""task_state_transitions""
+where role = @role and initial_state = ANY(@initial_state)
 ;
 ";
         
@@ -78,8 +92,8 @@ where role = @role and initial_state = @initial_state
 
         public async Task<ServiceResult<bool>> CanTransit(
             Guid taskId,
+            Guid userId,
             Guid transitionId,
-            Guid role,
             NpgsqlConnectionWrapper oc = null)
         {
             using (var connWrapper = oc ?? this.cp.Create())
@@ -88,9 +102,9 @@ where role = @role and initial_state = @initial_state
                 using (var command = connWrapper.CreateCommand())
                 {
                     command.CommandText = SqlCanTransit;
-                    command.Parameters.Add(new NpgsqlParameter("role", role));
+                    command.Parameters.Add(new NpgsqlParameter("task_id", taskId));
+                    command.Parameters.Add(new NpgsqlParameter("user_id", userId));
                     command.Parameters.Add(new NpgsqlParameter("transitionId", transitionId));
-                    command.Parameters.Add(new NpgsqlParameter("taskId", taskId));
 
                     return new ServiceResult<bool>(await command.ExecuteNonQueryAsync() == 1);
                 }
@@ -164,6 +178,34 @@ where role = @role and initial_state = @initial_state
                     command.CommandText = SqlGetTransitions;
                     command.Parameters.Add(new NpgsqlParameter("role", role));
                     command.Parameters.Add(new NpgsqlParameter("initial_state", initialState));
+
+                    var list = new List<TaskStateTransition>(this.taskStateTransitionsCountLazy.Value);
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            list.Add(reader.GetTaskStateTransition());
+                        }
+                    }
+                    return new ServiceResult<IList<TaskStateTransition>>(list);
+                }
+            }
+        }
+
+        public async Task<ServiceResult<IList<TaskStateTransition>>> GetTransitions(
+            Guid role,
+            ICollection<Guid> initialState,
+            NpgsqlConnectionWrapper oc = null)
+        {
+            var initialStatesDistinct = new HashSet<Guid>(initialState);
+            using (var connWrapper = oc ?? this.cp.Create())
+            {
+                connWrapper.Connect();
+                using (var command = connWrapper.CreateCommand())
+                {
+                    command.CommandText = SqlGetTransitionsMany;
+                    command.Parameters.Add(new NpgsqlParameter("role", role));
+                    command.Parameters.Add(new NpgsqlParameter("initial_state", initialStatesDistinct).WithArrayType(NpgsqlDbType.Uuid));
 
                     var list = new List<TaskStateTransition>(this.taskStateTransitionsCountLazy.Value);
                     using (var reader = await command.ExecuteReaderAsync())
