@@ -6,6 +6,7 @@ using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.References;
+using DeliveryTracker.Tasks.TransitionObservers;
 using DeliveryTracker.Validation;
 
 namespace DeliveryTracker.Tasks
@@ -25,6 +26,8 @@ namespace DeliveryTracker.Tasks
         private readonly IReferenceFacade referenceFacade;
 
         private readonly IUserManager userManager;
+
+        private readonly ITransitionObserverExecutor observerExecutor;
         
         #endregion
         
@@ -36,7 +39,8 @@ namespace DeliveryTracker.Tasks
             ITaskStateTransitionManager stateTransitionManager,
             IUserCredentialsAccessor accessor,
             IReferenceFacade referenceFacade,
-            IUserManager userManager)
+            IUserManager userManager,
+            ITransitionObserverExecutor observerExecutor)
         {
             this.cp = cp;
             this.taskManager = taskManager;
@@ -44,6 +48,7 @@ namespace DeliveryTracker.Tasks
             this.accessor = accessor;
             this.referenceFacade = referenceFacade;
             this.userManager = userManager;
+            this.observerExecutor = observerExecutor;
         }
         
         #endregion
@@ -179,6 +184,9 @@ namespace DeliveryTracker.Tasks
                     TaskStateId = getTransitionResult.Result.FinalState,
                 };
 
+                await this.observerExecutor.Execute(
+                    new TransitionObserverContext(newTask, credentials, getTransitionResult.Result));
+                
                 var editResult = await this.taskManager.EditAsync(newTask, connWrapper);
 
                 return editResult;

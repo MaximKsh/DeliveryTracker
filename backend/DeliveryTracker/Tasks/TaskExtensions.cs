@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using DeliveryTracker.Database;
+using DeliveryTracker.Tasks.TransitionObservers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DeliveryTracker.Tasks
@@ -13,8 +14,13 @@ namespace DeliveryTracker.Tasks
                 .AddSingleton<ITaskStateTransitionManager, TaskStateTransitionManager>()
                 .AddSingleton<ITaskManager, TaskManager>()
                 .AddSingleton<ITaskService, TaskService>()
+                .AddSingleton<ITransitionObserverExecutor, TransitionObserverExecutor>()
                 ;
-            
+
+            // Observers
+            services
+                .AddSingleton<ITransitionObserver, InProgressObserver>()
+                ;
             return services;
         }
 
