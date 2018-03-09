@@ -107,6 +107,8 @@
             public const string PaymentTypesView = Pref + "PaymentTypesView";
             public const string PerformersView = Pref + "PerformersView";
             public const string ProductsView = Pref + "ProductsView";
+            public const string TasksManagersView = Pref + "TasksManagersView";
+            public const string TasksPerformerView = Pref + "TasksPerformerView";
             public const string WarehousesView = Pref + "WarehousesView";
         }
         

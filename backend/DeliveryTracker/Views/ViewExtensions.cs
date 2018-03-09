@@ -10,6 +10,7 @@ namespace DeliveryTracker.Views
                 .AddSingleton<IViewService, ViewService>()
                 .AddSingleton<IViewGroup, ReferenceViewGroup>()
                 .AddSingleton<IViewGroup, UserViewGroup>()
+                .AddSingleton<IViewGroup, TaskViewGroup>()
                 ;
             
             return services;
