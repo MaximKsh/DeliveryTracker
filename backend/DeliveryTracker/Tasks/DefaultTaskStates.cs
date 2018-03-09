@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using DeliveryTracker.Localization;
-using Microsoft.IdentityModel.Tokens;
 
 namespace DeliveryTracker.Tasks
 {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using Microsoft.Extensions.Configuration;

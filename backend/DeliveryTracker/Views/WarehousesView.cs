@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
@@ -52,6 +53,13 @@ where instance_id = @instance_id
         /// <inheritdoc />
         public string Name { get; } = nameof(WarehousesView);
 
+        /// <inheritdoc />
+        public IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
+        {
+            DefaultRoles.CreatorRole,
+            DefaultRoles.ManagerRole
+        };
+        
         /// <inheritdoc />
         public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
             NpgsqlConnectionWrapper oc,

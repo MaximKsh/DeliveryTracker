@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using DeliveryTracker.Localization;
 using DeliveryTracker.Tasks;
-using Microsoft.AspNetCore.Identity;
 
 namespace DeliveryTracker.Validation
 {

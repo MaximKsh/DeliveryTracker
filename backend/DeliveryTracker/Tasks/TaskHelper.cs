@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
+﻿using System.Collections.Generic;
 using DeliveryTracker.Database;
-using DeliveryTracker.Instances;
 
 namespace DeliveryTracker.Tasks
 {

@@ -18,7 +18,7 @@ namespace DeliveryTracker.Views
 
         protected readonly IUserCredentialsAccessor Accessor;
         
-        protected ImmutableDictionary<string, IView> Views;
+        protected IReadOnlyDictionary<string, IView> Views;
         
         #endregion
         
@@ -38,9 +38,19 @@ namespace DeliveryTracker.Views
         public abstract string Name { get; }
         
         /// <inheritdoc />
-        public virtual ServiceResult<string[]> GetViewsList()
+        public virtual ServiceResult<IList<string>> GetViewsList()
         {
-            return new ServiceResult<string[]>(this.Views.Keys.ToArray());
+            var credentials = this.Accessor.GetUserCredentials();
+            var list = new List<string>(this.Views.Count);
+            foreach (var view in this.Views)
+            {
+                if (view.Value.PermittedRoles.Contains(credentials.Role))
+                {
+                    list.Add(view.Key);
+                }
+            }
+            
+            return new ServiceResult<IList<string>>(list);
         }
 
         /// <inheritdoc />
@@ -55,6 +65,10 @@ namespace DeliveryTracker.Views
                 conn.Connect();
                 foreach (var view in this.Views)
                 {
+                    if (!view.Value.PermittedRoles.Contains(credentials.Role))
+                    {
+                        continue;
+                    }
                     var result = await view.Value.GetViewDigestAsync(conn, credentials, parameters);
                     if (!result.Success)
                     {
@@ -69,7 +83,8 @@ namespace DeliveryTracker.Views
         }
 
         /// <inheritdoc />
-        public virtual async Task<ServiceResult<IList<T>>> ExecuteViewAsync<T>(string viewName,
+        public virtual async Task<ServiceResult<IList<T>>> ExecuteViewAsync<T>(
+            string viewName,
             IImmutableDictionary<string, string[]> parameters,
             NpgsqlConnectionWrapper oc = null)
         {
@@ -91,7 +106,8 @@ namespace DeliveryTracker.Views
         }
 
         /// <inheritdoc />
-        public virtual async Task<ServiceResult<IList<IDictionaryObject>>> ExecuteViewAsync(string viewName,
+        public virtual async Task<ServiceResult<IList<IDictionaryObject>>> ExecuteViewAsync(
+            string viewName,
             IImmutableDictionary<string, string[]> parameters,
             NpgsqlConnectionWrapper oc = null)
         {
@@ -101,6 +117,12 @@ namespace DeliveryTracker.Views
             }
             
             var credentials = this.Accessor.GetUserCredentials();
+            
+            if (!view.PermittedRoles.Contains(credentials.Role))
+            {
+                return new ServiceResult<IList<IDictionaryObject>>(ErrorFactory.AccessDenied());
+            }
+            
             using (var conn = oc ?? this.Cp.Create())
             {
                 conn.Connect();

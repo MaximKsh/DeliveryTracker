@@ -1,5 +1,4 @@
-﻿using System;
-using DeliveryTracker.Identification;
+﻿using DeliveryTracker.Identification;
 
 namespace DeliveryTracker.Tasks.TransitionObservers
 {

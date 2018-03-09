@@ -1,4 +1,5 @@
-﻿using DeliveryTracker.Common;
+﻿using System.Collections.Generic;
+using DeliveryTracker.Common;
 
 namespace DeliveryTracker.Views
 {
@@ -11,7 +12,7 @@ namespace DeliveryTracker.Views
         /// Получить список групп.
         /// </summary>
         /// <returns></returns>
-        ServiceResult<string[]> GetViewGroupsList();
+        ServiceResult<IList<string>> GetViewGroupsList();
         
         /// <summary>
         /// Получить группу представлений.

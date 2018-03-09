@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
@@ -60,6 +61,13 @@ where instance_id = @instance_id and role = @role
         
         /// <inheritdoc />
         public string Name { get; } = nameof(ManagersView);
+        
+        /// <inheritdoc />
+        public IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
+        {
+            DefaultRoles.CreatorRole,
+            DefaultRoles.ManagerRole
+        }.AsReadOnly();
 
         /// <inheritdoc />
         public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
