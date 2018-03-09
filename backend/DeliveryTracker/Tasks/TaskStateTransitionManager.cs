@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
@@ -26,14 +27,14 @@ with u as
 (
     select role, instance_id
     from ""users""
-    where ""id"" = @userId
+    where ""id"" = @user_id
 )
 select null
 from ""tasks""
-where ""id"" = @task_id and ""instance_id"" = u.instance_id and exists(
+where ""id"" = @task_id and ""instance_id"" = (select instance_id from u) and exists(
     select null
     from ""task_state_transitions""
-    where ""id"" = @transition_id and ""role"" = u.role and ""initial_state"" = ""tasks"".""state_id""
+    where ""id"" = @transition_id and ""role"" = (select role from u) and ""initial_state"" = ""tasks"".""state_id""
 )
 ;
 ";
@@ -42,6 +43,13 @@ where ""id"" = @task_id and ""instance_id"" = u.instance_id and exists(
 select null
 from ""task_state_transitions""
 where role = @role and initial_state = @initial_state and final_state = @final_state
+;
+";
+
+        private static readonly string SqlGetTransitionById = $@"
+select {TaskHelper.GetTaskStateTransitionColumns()}
+from ""task_state_transitions""
+where id = @id
 ;
 ";
         
@@ -104,7 +112,7 @@ where role = @role and initial_state = ANY(@initial_state)
                     command.CommandText = SqlCanTransit;
                     command.Parameters.Add(new NpgsqlParameter("task_id", taskId));
                     command.Parameters.Add(new NpgsqlParameter("user_id", userId));
-                    command.Parameters.Add(new NpgsqlParameter("transitionId", transitionId));
+                    command.Parameters.Add(new NpgsqlParameter("transition_id", transitionId));
 
                     return new ServiceResult<bool>(await command.ExecuteNonQueryAsync() == 1);
                 }
@@ -133,6 +141,33 @@ where role = @role and initial_state = ANY(@initial_state)
             }
         }
 
+        /// <inheritdoc />
+        public async Task<ServiceResult<TaskStateTransition>> GetTransition(
+            Guid transitionId, 
+            NpgsqlConnectionWrapper oc = null)
+        {
+            using (var connWrapper = oc ?? this.cp.Create())
+            {
+                connWrapper.Connect();
+                using (var command = connWrapper.CreateCommand())
+                {
+                    command.CommandText = SqlGetTransitionById;
+                    command.Parameters.Add(new NpgsqlParameter("id", transitionId));
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return new ServiceResult<TaskStateTransition>(reader.GetTaskStateTransition());
+                        }
+
+                        return new ServiceResult<TaskStateTransition>(
+                            ErrorFactory.IncorrectTaskStateTransition(transitionId));
+                    }
+                }
+            }
+        }
+        
         /// <inheritdoc />
         public async Task<ServiceResult<TaskStateTransition>> GetTransition(
             Guid role,
@@ -197,7 +232,14 @@ where role = @role and initial_state = ANY(@initial_state)
             ICollection<Guid> initialState,
             NpgsqlConnectionWrapper oc = null)
         {
-            var initialStatesDistinct = new HashSet<Guid>(initialState);
+            var initialStatesDistinct = initialState is ISet<Guid>
+                ? initialState 
+                : new HashSet<Guid>(initialState);
+            
+            var idsParam = initialState is IList<Guid>
+                ? initialState
+                : initialStatesDistinct.ToArray();
+            
             using (var connWrapper = oc ?? this.cp.Create())
             {
                 connWrapper.Connect();
@@ -205,7 +247,7 @@ where role = @role and initial_state = ANY(@initial_state)
                 {
                     command.CommandText = SqlGetTransitionsMany;
                     command.Parameters.Add(new NpgsqlParameter("role", role));
-                    command.Parameters.Add(new NpgsqlParameter("initial_state", initialStatesDistinct).WithArrayType(NpgsqlDbType.Uuid));
+                    command.Parameters.Add(new NpgsqlParameter("initial_state", idsParam).WithArrayType(NpgsqlDbType.Uuid));
 
                     var list = new List<TaskStateTransition>(this.taskStateTransitionsCountLazy.Value);
                     using (var reader = await command.ExecuteReaderAsync())

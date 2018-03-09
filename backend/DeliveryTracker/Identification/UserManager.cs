@@ -179,14 +179,18 @@ where id = @id and instance_id = @instance_id
             {
                 return new ServiceResult<IList<User>>(validationResult.Error);
             }
+            var idsParam = userIds is IList<Guid>
+                ? userIds
+                : userIds.ToArray();
+
 
             var list = new List<User>(userIds.Count);
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {
                 using (var command = connWrapper.CreateCommand())
                 {
-                    command.CommandText = SqlGet;
-                    command.Parameters.Add(new NpgsqlParameter("ids", userIds).WithArrayType(NpgsqlDbType.Uuid));
+                    command.CommandText = SqlGetList;
+                    command.Parameters.Add(new NpgsqlParameter("ids", idsParam).WithArrayType(NpgsqlDbType.Uuid));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                     using (var reader = await command.ExecuteReaderAsync())
                     {

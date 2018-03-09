@@ -21,6 +21,10 @@ namespace DeliveryTracker.Tasks
             NpgsqlConnectionWrapper oc = null);
 
         Task<ServiceResult<TaskStateTransition>> GetTransition(
+            Guid transitionId,
+            NpgsqlConnectionWrapper oc = null);
+        
+        Task<ServiceResult<TaskStateTransition>> GetTransition(
             Guid role,
             Guid initialState,
             Guid finalState, 

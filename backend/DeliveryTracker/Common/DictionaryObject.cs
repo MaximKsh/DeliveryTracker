@@ -151,7 +151,31 @@ namespace DeliveryTracker.Common
                     return defaultValue;
                 case IDictionary<string, T> dict:
                     return dict;
+                case IDictionary<string, object> dictStringObject:
+                {
+                    var result = new Dictionary<string, T>((int)(1.5 * dictStringObject.Count));
+                    foreach (var pair in dictStringObject)
+                    {
+                        switch (pair.Value)
+                        {
+                            case T itemCorrect:
+                                result.Add(pair.Key, itemCorrect);
+                                break;
+                            case IDictionary<string, object> itemDict:
+                                var entity = new T();
+                                entity.SetDictionary(itemDict);
+                                result.Add(pair.Key, entity);
+                                break;
+                            default:
+                                result.Add(pair.Key, default);
+                                break;
+                        }    
+                    }
+                    this.Dictionary[key] = result;
+                    return result;
+                }
                 case JObject jobj:
+                {
                     var result = new Dictionary<string, T>((int)(1.5 * jobj.Count));
                     foreach (var pair in jobj)
                     {
@@ -162,6 +186,7 @@ namespace DeliveryTracker.Common
                     }
                     this.Dictionary[key] = result;
                     return result;
+                }
             }
             return defaultValue;
         }
@@ -181,6 +206,29 @@ namespace DeliveryTracker.Common
                     return null;
                 case IList<T> value:
                     return value;
+                case IList<object> valueObj:
+                {
+                    var result = new List<T>(valueObj.Count);
+                    foreach (var item in valueObj)
+                    {
+                        switch (item)
+                        {
+                            case T itemCorrect:
+                                result.Add(itemCorrect);
+                                break;
+                            case IDictionary<string, object> itemDict:
+                                var entity = new T();
+                                entity.SetDictionary(itemDict);
+                                result.Add(entity);
+                                break;
+                            default:
+                                result.Add(default);
+                                break;
+                        }
+                    }
+                    this.Dictionary[key] = result;
+                    return result;   
+                }
                 case IList<JToken> jsonObjectList:
                 {
                     var result = new List<T>(jsonObjectList.Count);

@@ -372,6 +372,19 @@ namespace DeliveryTracker.Validation
         /// Некорректное переход между состояниями задания.
         /// </summary>
         /// <returns></returns>
+        public static IError IncorrectTaskStateTransition(Guid id) =>
+            new Error(
+                ErrorCode.IncorrectTaskStateTransition,
+                LocalizationAlias.Error.IncorrectTaskStateTransition,
+                new Dictionary<string, string>
+                {
+                    [nameof(id)] = id.ToString(),
+                });
+        
+        /// <summary>
+        /// Некорректное переход между состояниями задания.
+        /// </summary>
+        /// <returns></returns>
         public static IError IncorrectTaskStateTransition(Guid role, Guid initialState, Guid finalState) =>
             new Error(
                 ErrorCode.IncorrectTaskStateTransition,

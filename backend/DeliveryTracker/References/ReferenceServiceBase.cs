@@ -254,13 +254,17 @@ namespace DeliveryTracker.References
                 return new ServiceResult<IList<T>>(ErrorFactory.AccessDenied());
             }
 
+            var idsParam = ids is IList<Guid>
+                ? ids
+                : ids.ToArray();
+
             using (var conn = oc ?? this.Cp.Create())
             {
                 conn.Connect();
                 using (var command = conn.CreateCommand())
                 {
                     // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
-                    command.Parameters.Add(new NpgsqlParameter("ids", ids).WithArrayType(NpgsqlDbType.Uuid));
+                    command.Parameters.Add(new NpgsqlParameter("ids", idsParam).WithArrayType(NpgsqlDbType.Uuid));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", credentials.InstanceId));
 
                     var parameters = this.SetCommandGetList(command, ids, credentials);

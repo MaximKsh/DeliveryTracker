@@ -5,6 +5,7 @@ using DeliveryTracker.Identification;
 using DeliveryTracker.Tasks;
 using DeliveryTracker.Validation;
 using DeliveryTrackerWeb.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DeliveryTrackerWeb.Controllers
@@ -43,6 +44,7 @@ namespace DeliveryTrackerWeb.Controllers
         // tasks/delete
         
         [HttpPost("create")]
+        [Authorize(AuthorizationPolicies.CreatorOrManager)]
         public async Task<IActionResult> Create([FromBody] TaskRequest request)
         {
             var taskInfo = request?.TaskInfo;
@@ -83,6 +85,7 @@ namespace DeliveryTrackerWeb.Controllers
         }
         
         [HttpGet("get")]
+        [Authorize]
         public async Task<IActionResult> Get(Guid id)
         {
             var validationResult = new ParametersValidator()
@@ -114,6 +117,7 @@ namespace DeliveryTrackerWeb.Controllers
         }
         
         [HttpPost("edit")]
+        [Authorize(AuthorizationPolicies.CreatorOrManager)]
         public async Task<IActionResult> Edit([FromBody] TaskRequest request)
         {
             var taskInfo = request?.TaskInfo;
@@ -158,6 +162,7 @@ namespace DeliveryTrackerWeb.Controllers
         }
         
         [HttpPost("change_state")]
+        [Authorize]
         public async Task<IActionResult> ChangeState([FromBody] TaskRequest request)
         {
             var taskInfo = request?.TaskInfo;

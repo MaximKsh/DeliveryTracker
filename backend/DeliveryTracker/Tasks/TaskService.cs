@@ -56,6 +56,19 @@ namespace DeliveryTracker.Tasks
             TaskInfo taskInfo,
             NpgsqlConnectionWrapper oc = null)
         {
+            
+            var credentials = this.accessor.GetUserCredentials();
+            if (credentials.Role != DefaultRoles.CreatorRole
+                && credentials.Role != DefaultRoles.ManagerRole)
+            {
+                return new ServiceResult<TaskInfo>(ErrorFactory.AccessDenied());
+            }
+            
+            taskInfo.Id = Guid.NewGuid();
+            taskInfo.AuthorId = credentials.Id;
+            taskInfo.InstanceId = credentials.InstanceId;
+            taskInfo.TaskStateId = DefaultTaskStates.New.Id;
+            
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {
                 using (var transaction = connWrapper.BeginTransaction())
@@ -66,9 +79,20 @@ namespace DeliveryTracker.Tasks
                         transaction.Rollback();
                         return createResult;
                     }
+                    
+                    var editProductsResult = await this.taskManager.EditProductsAsync(
+                        taskInfo.Id,
+                        taskInfo.InstanceId,
+                        taskInfo.TaskProducts,
+                        connWrapper);
+                    if (!editProductsResult.Success)
+                    {
+                        transaction.Rollback();
+                        return new ServiceResult<TaskInfo>(editProductsResult.Errors);
+                    }
 
                     var task = createResult.Result;
-                    var fillProductsResult = await this.taskManager.FillProductsAsync(new List<TaskInfo> { task }, connWrapper);
+                    var fillProductsResult = await this.taskManager.FillProductsAsync(task, connWrapper);
                     if (!fillProductsResult.Success)
                     {
                         transaction.Rollback();
@@ -111,7 +135,7 @@ namespace DeliveryTracker.Tasks
                     if (!editProductsResult.Success)
                     {
                         transact.Rollback();
-                        return editResult;
+                        return new ServiceResult<TaskInfo>(editProductsResult.Errors);
                     }
 
                     var newTask = editResult.Result;
@@ -146,11 +170,13 @@ namespace DeliveryTracker.Tasks
                     return new ServiceResult<TaskInfo>(canTransit.Errors);
                 }
 
+                var getTransitionResult = await this.stateTransitionManager.GetTransition(transitionId, connWrapper);
+                
                 var newTask = new TaskInfo
                 {
                     Id = taskId,
                     InstanceId = credentials.InstanceId,
-                    TaskStateId = transitionId,
+                    TaskStateId = getTransitionResult.Result.FinalState,
                 };
 
                 var editResult = await this.taskManager.EditAsync(newTask, connWrapper);
@@ -260,6 +286,8 @@ namespace DeliveryTracker.Tasks
                 taskPackage.LinkedTaskStateTransitions =  transitionsResult.Result;
             }
 
+            taskPackage.TaskInfo = new List<TaskInfo> { taskInfo };
+            
             return new ServiceResult<TaskPackage>(taskPackage);
         
         }
@@ -348,6 +376,7 @@ namespace DeliveryTracker.Tasks
 
                 taskPackage.LinkedTaskStateTransitions =  transitionsResult.Result;
             }
+            taskPackage.TaskInfo = new List<TaskInfo>( taskInfos );
 
             return new ServiceResult<TaskPackage>(taskPackage);
         }

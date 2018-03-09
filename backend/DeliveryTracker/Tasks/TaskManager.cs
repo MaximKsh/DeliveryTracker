@@ -262,7 +262,8 @@ where ""id"" = @id and instance_id = @instance_id
             IList<TaskProduct> taskProducts,
             NpgsqlConnectionWrapper oc = null)
         {
-            if (taskProducts.Count == 0)
+            if (taskProducts == null
+                || taskProducts.Count == 0)
             {
                 return new ServiceResult();
             }
@@ -461,7 +462,7 @@ where ""id"" = @id and instance_id = @instance_id
 
         #region private
 
-        private async Task<ServiceResult<TaskInfo>> CreateAsyncInternal(TaskInfo user, NpgsqlConnectionWrapper oc = null)
+        private async Task<ServiceResult<TaskInfo>> CreateAsyncInternal(TaskInfo taskInfo, NpgsqlConnectionWrapper oc = null)
         {
             TaskInfo newTask = null;
             using (var connWrapper = oc ?? this.cp.Create())
@@ -470,26 +471,26 @@ where ""id"" = @id and instance_id = @instance_id
                 using (var command = connWrapper.CreateCommand())
                 {
                     command.CommandText = SqlCreate;
-                    command.Parameters.Add(new NpgsqlParameter("id", user.Id));
-                    command.Parameters.Add(new NpgsqlParameter("instance_id", user.InstanceId));
-                    command.Parameters.Add(new NpgsqlParameter("state_id", user.TaskStateId));
-                    command.Parameters.Add(new NpgsqlParameter("author_id", user.AuthorId));
-                    command.Parameters.Add(new NpgsqlParameter("performer_id", user.PerformerId).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("task_number", user.TaskNumber));
+                    command.Parameters.Add(new NpgsqlParameter("id", taskInfo.Id));
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", taskInfo.InstanceId));
+                    command.Parameters.Add(new NpgsqlParameter("state_id", taskInfo.TaskStateId));
+                    command.Parameters.Add(new NpgsqlParameter("author_id", taskInfo.AuthorId));
+                    command.Parameters.Add(new NpgsqlParameter("performer_id", taskInfo.PerformerId).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("task_number", taskInfo.TaskNumber));
                     command.Parameters.Add(new NpgsqlParameter("created", DateTime.UtcNow));
                     command.Parameters.Add(new NpgsqlParameter("state_changed_last_time", DateTime.UtcNow));
-                    command.Parameters.Add(new NpgsqlParameter("receipt", user.Receipt).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("receipt_actual", user.ReceiptActual).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("delivery_from", user.DeliveryFrom).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("delivery_to", user.DeliveryTo).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("delivery_actual", user.DeliveryActual).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("comment", user.Comment).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("warehouse_id", user.WarehouseId).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("client_id", user.ClientId).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("client_address_id", user.ClientAddressId).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("payment_type_id", user.PaymentTypeId).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("cost", user.Cost).CanBeNull());
-                    command.Parameters.Add(new NpgsqlParameter("delivery_cost", user.DeliveryCost).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("receipt", taskInfo.Receipt).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("receipt_actual", taskInfo.ReceiptActual).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("delivery_from", taskInfo.DeliveryFrom).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("delivery_to", taskInfo.DeliveryTo).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("delivery_actual", taskInfo.DeliveryActual).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("comment", taskInfo.Comment).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("warehouse_id", taskInfo.WarehouseId).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("client_id", taskInfo.ClientId).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("client_address_id", taskInfo.ClientAddressId).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("payment_type_id", taskInfo.PaymentTypeId).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("cost", taskInfo.Cost).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("delivery_cost", taskInfo.DeliveryCost).CanBeNull());
 
                     try
                     {
@@ -526,7 +527,7 @@ where ""id"" = @id and instance_id = @instance_id
                     if (taskInfo.TaskStateId != default)
                     {
                         parametersCounter += command.AppendIfNotDefault(builder, "state_id", taskInfo.TaskStateId);
-                        command.AppendIfNotDefault(builder, "state_changed_last_time", DateTime.UtcNow);
+                        parametersCounter += command.AppendIfNotDefault(builder, "state_changed_last_time", DateTime.UtcNow);
                     }
                     parametersCounter += command.AppendIfNotDefault(builder, "performer_id", taskInfo.PerformerId);
                     parametersCounter += command.AppendIfNotDefault(builder, "task_number", taskInfo.TaskNumber);

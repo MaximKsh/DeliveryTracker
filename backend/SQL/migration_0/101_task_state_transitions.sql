@@ -13,8 +13,11 @@ CREATE UNIQUE INDEX task_state_transitions_role_initial_state_final_state_uindex
 
 
 INSERT INTO task_state_transitions(id, role, initial_state, final_state, button_caption)
-        -- Manager: Unconfirmed -> New
-VALUES ('f81c7dd5-57e3-4bd6-ae10-60ef99a232bd', 'ca4e3a74-86bb-4c6e-84b5-9e2da47d1b2e', '3f7d33e6-5ecf-41a3-876a-c0345f690ca4', '135374ad-ba12-4ada-9dc7-8f8e3b11d9e5', 'ServerMessage_StateTransitionButton_ManagerUnconfirmedNew')
+    VALUES
+-- Manager: Unconfirmed -> New
+('f81c7dd5-57e3-4bd6-ae10-60ef99a232bd', 'ca4e3a74-86bb-4c6e-84b5-9e2da47d1b2e', '3f7d33e6-5ecf-41a3-876a-c0345f690ca4', '135374ad-ba12-4ada-9dc7-8f8e3b11d9e5', 'ServerMessage_StateTransitionButton_ManagerUnconfirmedNew'),
+-- Manager: New -> InProgress
+('13c933dd-ab35-4175-be2d-69996bec55c2', 'ca4e3a74-86bb-4c6e-84b5-9e2da47d1b2e', '135374ad-ba12-4ada-9dc7-8f8e3b11d9e5', 'beaff26f-2193-41ed-b2a6-983b707a216d', 'ServerMessage_StateTransitionButton_ManagerNewInProgress')
 
 
 ;
