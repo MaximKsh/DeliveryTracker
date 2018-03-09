@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
@@ -27,6 +28,16 @@ namespace DeliveryTracker.References
         /// <param name="oc"></param>
         /// <returns></returns>
         new Task<ServiceResult<T>> GetAsync(Guid id, NpgsqlConnectionWrapper oc = null);
+        
+        /// <summary>
+        /// Получить несколько записей из справочника.
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="oc"></param>
+        /// <returns></returns>
+        new Task<ServiceResult<IList<T>>> GetAsync(
+            ICollection<Guid> ids, 
+            NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
         /// Редактировать запись в справочнике.

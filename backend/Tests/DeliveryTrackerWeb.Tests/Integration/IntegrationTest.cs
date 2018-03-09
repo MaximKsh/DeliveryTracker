@@ -1,13 +1,54 @@
-﻿using System.Net;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using DeliveryTracker.Common;
 using DeliveryTracker.Identification;
+using DeliveryTracker.References;
+using DeliveryTracker.Tasks;
 using DeliveryTracker.Validation;
 using DeliveryTrackerWeb.ViewModels;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace DeliveryTrackerWeb.Tests.Integration
 {
     public class IntegrationTest : FunctionalTestBase
     {
+        [Fact]
+        public async void Foo()
+        {
+            var pack = new TaskPackage();
+            pack.LinkedReferences = new Dictionary<string, DictionaryObject>();
+            var paymentType = new PaymentType
+            {
+                Id = Guid.NewGuid(),
+                Name = "abc"
+            };
+            var product = new Product
+            {
+                Id = Guid.NewGuid(),
+                Cost = 150.0m,
+            };
+            pack.LinkedReferences.Add(paymentType.Id.ToString(), paymentType);
+            pack.LinkedReferences.Add(product.Id.ToString(), product);
+
+            var settings = new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+                
+            };
+            settings.Converters.Add(new DictionaryObjectJsonConverter());
+            var json = JsonConvert.SerializeObject(pack.GetDictionary(), settings);
+
+            var pack2 = JsonConvert.DeserializeObject<TaskPackage>(json, settings);
+            var packDic = JsonConvert.DeserializeObject<IDictionary<string, object>>(json);
+
+            var LIST = pack2.LinkedReferences;
+            
+            var pack3 = new TaskPackage();
+            pack3.SetDictionary(packDic);
+
+        }
 
 
         [Fact]

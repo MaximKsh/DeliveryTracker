@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Validation;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace DeliveryTracker.Identification
 {
@@ -45,6 +47,11 @@ returning " + IdentificationHelper.GetUserColumns() + ";";
 select " + IdentificationHelper.GetUserColumns() + @"
 from users
 where id = @id and instance_id = @instance_id;";
+        
+        private static readonly string SqlGetList = @"
+select " + IdentificationHelper.GetUserColumns() + @"
+from users
+where id = ANY(@ids) and instance_id = @instance_id;";
         
         private static readonly string SqlGetByCode = @"
 select " + IdentificationHelper.GetUserColumns() + @"
@@ -154,6 +161,48 @@ where id = @id and instance_id = @instance_id
             return new ServiceResult<User>(ErrorFactory.UserNotFound(userId));
         }
 
+        /// <inheritdoc />
+        public async Task<ServiceResult<IList<User>>> GetAsync(
+            ICollection<Guid> userIds,
+            Guid instanceId,
+            NpgsqlConnectionWrapper oc = null)
+        {
+            if (userIds.Count == 0)
+            {
+                return new ServiceResult<IList<User>>(new List<User>());
+            }
+            
+            var validationResult = new ParametersValidator()
+                .AddNotEmptyGuidRule("instanceId", instanceId)
+                .Validate();
+            if (!validationResult.Success)
+            {
+                return new ServiceResult<IList<User>>(validationResult.Error);
+            }
+            var idsParam = userIds is IList<Guid>
+                ? userIds
+                : userIds.ToArray();
+
+
+            var list = new List<User>(userIds.Count);
+            using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
+            {
+                using (var command = connWrapper.CreateCommand())
+                {
+                    command.CommandText = SqlGetList;
+                    command.Parameters.Add(new NpgsqlParameter("ids", idsParam).WithArrayType(NpgsqlDbType.Uuid));
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            list.Add(reader.GetUser());
+                        }
+                    }
+                }
+            }
+            return new ServiceResult<IList<User>>(list);
+        }
         
         /// <inheritdoc />
         public async Task<ServiceResult<User>> GetAsync(string code, Guid instanceId, NpgsqlConnectionWrapper oc = null)
@@ -290,15 +339,18 @@ where id = @id and instance_id = @instance_id
                 using (var command = connWrapper.CreateCommand())
                 {
                     var builder = new StringBuilder();
-                     
+                    var parametersCounter = 0; 
+                    
                     command.Parameters.Add(new NpgsqlParameter("id", user.Id));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", user.InstanceId));
-                    command.AppendIfNotDefault(builder, "surname", user.Surname);
-                    command.AppendIfNotDefault(builder, "name", user.Name);
-                    command.AppendIfNotDefault(builder, "patronymic", user.Patronymic);
-                    command.AppendIfNotDefault(builder, "phone_number", user.PhoneNumber);
-                    
-                    command.CommandText = string.Format(SqlUpdate, builder.ToString());
+                    parametersCounter += command.AppendIfNotDefault(builder, "surname", user.Surname);
+                    parametersCounter += command.AppendIfNotDefault(builder, "name", user.Name);
+                    parametersCounter += command.AppendIfNotDefault(builder, "patronymic", user.Patronymic);
+                    parametersCounter += command.AppendIfNotDefault(builder, "phone_number", user.PhoneNumber);
+
+                    command.CommandText = parametersCounter != 0
+                        ? string.Format(SqlUpdate, builder.ToString())
+                        : SqlGet;
                     try
                     {
                         using (var reader = await command.ExecuteReaderAsync())

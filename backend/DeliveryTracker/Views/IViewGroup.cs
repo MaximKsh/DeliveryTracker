@@ -17,7 +17,7 @@ namespace DeliveryTracker.Views
         /// Получить список названий представлений в группе.
         /// </summary>
         /// <returns></returns>
-        ServiceResult<string[]> GetViewsList();
+        ServiceResult<IList<string>> GetViewsList();
 
         /// <summary>
         /// Получить дайджест (имя-количество записей) по каждому представлению.

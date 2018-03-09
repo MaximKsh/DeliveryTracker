@@ -235,6 +235,67 @@ namespace DeliveryTrackerWeb.Tests.Integration
                 client,
                 ReferenceUrl($"{nameof(Product)}/get?id={result.Id}"));
             Assert.Equal(HttpStatusCode.BadRequest, getResultNotFound.StatusCode);
-        }   
+        }
+        
+        [Fact]
+        public async void TestWarehouse()
+        {
+            var (client, _, _, _) = await this.CreateNewHttpClientAndInstance();
+            
+            var postResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Warehouse)}/create"),
+                new ReferenceRequest
+                {
+                    Entity = new Warehouse()
+                    {
+                        Name = "Dom1",
+                        RawAddress = "Ulitsa pushkina dom kolotushkina"
+                    }.GetDictionary(),
+                });
+            
+            Assert.Equal(HttpStatusCode.OK, postResult.StatusCode);
+            var result = new Warehouse();
+            result.SetDictionary(postResult.Result.Entity);
+            Assert.Equal("Dom1", result.Name);
+            Assert.Equal("Ulitsa pushkina dom kolotushkina", result.RawAddress);
+            
+            var editResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Warehouse)}/edit"),
+                new ReferenceRequest
+                {
+                    Entity = new Warehouse()
+                    {
+                        Id = result.Id,
+                        Name = "Dom2",
+                    }.GetDictionary(),
+                });
+            
+            Assert.Equal(HttpStatusCode.OK, editResult.StatusCode);
+            result.SetDictionary(editResult.Result.Entity);
+            Assert.Equal("Dom2", result.Name);
+
+            var getResult = await RequestGet<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Warehouse)}/get?id={result.Id}"));
+            Assert.Equal(HttpStatusCode.OK, getResult.StatusCode);
+            result.SetDictionary(getResult.Result.Entity);
+            Assert.Equal("Dom2", result.Name);
+
+            var deleteResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Warehouse)}/delete"),
+                new ReferenceRequest
+                {
+                    Id = result.Id
+                });
+            Assert.Equal(HttpStatusCode.OK, deleteResult.StatusCode);
+            
+            var getResultNotFound = await RequestGet<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Warehouse)}/get?id={result.Id}"));
+            Assert.Equal(HttpStatusCode.BadRequest, getResultNotFound.StatusCode);
+        }
     }
 }

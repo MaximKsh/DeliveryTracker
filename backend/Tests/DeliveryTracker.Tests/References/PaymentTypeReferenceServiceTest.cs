@@ -1,4 +1,7 @@
-﻿using DeliveryTracker.Identification;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using DeliveryTracker.Identification;
 using DeliveryTracker.References;
 using DeliveryTracker.Validation;
 using Moq;
@@ -57,8 +60,31 @@ namespace DeliveryTracker.Tests.References
             var getResult = await this.paymentTypeService.GetAsync(createResult.Result.Id);
             
             // Assert
-            Assert.True(getResult.Success, createResult.Errors.ErrorsToString());
+            Assert.True(getResult.Success, getResult.Errors.ErrorsToString());
             Assert.Equal(paymentType.Name, getResult.Result.Name);
+        }
+        
+        [Fact]
+        public async void GetList()
+        {
+            // Arrange    
+            var ids = new List<Guid>();
+            for (var i = 0; i < 10; i++)
+            {
+                var entity = new PaymentType
+                {
+                    Name = i.ToString()
+                };
+                var createResult = await this.paymentTypeService.CreateAsync(entity);  
+                ids.Add(createResult.Result.Id);
+            }
+            
+            // Act
+            var getResult = await this.paymentTypeService.GetAsync(ids);
+            
+            // Assert
+            Assert.True(getResult.Success, getResult.Errors.ErrorsToString());
+            Assert.Equal(ids.OrderBy(p => p), getResult.Result.Select(p => p.Id).OrderBy(p => p));
         }
         
         [Fact]

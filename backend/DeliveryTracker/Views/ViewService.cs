@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using System.Linq;
 using DeliveryTracker.Common;
 using DeliveryTracker.Validation;
@@ -12,7 +12,7 @@ namespace DeliveryTracker.Views
     {
         #region fields
         
-        private readonly ImmutableDictionary<string, IViewGroup> viewGroups;
+        private readonly ReadOnlyDictionary<string, IViewGroup> viewGroups;
         
         #endregion
         
@@ -26,7 +26,7 @@ namespace DeliveryTracker.Views
                 groups[viewGroup.Name] = viewGroup;
             }
 
-            this.viewGroups = groups.ToImmutableDictionary();
+            this.viewGroups = new ReadOnlyDictionary<string, IViewGroup>(groups);
         }
         
         #endregion
@@ -34,9 +34,9 @@ namespace DeliveryTracker.Views
         #region public
 
         /// <inheritdoc />
-        public ServiceResult<string[]> GetViewGroupsList()
+        public ServiceResult<IList<string>> GetViewGroupsList()
         {
-            return new ServiceResult<string[]>(this.viewGroups.Keys.ToArray());
+            return new ServiceResult<IList<string>>(this.viewGroups.Keys.ToArray());
         }
 
         /// <inheritdoc />

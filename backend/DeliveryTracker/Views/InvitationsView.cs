@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
@@ -53,6 +54,13 @@ where instance_id = @instance_id
         public string Name { get; } = nameof(InvitationsView);
         
         /// <inheritdoc />
+        public IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
+        {
+            DefaultRoles.CreatorRole,
+            DefaultRoles.ManagerRole
+        }.AsReadOnly();
+        
+        /// <inheritdoc />
         public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
             NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
@@ -103,6 +111,7 @@ where instance_id = @instance_id
             UserCredentials userCredentials,
             IImmutableDictionary<string, string[]> parameters)
         {
+            
             using (var command = oc.CreateCommand())
             {
                 command.CommandText = SqlCount;

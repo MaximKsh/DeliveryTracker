@@ -40,6 +40,18 @@ namespace DeliveryTracker.References
             NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
+        /// Получить несколько записей из справочника.
+        /// </summary>
+        /// <param name="type">Тип справочника</param>
+        /// <param name="ids"></param>
+        /// <param name="oc"></param>
+        /// <returns></returns>
+        Task<ServiceResult<IList<ReferenceEntityBase>>> GetAsync(
+            string type,
+            ICollection<Guid> ids, 
+            NpgsqlConnectionWrapper oc = null);
+        
+        /// <summary>
         /// Редактировать запись в справочнике.
         /// </summary>
         /// <param name="type"></param>

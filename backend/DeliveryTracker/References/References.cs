@@ -8,6 +8,7 @@ namespace DeliveryTracker.References
             Client,
             Product,
             PaymentType,
+            Warehouse,
         };
         
         public const string Client = "Client";
@@ -15,5 +16,7 @@ namespace DeliveryTracker.References
         public const string Product = "Product";
         
         public const string PaymentType = "PaymentType";
+
+        public const string Warehouse = "Warehouse";
     }
 }

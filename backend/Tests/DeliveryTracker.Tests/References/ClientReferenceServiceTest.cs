@@ -244,8 +244,36 @@ namespace DeliveryTracker.Tests.References
                 addressesExpectedFuncArray);
         }
 
-
-
+        [Fact]
+        public async void GetClientList()
+        {
+            // Arrange    
+            var ids = new List<Guid>();
+            foreach (var data in GetClientParameters())
+            {
+                var client = new Client
+                {
+                    Surname = data[0] as string,
+                    Name = data[1] as string,
+                    Patronymic = data[2] as string,
+                    Addresses = data[3] as List<Address>
+                };
+                var createResult = await this.clientService.CreateAsync(client);
+                ids.Add(createResult.Result.Id);
+            }
+            
+            // Act
+            var getResult = await this.clientService.GetAsync(ids);
+            
+            // Assert
+            Assert.True(getResult.Success, getResult.Errors.ErrorsToString());
+            Assert.Equal(ids.OrderBy(p => p), getResult.Result.Select(p => p.Id).OrderBy(p => p));
+            
+            
+            
+        }
+        
+        
         [Theory]
         [MemberData(nameof(GetClientParameters))]
         public async void DeleteClient(string surname, string name, string patronymic, List<Address> addresses)

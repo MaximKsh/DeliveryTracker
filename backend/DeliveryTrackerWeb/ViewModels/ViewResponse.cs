@@ -18,9 +18,9 @@ namespace DeliveryTrackerWeb.ViewModels
         {
         }
         
-        public string[] Groups { get; set; }
+        public IList<string> Groups { get; set; }
         
-        public string[] Views { get; set; }
+        public IList<string> Views { get; set; }
         
         public IDictionary<string, ViewDigest> Digest { get; set; }
         

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
@@ -13,6 +14,11 @@ namespace DeliveryTracker.Views
         /// Название представления.
         /// </summary>
         string Name { get; }
+        
+        /// <summary>
+        /// Список ролей, для которых доступно представление.
+        /// </summary>
+        IReadOnlyList<Guid> PermittedRoles { get; }
 
         /// <summary>
         /// Получить дайджест представления.

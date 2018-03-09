@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Validation;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace DeliveryTracker.References
 {
@@ -75,12 +77,21 @@ namespace DeliveryTracker.References
             Guid id, 
             UserCredentials credentials);
 
+        protected abstract ExecutionParameters SetCommandGetList(
+            NpgsqlCommand command, 
+            ICollection<Guid> ids, 
+            UserCredentials credentials);
+        
         protected abstract ExecutionParameters SetCommandDelete(
             NpgsqlCommand command, 
             Guid id, 
             UserCredentials credentials);
 
         protected abstract T Read(
+            IDataReader reader,  
+            ReferenceServiceExecutionContext ctx);
+        
+        protected abstract IList<T> ReadList(
             IDataReader reader,  
             ReferenceServiceExecutionContext ctx);
 
@@ -106,6 +117,11 @@ namespace DeliveryTracker.References
         }
         
         protected virtual bool CanGet(Guid id, UserCredentials credentials)
+        {
+            return credentials.Valid;
+        }
+        
+        protected virtual bool CanGetList(ICollection<Guid> ids, UserCredentials credentials)
         {
             return credentials.Valid;
         }
@@ -230,6 +246,48 @@ namespace DeliveryTracker.References
         }
 
         /// <inheritdoc />
+        public virtual async Task<ServiceResult<IList<T>>> GetAsync(ICollection<Guid> ids, NpgsqlConnectionWrapper oc = null)
+        {
+            var credentials = this.Accessor.GetUserCredentials();
+            if (!this.CanGetList(ids, credentials))
+            {
+                return new ServiceResult<IList<T>>(ErrorFactory.AccessDenied());
+            }
+
+            var idsParam = ids is IList<Guid>
+                ? ids
+                : ids.ToArray();
+
+            using (var conn = oc ?? this.Cp.Create())
+            {
+                conn.Connect();
+                using (var command = conn.CreateCommand())
+                {
+                    // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
+                    command.Parameters.Add(new NpgsqlParameter("ids", idsParam).WithArrayType(NpgsqlDbType.Uuid));
+                    command.Parameters.Add(new NpgsqlParameter("instance_id", credentials.InstanceId));
+
+                    var parameters = this.SetCommandGetList(command, ids, credentials);
+                    var ctx = new ReferenceServiceExecutionContext
+                    {
+                        Action = ReferenceExecutionAction.Get,
+                        Parameters = parameters,
+                    };
+                    IList<T> list;
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        list = this.ReadList(reader, ctx);
+                    }
+                    var errors = ids
+                        .Except(list.Select(p => p.Id))
+                        .Select(p => ErrorFactory.ReferenceEntryNotFound(this.referenceName, p));
+                    return new ServiceResult<IList<T>>(list, errors);
+
+                }
+            }
+        }
+
+        /// <inheritdoc />
         public virtual async Task<ServiceResult<T>> EditAsync(T newData, NpgsqlConnectionWrapper oc = null)
         {
             var validationResult = new ParametersValidator()
@@ -332,6 +390,7 @@ namespace DeliveryTracker.References
             }
         }
         
+        /// <inheritdoc />
         public async Task<ServiceResult<ReferenceEntityBase>> CreateAsync(
             IDictionary<string, object> newData,
             NpgsqlConnectionWrapper oc = null)
@@ -344,6 +403,7 @@ namespace DeliveryTracker.References
                 : new ServiceResult<ReferenceEntityBase>(result.Errors);
         }
 
+        /// <inheritdoc />
         async Task<ServiceResult<ReferenceEntityBase>> IReferenceService.GetAsync(
             Guid id,
             NpgsqlConnectionWrapper oc)
@@ -353,7 +413,20 @@ namespace DeliveryTracker.References
                 ? new ServiceResult<ReferenceEntityBase>(result.Result) 
                 : new ServiceResult<ReferenceEntityBase>(result.Errors);
         }
+        
+        /// <inheritdoc />  
+        async Task<ServiceResult<IList<ReferenceEntityBase>>> IReferenceService.GetAsync(
+            ICollection<Guid> ids,
+            NpgsqlConnectionWrapper oc)
+        {
+            var result = await this.GetAsync(ids, oc);
+            var list = result.Result?.Cast<ReferenceEntityBase>().ToList();
+            return list != null
+                ? new ServiceResult<IList<ReferenceEntityBase>>(list, result.Errors) 
+                : new ServiceResult<IList<ReferenceEntityBase>>(result.Errors);
+        }
 
+        /// <inheritdoc />
         public async Task<ServiceResult<ReferenceEntityBase>> EditAsync(
             IDictionary<string, object> newData,
             NpgsqlConnectionWrapper oc = null)
@@ -366,6 +439,7 @@ namespace DeliveryTracker.References
                 : new ServiceResult<ReferenceEntityBase>(result.Errors);
         }
 
+        /// <inheritdoc />
         async Task<ServiceResult> IReferenceService.DeleteAsync(
             Guid id,
             NpgsqlConnectionWrapper oc)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Text;
 using DeliveryTracker.Database;
@@ -28,6 +29,12 @@ returning " + ReferenceHelper.GetPaymentTypeColumns() + ";";
 select " + ReferenceHelper.GetPaymentTypeColumns() + @"
 from payment_types
 where id = @id and instance_id = @instance_id;";
+        
+        private static readonly string SqlGetList = @"
+select " + ReferenceHelper.GetPaymentTypeColumns() + @"
+from payment_types
+where id = ANY (@ids) and instance_id = @instance_id;";
+        
         
         private const string SqlDelete = @"
 delete from payment_types
@@ -94,6 +101,16 @@ where id = @id and instance_id = @instance_id
             command.CommandText = SqlGet;
             return null;
         }
+        
+        
+        protected override ExecutionParameters SetCommandGetList(
+            NpgsqlCommand command,
+            ICollection<Guid> ids,
+            UserCredentials credentials)
+        {
+            command.CommandText = SqlGetList;
+            return null;
+        }
 
         protected override ExecutionParameters SetCommandDelete(
             NpgsqlCommand command,
@@ -109,6 +126,20 @@ where id = @id and instance_id = @instance_id
             ReferenceServiceExecutionContext ctx)
         {
             return reader.GetPaymentType();
+        }
+        
+        
+        protected override IList<PaymentType> ReadList(
+            IDataReader reader,
+            ReferenceServiceExecutionContext ctx)
+        {
+            var list = new List<PaymentType>();
+            while (reader.Read())
+            {
+                list.Add(reader.GetPaymentType());
+            }
+
+            return list;
         }
         
         #endregion

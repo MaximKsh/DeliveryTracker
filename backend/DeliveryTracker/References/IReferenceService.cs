@@ -37,6 +37,16 @@ namespace DeliveryTracker.References
         Task<ServiceResult<ReferenceEntityBase>> GetAsync(
             Guid id, 
             NpgsqlConnectionWrapper oc = null);
+        
+        /// <summary>
+        /// Получить несколько записей из справочника.
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="oc"></param>
+        /// <returns></returns>
+        Task<ServiceResult<IList<ReferenceEntityBase>>> GetAsync(
+            ICollection<Guid> ids, 
+            NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
         /// Редактировать запись в справочнике.

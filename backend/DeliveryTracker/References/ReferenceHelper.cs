@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
+using DeliveryTracker.Database;
 
 namespace DeliveryTracker.References
 {
@@ -21,6 +20,7 @@ namespace DeliveryTracker.References
         public static readonly IReadOnlyList<string> PaymentTypeColumnList;
         public static readonly IReadOnlyList<string> ClientColumnList;
         public static readonly IReadOnlyList<string> AddressColumnList;
+        public static readonly IReadOnlyList<string> WarehouseColumnList;
 
         static ReferenceHelper()
         {
@@ -64,26 +64,37 @@ namespace DeliveryTracker.References
                 "ST_Y(geoposition::geometry)",
             });
             AddressColumnList = addressColumnList.AsReadOnly();
+            
+            var warehouseColumnList = new List<string>();
+            warehouseColumnList.AddRange(BaseColumnList);
+            warehouseColumnList.AddRange(new []
+            {
+                "name",
+                "raw_address",
+                "ST_X(geoposition::geometry)",
+                "ST_Y(geoposition::geometry)",
+            });
+            WarehouseColumnList = warehouseColumnList.AsReadOnly();
         }
         
         
-        public static string GetProductColumns(string prefix = null)=>
-            GetColumnsInternal(ProductColumnList, prefix);
+        public static string GetProductColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(ProductColumnList, prefix);
         
-        public static string GetPaymentTypeColumns(string prefix = null) =>
-            GetColumnsInternal(PaymentTypeColumnList, prefix);
         
-        public static string GetClientColumns(string prefix = null)=>
-            GetColumnsInternal(ClientColumnList, prefix);
+        public static string GetPaymentTypeColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(PaymentTypeColumnList, prefix);
         
-        public static string GetAddressColumns(string prefix = null)=>
-            GetColumnsInternal(AddressColumnList, prefix);
-
-        private static string GetColumnsInternal(IEnumerable<string> source, string prefix = null)
-        {
-            prefix = prefix ?? string.Empty;
-            return string.Join("," + Environment.NewLine, source.Select(p => prefix + p));
-        }
         
+        public static string GetClientColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(ClientColumnList, prefix);
+        
+        
+        public static string GetAddressColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(AddressColumnList, prefix);
+        
+        
+        public static string GetWarehouseColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(WarehouseColumnList, prefix);
     }
 }

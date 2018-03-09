@@ -50,6 +50,19 @@ where instance_id = @instance_id and parent_id = @id;";
         private static readonly string SqlGetFull = 
             SqlGet + SqlGetAddresses;
         
+        private static readonly string SqlGetList = @"
+select " + ReferenceHelper.GetClientColumns() + @"
+from clients
+where id = ANY (@ids) and instance_id = @instance_id
+;";
+        private static readonly string SqlGetListAddresses = @"
+select " + ReferenceHelper.GetAddressColumns() + @"
+from client_addresses
+where instance_id = @instance_id and parent_id = ANY (@ids);";
+
+        
+        private static readonly string SqlGetListFull = 
+            SqlGetList + SqlGetListAddresses;
         
         
         
@@ -259,6 +272,16 @@ returning 1
             command.CommandText = SqlGetFull;
             return null;
         }
+        
+        
+        protected override ExecutionParameters SetCommandGetList(
+            NpgsqlCommand command,
+            ICollection<Guid> ids,
+            UserCredentials credentials)
+        {
+            command.CommandText = SqlGetListFull;
+            return null;
+        }
 
         protected override ExecutionParameters SetCommandDelete(
             NpgsqlCommand command,
@@ -292,6 +315,39 @@ returning 1
             }
 
             return client;
+        }
+        
+        protected override IList<Client> ReadList(
+            IDataReader reader,
+            ReferenceServiceExecutionContext ctx)
+        {
+            var list = new List<Client>();
+            while (reader.Read())
+            {
+                list.Add(reader.GetClient());
+            }
+
+            reader.NextResult();
+
+            var addresses = new List<Address>();
+            while (reader.Read())
+            {
+                addresses.Add(reader.GetAddress());
+            }
+
+            foreach (var client in list)
+            {
+                client.Addresses = new List<Address>();
+                foreach (var address in addresses)
+                {
+                    if (client.Id == address.ParentId)
+                    {
+                        client.Addresses.Add(address);
+                    }
+                }
+            }
+            
+            return list;
         }
 
         protected override async Task<bool> ExecDeleteAsync(NpgsqlCommand command, ReferenceServiceExecutionContext ctx)

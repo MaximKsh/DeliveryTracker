@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using DeliveryTracker.Common;
+using DeliveryTracker.Database;
 using Microsoft.Extensions.Configuration;
 
 namespace DeliveryTracker.Instances
@@ -15,11 +14,8 @@ namespace DeliveryTracker.Instances
             "creator_id"
         }.AsReadOnly();
         
-        public static string GetInstanceColumns(string prefix = null)
-        {
-            prefix = prefix ?? string.Empty;
-            return string.Join("," + Environment.NewLine, InstanceColumnList.Select(p => prefix + p));
-        }
+        public static string GetInstanceColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(InstanceColumnList, prefix);
         
         public static readonly IReadOnlyList<string> InvitationColumnList = new List<string>
         {
@@ -36,12 +32,9 @@ namespace DeliveryTracker.Instances
             "phone_number"
         }.AsReadOnly();
         
-        public static string GetInvitationColumns(string prefix = null)
-        {
-            prefix = prefix ?? string.Empty;
-            return string.Join("," + Environment.NewLine, InvitationColumnList.Select(p => prefix + p));
-        }
-
+        public static string GetInvitationColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(InvitationColumnList, prefix);
+        
         public static InvitationSettings ReadInvitationSettingsFromConf(IConfiguration configuration)
         {
             return new InvitationSettings(
@@ -51,6 +44,5 @@ namespace DeliveryTracker.Instances
                     configuration.GetValue("InvitationSettings:Alphabet", "23456789qwertyupasdfghkzxbnmQWERTYUPASDFGHKZXVBNM"))
                 ;
         }
-        
     }
 }

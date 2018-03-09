@@ -1,740 +1,419 @@
-﻿namespace DeliveryTracker.Tasks
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using DeliveryTracker.Common;
+using DeliveryTracker.Database;
+using DeliveryTracker.Identification;
+using DeliveryTracker.References;
+using DeliveryTracker.Tasks.TransitionObservers;
+using DeliveryTracker.Validation;
+
+namespace DeliveryTracker.Tasks
 {
-    public class TaskService
+    public class TaskService : ITaskService
     {
-        /*
         #region fields
 
-        private readonly TaskStateCache taskStateCache;
-        
-        private readonly DeliveryTrackerDbContext dbContext;
+        private readonly IPostgresConnectionProvider cp;
 
-        private readonly AccountService accountService;
+        private readonly ITaskManager taskManager;
 
-        private readonly RoleCache roleCache;
+        private readonly ITaskStateTransitionManager stateTransitionManager;
+
+        private readonly IUserCredentialsAccessor accessor;
+
+        private readonly IReferenceFacade referenceFacade;
+
+        private readonly IUserManager userManager;
+
+        private readonly ITransitionObserverExecutor observerExecutor;
         
         #endregion
         
-        #region constructor
-        
+        #region constuctor
+
         public TaskService(
-            TaskStateCache taskStateCache,
-            DeliveryTrackerDbContext dbContext, 
-            AccountService accountService,
-            RoleCache roleCache)
+            IPostgresConnectionProvider cp,
+            ITaskManager taskManager,
+            ITaskStateTransitionManager stateTransitionManager,
+            IUserCredentialsAccessor accessor,
+            IReferenceFacade referenceFacade,
+            IUserManager userManager,
+            ITransitionObserverExecutor observerExecutor)
         {
-            this.taskStateCache = taskStateCache;
-            this.dbContext = dbContext;
-            this.accountService = accountService;
-            this.roleCache = roleCache;
+            this.cp = cp;
+            this.taskManager = taskManager;
+            this.stateTransitionManager = stateTransitionManager;
+            this.accessor = accessor;
+            this.referenceFacade = referenceFacade;
+            this.userManager = userManager;
+            this.observerExecutor = observerExecutor;
         }
         
         #endregion
         
-        #region public
+        
+        #region implementation
 
-        /// <summary>
-        /// Добавить задание с указанными параметрами.
-        /// </summary>
-        /// <param name="authorName"></param>
-        /// <param name="taskInfo"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<TaskModel>> AddTask(
-            string authorName,
-            TaskViewModel taskInfo)
+        /// <inheritdoc />
+        public async Task<ServiceResult<TaskInfo>> CreateAsync(
+            TaskInfo taskInfo,
+            NpgsqlConnectionWrapper oc = null)
         {
-            var authorResult = await this.accountService.FindUser(authorName);
-            if (!authorResult.Success)
+            
+            var credentials = this.accessor.GetUserCredentials();
+            if (credentials.Role != DefaultRoles.CreatorRole
+                && credentials.Role != DefaultRoles.ManagerRole)
             {
-                return new ServiceResult<TaskModel>(ErrorFactory.UserNotFound(authorName));
-            }
-            var sender = authorResult.Result;
-
-            UserModel performer = null;
-            if (taskInfo?.Performer?.Username != null)
-            {
-                var performerResult = await this.accountService.FindUser(taskInfo.Performer.Username);
-                if (!performerResult.Success)
-                {
-                    return new ServiceResult<TaskModel>(ErrorFactory.UserNotFound(taskInfo.Performer.Username));
-                }
-                performer = performerResult.Result;
-            }
-
-            return await this.AddTask(sender, taskInfo, performer);
-        }
-
-        /// <summary>
-        /// Добавить задание с указанными параметрами.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="taskInfo"></param>
-        /// <param name="performer"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<TaskModel>> AddTask(
-            UserModel sender,
-            TaskViewModel taskInfo,
-            UserModel performer)
-        {
-            // Проверяем что переданный менеджер действительно менеджер
-            var managerRoleResult = await this.accountService.GetUserRole(sender);
-            if (!managerRoleResult.Success)
-            {
-                return new ServiceResult<TaskModel>(ErrorFactory.UserWithoutRole(sender.UserName));
-            }
-            if (managerRoleResult.Result != this.roleCache.Manager.Name
-                && managerRoleResult.Result != this.roleCache.Creator.Name)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.UserNotInRole(
-                        sender.UserName, 
-                        $"{this.roleCache.Creator.Name}, {this.roleCache.Manager.Name}"));
+                return new ServiceResult<TaskInfo>(ErrorFactory.AccessDenied());
             }
             
-            if (performer != null)
+            taskInfo.Id = Guid.NewGuid();
+            taskInfo.AuthorId = credentials.Id;
+            taskInfo.InstanceId = credentials.InstanceId;
+            taskInfo.TaskStateId = DefaultTaskStates.New.Id;
+            
+            using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {
-                // Менеджер и исполнитель должны быть в одном инстансе
-                if (sender.InstanceId != performer.InstanceId)
+                using (var transaction = connWrapper.BeginTransaction())
                 {
-                    return new ServiceResult<TaskModel>(ErrorFactory.PerformerInAnotherInstance());
-                }
-                // Проверяем что переданный исполнитель действительно исполнитель
-                var performerRoleResult = await this.accountService.GetUserRole(performer);
-                if (!performerRoleResult.Success)
-                {
-                    return new ServiceResult<TaskModel>(ErrorFactory.UserWithoutRole(performer.UserName));
-                }
-                if (performerRoleResult.Result != this.roleCache.Performer.Name)
-                {
-                    return new ServiceResult<TaskModel>(
-                        ErrorFactory.UserNotInRole(performer.UserName, this.roleCache.Performer.Name));
+                    var createResult = await this.taskManager.CreateAsync(taskInfo, connWrapper);
+                    if (!createResult.Success)
+                    {
+                        transaction.Rollback();
+                        return createResult;
+                    }
+                    
+                    var editProductsResult = await this.taskManager.EditProductsAsync(
+                        taskInfo.Id,
+                        taskInfo.InstanceId,
+                        taskInfo.TaskProducts,
+                        connWrapper);
+                    if (!editProductsResult.Success)
+                    {
+                        transaction.Rollback();
+                        return new ServiceResult<TaskInfo>(editProductsResult.Errors);
+                    }
+
+                    var task = createResult.Result;
+                    var fillProductsResult = await this.taskManager.FillProductsAsync(task, connWrapper);
+                    if (!fillProductsResult.Success)
+                    {
+                        transaction.Rollback();
+                        return new ServiceResult<TaskInfo>(fillProductsResult.Errors);
+                    }
+                    
+                    transaction.Commit();
+                    return new ServiceResult<TaskInfo>(task);
                 }
             }
-            var newStateId = performer != null
-                ? this.taskStateCache.NewState.Id
-                : this.taskStateCache.NewUndistributedState.Id;
-            
-            var newTask = new TaskModel
-            {
-                Id = Guid.NewGuid(),
-                Number = taskInfo.Number ?? "",
-                ShippingDesc = taskInfo.ShippingDesc,
-                Details = taskInfo.Details,
-                Address = taskInfo.Address,
-                DatetimeFrom = taskInfo.TaskDateTimeRange?.From,
-                DatetimeTo = taskInfo.TaskDateTimeRange?.To,
-                StateId = newStateId,
-                InstanceId = sender.InstanceId,
-                AuthorId = sender.Id,
-                PerformerId = performer?.Id,
-                CreationDate = DateTime.UtcNow,
-                SetPerformerDate = performer != null ? (DateTime?)DateTime.UtcNow : null,
-            };
-            var addTaskResult = this.dbContext.Tasks.Add(newTask);
-            return new ServiceResult<TaskModel>(addTaskResult.Entity);
         }
 
-        /// <summary>
-        /// Зарезервировать задание за пользователем
-        /// Переход NewUndistributed -> New
-        /// </summary>
-        /// <param name="taskId"></param>
-        /// <param name="performerName"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<TaskModel>> ReserveTask(
+        /// <inheritdoc />
+        public async Task<ServiceResult<TaskInfo>> EditTaskAsync(
+            TaskInfo taskInfo,
+            NpgsqlConnectionWrapper oc = null)
+        {
+            if (taskInfo.TaskStateId != default)
+            {
+                return new ServiceResult<TaskInfo>(
+                    ErrorFactory.TaskEditError(taskInfo.Id, "Can't change state via edit method."));    
+            }
+
+            using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
+            {
+                using (var transact = connWrapper.BeginTransaction())
+                {
+                    var editResult = await this.taskManager.EditAsync(taskInfo, connWrapper);
+                    if (!editResult.Success)
+                    {
+                        transact.Rollback();
+                        return editResult;
+                    }
+
+                    var editProductsResult = await this.taskManager.EditProductsAsync(
+                        taskInfo.Id,
+                        taskInfo.InstanceId,
+                        taskInfo.TaskProducts,
+                        connWrapper);
+                    if (!editProductsResult.Success)
+                    {
+                        transact.Rollback();
+                        return new ServiceResult<TaskInfo>(editProductsResult.Errors);
+                    }
+
+                    var newTask = editResult.Result;
+                    var fillProductsResult = await this.taskManager.FillProductsAsync(
+                        newTask, connWrapper);
+                    if (!fillProductsResult.Success)
+                    {
+                        transact.Rollback();
+                        return new ServiceResult<TaskInfo>(fillProductsResult.Errors);
+                    }
+                    transact.Commit();
+                
+                    return new ServiceResult<TaskInfo>(newTask);   
+                }
+            }
+                   
+        }
+
+        /// <inheritdoc />
+        public async Task<ServiceResult<TaskInfo>> TransitAsync(
             Guid taskId,
-            string performerName)
+            Guid transitionId,
+            NpgsqlConnectionWrapper oc = null)
         {
-            var currentUserResult = await this.accountService.FindUser(performerName);
-            if (!currentUserResult.Success)
-            {
-                return new ServiceResult<TaskModel>(ErrorFactory.UserNotFound(performerName));
-            }
-            var user = currentUserResult.Result;
+            var credentials = this.accessor.GetUserCredentials();
             
-            var taskModel = await this.dbContext.Tasks.FindAsync(taskId);
-            if (taskModel == null)
+            using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {
-                return new ServiceResult<TaskModel>(ErrorFactory.TaskNotFound(taskId));
+                var canTransit = await this.stateTransitionManager.CanTransit(taskId, credentials.Id, transitionId, connWrapper);
+                if (!canTransit.Success)
+                {
+                    return new ServiceResult<TaskInfo>(canTransit.Errors);
+                }
+
+                var getTransitionResult = await this.stateTransitionManager.GetTransition(transitionId, connWrapper);
+                
+                var newTask = new TaskInfo
+                {
+                    Id = taskId,
+                    InstanceId = credentials.InstanceId,
+                    TaskStateId = getTransitionResult.Result.FinalState,
+                };
+
+                await this.observerExecutor.Execute(
+                    new TransitionObserverContext(newTask, credentials, getTransitionResult.Result));
+                
+                var editResult = await this.taskManager.EditAsync(newTask, connWrapper);
+
+                return editResult;
             }
-            return await this.ReserveTask(taskModel, user);
         }
 
-        /// <summary>
-        /// Зарезервировать задание за пользователем
-        /// Переход NewUndistributed -> New
-        /// </summary>
-        /// <param name="task"></param>
-        /// <param name="performer"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<TaskModel>> ReserveTask(
-            TaskModel task,
-            UserModel performer)
-        {
-            if (task.InstanceId != performer.InstanceId)
-            {
-                return new ServiceResult<TaskModel>(ErrorFactory.TaskIsForbidden());
-            }
-            var roleResult = await this.accountService.GetUserRole(performer);
-            if (!roleResult.Success)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.UserNotInRole(performer.UserName, this.roleCache.Performer.Name));
-            }
-            var role = roleResult.Result;
-            if (role != this.roleCache.Performer.Name)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.UserNotInRole(performer.UserName, this.roleCache.Performer.Name));
-            }
-            
-            if (!this.taskStateCache.TryGetById(task.StateId, out var oldState))
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.IncorrectTaskState(null, this.taskStateCache.NewUndistributedState));
-            }
-            if (oldState != this.taskStateCache.NewUndistributedState)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.IncorrectTaskStateTransition(this.taskStateCache.NewUndistributedState, oldState));
-            }
-            
-            
-            task.StateId = this.taskStateCache.NewState.Id;
-            task.PerformerId = performer.Id;
-            task.SetPerformerDate = DateTime.UtcNow;
-            var result = this.dbContext.Tasks.Update(task);
-            return new ServiceResult<TaskModel>(result.Entity);
-        }
-            
-        
-        /// <summary>
-        /// Взять задание в работу.
-        /// </summary>
-        /// <param name="taskId"></param>
-        /// <param name="performerName"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<TaskModel>> TakeTaskToWork(
+        /// <inheritdoc />
+        public async Task<ServiceResult<TaskInfo>> GetTaskAsync(
             Guid taskId,
-            string performerName)
+            NpgsqlConnectionWrapper oc = null)
         {
-            var currentUserResult = await this.accountService.FindUser(performerName);
-            if (!currentUserResult.Success)
+            var credentials = this.accessor.GetUserCredentials();
+            using (var cw = oc?.Connect() ?? this.cp.Create().Connect())
             {
-                return new ServiceResult<TaskModel>(ErrorFactory.UserNotFound(performerName));
-            }
-            var user = currentUserResult.Result;
+                var result = await this.taskManager.GetAsync(taskId, credentials.InstanceId, cw);
+                if (!result.Success)
+                {
+                    return result;
+                }
+
+                var task = result.Result;
+                var fillProductsResult = await this.taskManager.FillProductsAsync(
+                    task, cw);
+                if (!fillProductsResult.Success)
+                {
+                    return new ServiceResult<TaskInfo>(fillProductsResult.Errors);
+                }
             
-            var taskModel = await this.dbContext.Tasks.FindAsync(taskId);
-            if (taskModel == null)
-            {
-                return new ServiceResult<TaskModel>(ErrorFactory.TaskNotFound(taskId));
+                return new ServiceResult<TaskInfo>(task);    
             }
-            
-            return await this.TakeTaskToWork(taskModel, user);
         }
 
-        /// <summary>
-        /// Взять задание в работу.
-        /// </summary>
-        /// <param name="task"></param>
-        /// <param name="performer"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<TaskModel>> TakeTaskToWork(
-            TaskModel task,
-            UserModel performer)
+        public async Task<ServiceResult<TaskPackage>> PackTaskAsync(
+            TaskInfo taskInfo,
+            NpgsqlConnectionWrapper oc = null)
         {
-            if (task.InstanceId != performer.InstanceId
-                || task.PerformerId != performer.Id)
+            var credentials = this.accessor.GetUserCredentials();
+            var taskPackage = new TaskPackage();
+            using (var cw = oc?.Connect() ?? this.cp.Create().Connect())
             {
-                return new ServiceResult<TaskModel>(ErrorFactory.TaskIsForbidden());
+                taskPackage.LinkedReferences = new Dictionary<string, DictionaryObject>(8);
+                if (taskInfo.TaskProducts?.Count > 0)
+                {
+                    var result = await this.AddToReferences(
+                        taskPackage, 
+                        nameof(Product), 
+                        taskInfo.TaskProducts.Select(p => p.ProductId).ToArray(), 
+                        cw);
+                    if (!result.Success)
+                    {
+                        return new ServiceResult<TaskPackage>(result.Errors);
+                    }
+                }
+                
+                if (taskInfo.WarehouseId.HasValue)
+                {
+                    var result = await this.referenceFacade.GetAsync(nameof(Warehouse), taskInfo.WarehouseId.Value, cw);
+                    if (!result.Success)
+                    {
+                        return new ServiceResult<TaskPackage>(result.Errors);
+                    }
+                    taskPackage.LinkedReferences.Add(result.Result.Id.ToString(), result.Result);
+                }
+                
+                if (taskInfo.PaymentTypeId.HasValue)
+                {
+                    var result = await this.referenceFacade.GetAsync(nameof(PaymentType), taskInfo.PaymentTypeId.Value, cw);
+                    if (!result.Success)
+                    {
+                        return new ServiceResult<TaskPackage>(result.Errors);
+                    }
+                    taskPackage.LinkedReferences.Add(result.Result.Id.ToString(), result.Result);
+                }
+                
+                if (taskInfo.ClientId.HasValue)
+                {
+                    var result = await this.referenceFacade.GetAsync(nameof(Client), taskInfo.ClientId.Value, cw);
+                    if (!result.Success)
+                    {
+                        return new ServiceResult<TaskPackage>(result.Errors);
+                    }
+                    taskPackage.LinkedReferences.Add(result.Result.Id.ToString(), result.Result);
+                }
+
+                var userIds = new List<Guid> { taskInfo.AuthorId };
+                if (taskInfo.PerformerId.HasValue)
+                {
+                    userIds.Add(taskInfo.PerformerId.Value);
+                }
+                var getUsersResult = await this.userManager.GetAsync(userIds, credentials.InstanceId,  cw);
+                if (!getUsersResult.Success)
+                {
+                    return new ServiceResult<TaskPackage>(getUsersResult.Errors);
+                }
+
+                taskPackage.LinkedUsers = getUsersResult.Result.ToDictionary(k => k.Id.ToString(), v => v);
+
+                var transitionsResult = await this.stateTransitionManager.GetTransitions(
+                    credentials.Role, taskInfo.TaskStateId, cw);
+                if (!transitionsResult.Success)
+                {
+                    return new ServiceResult<TaskPackage>(transitionsResult.Errors);
+                }
+
+                taskPackage.LinkedTaskStateTransitions =  transitionsResult.Result;
             }
-            var roleResult = await this.accountService.GetUserRole(performer);
-            if (!roleResult.Success)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.UserNotInRole(performer.UserName, this.roleCache.Performer.Name));
-            }
-            var role = roleResult.Result;
-            if (role != this.roleCache.Performer.Name)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.UserNotInRole(performer.UserName, this.roleCache.Performer.Name));
-            }
+
+            taskPackage.TaskInfo = new List<TaskInfo> { taskInfo };
             
-            if (!this.taskStateCache.TryGetById(task.StateId, out var oldState))
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.IncorrectTaskState(null, this.taskStateCache.NewState));
-            }
-            if (oldState != this.taskStateCache.NewState)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.IncorrectTaskStateTransition(this.taskStateCache.NewState, oldState));
-            }
-            
-            
-            task.StateId = this.taskStateCache.InWorkState.Id;
-            task.PerformerId = performer.Id;
-            task.InWorkDate = DateTime.UtcNow;
-            var result = this.dbContext.Tasks.Update(task);
-            return new ServiceResult<TaskModel>(result.Entity);
-           
+            return new ServiceResult<TaskPackage>(taskPackage);
+        
         }
 
-        /// <summary>
-        /// Завершение задания исполнителем.
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="taskId"></param>
-        /// <param name="newStateAlias"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<TaskModel>> CompleteTaskByPerformer(
-            string username,
-            Guid taskId,
-            string newStateAlias)
+        /// <inheritdoc />
+        public async Task<ServiceResult<TaskPackage>> PackTasksAsync(
+            IList<TaskInfo> taskInfos,
+            NpgsqlConnectionWrapper oc = null)
         {
-            var currentUserResult = await this.accountService.FindUser(username);
-            if (!currentUserResult.Success)
+            var credentials = this.accessor.GetUserCredentials();
+            var taskPackage = new TaskPackage();
+            var productIds = new HashSet<Guid>(taskInfos.Count);
+            var warehousesIds = new HashSet<Guid>(taskInfos.Count);
+            var paymentTypeIds = new HashSet<Guid>(taskInfos.Count);
+            var clientsIds = new HashSet<Guid>(taskInfos.Count);
+            var userIds = new HashSet<Guid>(2 * taskInfos.Count); // Автор и Исполнитель
+            var initialStates = new HashSet<Guid>(taskInfos.Count);
+            foreach (var taskInfo in taskInfos)
             {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.UserNotFound(username));
-            }
-            var user = currentUserResult.Result;
-            
-            var task = await this.dbContext.Tasks.FindAsync(taskId);
-            if (task == null)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.TaskNotFound(taskId));
-            }
-            
-            if (!this.taskStateCache.TryGetByAlias(newStateAlias, out var newState))
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.IncorrectTaskState(
-                        null,
-                        this.taskStateCache.PerformedState,
-                        this.taskStateCache.CancelledState));
-            }
-            return this.CompleteTaskByPerformer(user, task, newState);
-        }
-        
-        /// <summary>
-        /// Завершение задания исполнителем.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <param name="task"></param>
-        /// <param name="taskState"></param>
-        /// <returns></returns>
-        public ServiceResult<TaskModel> CompleteTaskByPerformer(
-            UserModel user,
-            TaskModel task,
-            TaskStateModel taskState)
-        {
-            if (taskState != this.taskStateCache.PerformedState
-                && taskState != this.taskStateCache.CancelledState)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.IncorrectTaskState(
-                        taskState, 
-                        this.taskStateCache.PerformedState, 
-                        this.taskStateCache.CancelledState));
-            }
-            
-            if (!this.taskStateCache.TryGetById(task.StateId, out var oldState)
-                || oldState != this.taskStateCache.InWorkState)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.IncorrectTaskStateTransition(taskState, oldState));
-            }
-            
-            // Роль проверять необязательно, достаточно учесть тот факт,
-            // что исполнителем может стоять только пользователь в роли исполнителя.
-            if (task.PerformerId != user.Id)
-            {
-                return new ServiceResult<TaskModel>(ErrorFactory.TaskIsForbidden());
-            }
-            
-            task.StateId = taskState.Id;
-            task.CompletionDate = DateTime.UtcNow;
-            var result = this.dbContext.Tasks.Update(task);
-            return new ServiceResult<TaskModel>(result.Entity);
-        }
+                if (taskInfo.TaskProducts != null)
+                {
+                    foreach (var item in taskInfo.TaskProducts.Select(p => p.ProductId))
+                    {
+                        productIds.Add(item);   
+                    }
+                }
+                if (taskInfo.WarehouseId.HasValue)
+                {
+                    warehousesIds.Add(taskInfo.WarehouseId.Value);   
+                }
+                if (taskInfo.PaymentTypeId.HasValue)
+                {
+                    paymentTypeIds.Add(taskInfo.PaymentTypeId.Value);   
+                }
+                if (taskInfo.ClientId.HasValue)
+                {
+                    clientsIds.Add(taskInfo.ClientId.Value);   
+                }
+                userIds.Add(taskInfo.AuthorId); 
+                if (taskInfo.PerformerId.HasValue)
+                {
+                    userIds.Add(taskInfo.PerformerId.Value);   
+                }
 
-        /// <summary>
-        /// Отменить задание автором задания.
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="taskId"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<TaskModel>> CancelTaskByManager(
-            string username,
-            Guid taskId)
-        {
-            var currentUserResult = await this.accountService.FindUser(username);
-            if (!currentUserResult.Success)
-            {
-                return new ServiceResult<TaskModel>(ErrorFactory.UserNotFound(username));
+                initialStates.Add(taskInfo.TaskStateId);
             }
-            var user = currentUserResult.Result;
-            
-            var task = await this.dbContext.Tasks.FindAsync(taskId);
-            if (task == null)
-            {
-                return new ServiceResult<TaskModel>(ErrorFactory.TaskNotFound(taskId));
-            }
-            return this.CancelTaskByManager(user, task);
-        }
 
-        /// <summary>
-        /// Завершение задания исполнителем.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <param name="task"></param>
-        /// <returns>Модель задания</returns>
-        public ServiceResult<TaskModel> CancelTaskByManager(
-            UserModel user,
-            TaskModel task)
-        {
-            // Роль проверять необязательно, достаточно учесть тот факт,
-            // что автором может стоять только человек в роли менеджера.
-            if (task.AuthorId != user.Id)
+            using (var cw = oc?.Connect() ?? this.cp.Create().Connect())
             {
-                return new ServiceResult<TaskModel>(ErrorFactory.TaskIsForbidden());
-            }
-            
-            if (!this.taskStateCache.TryGetById(task.StateId, out var oldState)
-                || ( oldState != this.taskStateCache.NewUndistributedState 
-                     && oldState != this.taskStateCache.NewState
-                     && oldState != this.taskStateCache.InWorkState))
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.IncorrectTaskStateTransition(
-                        this.taskStateCache.CancelledByManagerState, 
-                        oldState));
-            }
-            
-            task.StateId = this.taskStateCache.CancelledByManagerState.Id;
-            task.CompletionDate = DateTime.UtcNow;
-            var result = this.dbContext.Tasks.Update(task);
-            return new ServiceResult<TaskModel>(result.Entity);
-        }
+                taskPackage.LinkedReferences = new Dictionary<string, DictionaryObject>(
+                    productIds.Count + warehousesIds.Count + paymentTypeIds.Count + clientsIds.Count);
+                var result = await this.AddToReferences(taskPackage, nameof(Product), productIds, cw);
+                if (!result.Success)
+                {
+                    return new ServiceResult<TaskPackage>(result.Errors);
+                }
+                result = await this.AddToReferences(taskPackage, nameof(Warehouse), warehousesIds, cw);
+                if (!result.Success)
+                {
+                    return new ServiceResult<TaskPackage>(result.Errors);
+                }
+                result = await this.AddToReferences(taskPackage, nameof(PaymentType), paymentTypeIds, cw);
+                if (!result.Success)
+                {
+                    return new ServiceResult<TaskPackage>(result.Errors);
+                }
+                result = await this.AddToReferences(taskPackage, nameof(Client), clientsIds, cw);
+                if (!result.Success)
+                {
+                    return new ServiceResult<TaskPackage>(result.Errors);
+                }
+                
+                var getUsersResult = await this.userManager.GetAsync(userIds, credentials.InstanceId,  cw);
+                if (!getUsersResult.Success)
+                {
+                    return new ServiceResult<TaskPackage>(getUsersResult.Errors);
+                }
 
-        /// <summary>
-        /// Получить задания, отправленные или исполняемые пользователем(в зависимости от его роли).
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="offset"></param>
-        /// <param name="limit"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<List<TaskModel>>> GetMyTasks(
-            string username,
-            int limit,
-            int offset)
-        {
-            var currentUserResult = await this.accountService.FindUser(username);
-            if (!currentUserResult.Success)
-            {
-                return new ServiceResult<List<TaskModel>>(ErrorFactory.UserNotFound(username));
-            }
-            var user = currentUserResult.Result;
-            return await this.GetMyTasks(user, limit, offset);
-        }
-        
-        /// <summary>
-        /// Получить задания, отправленные или исполняемые пользователем(в зависимости от его роли).
-        /// </summary>
-        /// <param name="user"></param>
-        /// <param name="offset"></param>
-        /// <param name="limit"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<List<TaskModel>>> GetMyTasks(
-            UserModel user,
-            int limit,
-            int offset)
-        {
-            var roleResult = await this.accountService.GetUserRole(user);
-            if (!roleResult.Success)
-            {
-                return new ServiceResult<List<TaskModel>>(ErrorFactory.UserWithoutRole(user.UserName));
-            }
-            var role = roleResult.Result;
-            if (role == this.roleCache.Manager.Name
-                || role == this.roleCache.Creator.Name)
-            {
-                return await this.GetMyTasksForManager(user, limit, offset);
-            }
-            if (role == this.roleCache.Performer.Name)
-            {
-                return await this.GetMyTasksForPerformer(user, limit, offset);
-            }
-            return new ServiceResult<List<TaskModel>>(ErrorFactory.UserWithoutRole(user.UserName));
-        }
-        
-        /// <summary>
-        /// Получить все задания.
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="offset"></param>
-        /// <param name="limit"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<List<TaskModel>>> GetTasks(
-            string username,
-            int limit,
-            int offset)
-        {
-            var currentUserResult = await this.accountService.FindUser(username);
-            if (!currentUserResult.Success)
-            {
-                return new ServiceResult<List<TaskModel>>(ErrorFactory.UserNotFound(username));
-            }
-            var user = currentUserResult.Result;
-            return await this.GetTasks(user, limit, offset);
-        }
-        
-        /// <summary>
-        /// Получить все задания.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <param name="offset"></param>
-        /// <param name="limit"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<List<TaskModel>>> GetTasks(
-            UserModel user,
-            int limit,
-            int offset)
-        {
-            var roleResult = await this.accountService.GetUserRole(user);
-            if (!roleResult.Success)
-            {
-                return new ServiceResult<List<TaskModel>>(ErrorFactory.UserWithoutRole(user.UserName));
-            }
-            var role = roleResult.Result;
-            if (role == this.roleCache.Manager.Name
-                || role == this.roleCache.Creator.Name)
-            {
-                return await this.GetTasksForManager(user, limit, offset);
-            }
-            if (role == this.roleCache.Performer.Name)
-            {
-                return new ServiceResult<List<TaskModel>>(ErrorFactory.AccessDenied());
-            }
-            return new ServiceResult<List<TaskModel>>(ErrorFactory.UserWithoutRole(user.UserName));
-        }
-        
-        /// <summary>
-        /// Получить нераспределенные задания для исполнителя.
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="offset"></param>
-        /// <param name="limit"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<List<TaskModel>>> GetUndistributedTasks(
-            string username,
-            int limit, 
-            int offset)
-        {
-            var currentUserResult = await this.accountService.FindUser(username);
-            if (!currentUserResult.Success)
-            {
-                return new ServiceResult<List<TaskModel>>(ErrorFactory.UserNotFound(username));
-            }
-            var user = currentUserResult.Result;
-            return await this.GetUndistributedTasks(user, limit, offset);
-        }
-        
-        /// <summary>
-        /// Получить нераспределенные задания для исполнителя.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <param name="offset"></param>
-        /// <param name="limit"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<List<TaskModel>>> GetUndistributedTasks(
-            UserModel user,
-            int limit,
-            int offset)
-        {
-            if (await this.accountService.IsInRole(user, this.roleCache.Performer.Name))
-            {
-                return await this.GetUndistributedTasksInternal(user, limit, offset);
-            }
-            return new ServiceResult<List<TaskModel>>(
-                ErrorFactory.UserNotInRole(user.UserName, this.roleCache.Performer.Name));
-        }
+                taskPackage.LinkedUsers = getUsersResult.Result.ToDictionary(k => k.Id.ToString(), v => v);
 
-        /// <summary>
-        /// Получить задание по его ID.
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="taskId"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<TaskModel>> GetTask(
-            string username,
-            Guid taskId)
-        {
-            var currentUserResult = await this.accountService.FindUser(username);
-            if (!currentUserResult.Success)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.UserNotFound(username));
+                var transitionsResult = await this.stateTransitionManager.GetTransitions(credentials.Role, initialStates, cw);
+                if (!transitionsResult.Success)
+                {
+                    return new ServiceResult<TaskPackage>(transitionsResult.Errors);
+                }
+
+                taskPackage.LinkedTaskStateTransitions =  transitionsResult.Result;
             }
-            var user = currentUserResult.Result;
-            return await this.GetTask(user, taskId);
-        }
-        
-        /// <summary>
-        /// Получить задание по его ID.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <param name="taskId"></param>
-        /// <returns></returns>
-        public async Task<ServiceResult<TaskModel>> GetTask(
-            UserModel user,
-            Guid taskId)
-        {
-         
-            var roleResult = await this.accountService.GetUserRole(user);
-            if (!roleResult.Success)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.UserWithoutRole(user.UserName));
-            }
-            var role = roleResult.Result;
-            if (role == this.roleCache.Manager.Name
-                || role == this.roleCache.Creator.Name)
-            {
-                return await this.GetTaskForManager(user, taskId);
-            }
-            if (role == this.roleCache.Performer.Name)
-            {
-                return await this.GetTaskForPerformer(user, taskId);
-            }
-            return new ServiceResult<TaskModel>(
-                ErrorFactory.UserWithoutRole(user.UserName));
-            
+            taskPackage.TaskInfo = new List<TaskInfo>( taskInfos );
+
+            return new ServiceResult<TaskPackage>(taskPackage);
         }
         
         #endregion
-        
         
         #region private
 
-        private async Task<ServiceResult<List<TaskModel>>> GetTasksForManager(
-            UserModel user,
-            int limit,
-            int offset)
+        private async Task<ServiceResult<IList<ReferenceEntityBase>>> AddToReferences(
+            TaskPackage taskPackage,
+            string type,
+            ICollection<Guid> ids,
+            NpgsqlConnectionWrapper cw)
         {
-            IQueryable<TaskModel> tasks = this.dbContext.Tasks
-                .Where(p => p.InstanceId == user.InstanceId)
-                .Skip(offset)
-                .Take(limit)
-                .Include(p => p.Author)
-                .Include(p => p.Performer)
-                .OrderBy(p => p.CreationDate);
-            
-            return new ServiceResult<List<TaskModel>>(await tasks.ToListAsync());
+            var result = await this.referenceFacade.GetAsync(type, ids, cw);
+            if (!result.Success)
+            {
+                return result;
+            }
+            foreach (var item in result.Result)
+            {
+                taskPackage.LinkedReferences.Add(item.Id.ToString(), item);
+            }
+
+            return new ServiceResult<IList<ReferenceEntityBase>>();
         }
         
-        private async Task<ServiceResult<List<TaskModel>>> GetMyTasksForManager(
-            UserModel user,
-            int limit,
-            int offset)
-        {
-            IQueryable<TaskModel> tasks = this.dbContext.Tasks
-                .Where(p => p.InstanceId == user.InstanceId && p.AuthorId == user.Id)
-                .Skip(offset)
-                .Take(limit)
-                .Include(p => p.Author)
-                .Include(p => p.Performer)
-                .OrderBy(p => p.CreationDate);
-            
-            return new ServiceResult<List<TaskModel>>(await tasks.ToListAsync());
-        }
-        
-        private async Task<ServiceResult<List<TaskModel>>> GetMyTasksForPerformer(
-            UserModel user,
-            int limit,
-            int offset)
-        {
-            IQueryable<TaskModel> tasks = this.dbContext.Tasks
-                .Where(p => p.InstanceId == user.InstanceId && p.PerformerId == user.Id)
-                .Skip(offset)
-                .Take(limit)
-                .Include(p => p.Author)
-                .Include(p => p.Performer)
-                .OrderBy(p => p.CreationDate);
-            
-            return new ServiceResult<List<TaskModel>>(await tasks.ToListAsync());
-        }
-        
-        private async Task<ServiceResult<List<TaskModel>>> GetUndistributedTasksInternal(
-            UserModel user,
-            int limit,
-            int offset)
-        {
-            IQueryable<TaskModel> tasks = this.dbContext.Tasks
-                .Where(p => p.InstanceId == user.InstanceId
-                            && p.StateId == this.taskStateCache.NewUndistributedState.Id)
-                .Skip(offset)
-                .Take(limit)
-                .Include(p => p.Author)
-                .Include(p => p.Performer)
-                .OrderBy(p => p.CreationDate);
-            
-            return new ServiceResult<List<TaskModel>>(await tasks.ToListAsync());
-        }
-
-
-        private async Task<ServiceResult<TaskModel>> GetTaskForManager(
-            UserModel user,
-            Guid taskId)
-        {
-            var task = await this.dbContext.Tasks
-                .Include(p => p.Author)
-                .Include(p => p.Performer)
-                .FirstOrDefaultAsync(p => p.Id == taskId && p.InstanceId == user.InstanceId);
-
-            if (task == null)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.TaskNotFound(taskId));
-            }
-            if (task.AuthorId != user.Id)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.TaskIsForbidden());
-            }
-            
-            return new ServiceResult<TaskModel>(task);
-        }
-        
-        private async Task<ServiceResult<TaskModel>> GetTaskForPerformer(
-            UserModel user,
-            Guid taskId)
-        {
-            var task = await this.dbContext.Tasks
-                .Include(p => p.Author)
-                .Include(p => p.Performer)
-                .FirstOrDefaultAsync(p => p.Id == taskId && p.InstanceId == user.InstanceId);
-
-            if (task == null)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.TaskNotFound(taskId));
-            }
-            if (task.PerformerId.HasValue 
-                && task.PerformerId != user.Id)
-            {
-                return new ServiceResult<TaskModel>(
-                    ErrorFactory.TaskIsForbidden());
-            }
-            
-            return new ServiceResult<TaskModel>(task);
-        }
         
         #endregion
-        */
     }
+    
 }

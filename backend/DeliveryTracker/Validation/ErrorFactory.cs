@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using DeliveryTracker.Localization;
-using Microsoft.AspNetCore.Identity;
+using DeliveryTracker.Tasks;
 
 namespace DeliveryTracker.Validation
 {
@@ -335,54 +335,108 @@ namespace DeliveryTracker.Validation
                 });
         
         #endregion
-       
+
+
+        #region tasks
         
         /// <summary>
-        /// Для пользователя не найдена роль.
+        /// Некорректное состояние задания.
         /// </summary>
-        /// <param name="username"></param>
         /// <returns></returns>
-        public static IError UserWithoutRole(string username) =>
+        public static IError IncorrectTaskState(Guid taskStateId) =>
             new Error(
-                ErrorCode.UserWithoutRole,
-                LocalizationAlias.Error.UserWithoutRole,
+                ErrorCode.IncorrectTaskState,
+                LocalizationAlias.Error.IncorrectTaskState,
                 new Dictionary<string, string>
                 {
-                    ["username"] = username,
-                });
-
-        /// <summary>
-        /// Пользователь не состоит в требуемой роли.
-        /// </summary>
-        /// <param name="username"></param>
-        /// <param name="expected"></param>
-        /// <returns></returns>
-        public static IError UserNotInRole(string username, string expected) =>
-            new Error(
-                ErrorCode.UserNotInRole,
-                LocalizationAlias.Error.UserNotInRole,
-                new Dictionary<string, string>
-                {
-                    ["username"] = username,
-                    ["expected"] = expected,
-                });
-
-        /// <summary>
-        /// Ошибка, возникшая в Identity.
-        /// </summary>
-        /// <param name="error"></param>
-        /// <returns></returns>
-        public static IError IdentityError(IdentityError error) =>
-            new Error(
-                ErrorCode.IdentityError,
-                LocalizationAlias.Error.IdentityError,
-                new Dictionary<string, string>
-                {
-                    ["details"] = error.Description,
+                    [nameof(taskStateId)] = taskStateId.ToString()
                 });
         
+        /// <summary>
+        /// Некорректное состояние задания.
+        /// </summary>
+        /// <returns></returns>
+        public static IError IncorrectTaskState(TaskState taskState) =>
+            new Error(
+                ErrorCode.IncorrectTaskState,
+                LocalizationAlias.Error.IncorrectTaskState,
+                new Dictionary<string, string>
+                {
+                    [nameof(taskState.Id)] = taskState.Id.ToString(),
+                    [nameof(taskState.Name)] = taskState.Name,
+                    [nameof(taskState.Caption)] = taskState.Caption,
+                });
         
-
+        /// <summary>
+        /// Некорректное переход между состояниями задания.
+        /// </summary>
+        /// <returns></returns>
+        public static IError IncorrectTaskStateTransition(Guid id) =>
+            new Error(
+                ErrorCode.IncorrectTaskStateTransition,
+                LocalizationAlias.Error.IncorrectTaskStateTransition,
+                new Dictionary<string, string>
+                {
+                    [nameof(id)] = id.ToString(),
+                });
+        
+        /// <summary>
+        /// Некорректное переход между состояниями задания.
+        /// </summary>
+        /// <returns></returns>
+        public static IError IncorrectTaskStateTransition(Guid role, Guid initialState, Guid finalState) =>
+            new Error(
+                ErrorCode.IncorrectTaskStateTransition,
+                LocalizationAlias.Error.IncorrectTaskStateTransition,
+                new Dictionary<string, string>
+                {
+                    [nameof(role)] = role.ToString(),
+                    [nameof(initialState)] = initialState.ToString(),
+                    [nameof(finalState)] = finalState.ToString(),
+                });
+        
+        /// <summary>
+        /// Некорректное переход между состояниями задания.
+        /// </summary>
+        /// <returns></returns>
+        public static IError IncorrectTaskStateTransition(
+                Guid taskId, 
+                Guid taskStateId,
+                Guid taskStateTransitionId, 
+                Guid role) =>
+            new Error(
+                ErrorCode.IncorrectTaskStateTransition,
+                LocalizationAlias.Error.IncorrectTaskStateTransition,
+                new Dictionary<string, string>
+                {
+                    [nameof(taskId)] = taskId.ToString(),
+                    [nameof(taskStateId)] = taskStateId.ToString(),
+                    [nameof(taskStateTransitionId)] = taskStateTransitionId.ToString(),
+                    [nameof(role)] = role.ToString(),
+                });
+        
+        /// <summary>
+        /// Возникла ошибка при создании задания.
+        /// </summary>
+        /// <returns></returns>
+        public static IError TaskCreationError() =>
+            new Error(
+                ErrorCode.TaskCreationError,
+                LocalizationAlias.Error.TaskCreationError);
+        
+        /// <summary>
+        /// Возникла ошибка при редактировании задания.
+        /// </summary>
+        /// <returns></returns>
+        public static IError TaskEditError(Guid taskId, string comment = null) =>
+            new Error(
+                ErrorCode.TaskEditError,
+                LocalizationAlias.Error.TaskEditError,
+                new Dictionary<string, string>
+                {
+                    [nameof(taskId)] = taskId.ToString(),
+                    [nameof(comment)] = comment ?? string.Empty
+                });
         
         
         /// <summary>
@@ -395,47 +449,10 @@ namespace DeliveryTracker.Validation
                 LocalizationAlias.Error.TaskNotFound,
                 new Dictionary<string, string>
                 {
-                    ["taskId"] = taskId.ToString()
+                    [nameof(taskId)] = taskId.ToString()
                 });
         
-        /// <summary>
-        /// Некорректное состояние задания.
-        /// </summary>
-        /// <returns></returns>
-        public static IError IncorrectTaskState() =>
-            new Error(
-                ErrorCode.IncorrectTaskState,
-                LocalizationAlias.Error.IncorrectTaskState,
-                new Dictionary<string, string>
-                {
-                   // ["actual"] = actual?.Alias ?? "null",
-                   // ["expected"] = string.Join(',', expected.Select(p => p.Alias)),
-                });
-        
-        /// <summary>
-        /// Некорректное переход между состояниями задания.
-        /// </summary>
-        /// <returns></returns>
-        public static IError IncorrectTaskStateTransition() =>
-            new Error(
-                ErrorCode.IncorrectTaskStateTransition,
-                LocalizationAlias.Error.IncorrectTaskStateTransition,
-                new Dictionary<string, string>
-                {
-                   // ["newState"] = newState?.Alias ?? "null",
-                   // ["currentState"] = currentState?.Alias ?? "null",
-                });
-        
-        /// <summary>
-        /// Нет доступа к заданию.
-        /// </summary>
-        /// <returns></returns>
-        public static IError TaskIsForbidden() =>
-            new Error(
-                ErrorCode.TaskIsForbidden,
-                LocalizationAlias.Error.TaskIsForbidden);
-        
-        
-        
+
+        #endregion
     }
 }

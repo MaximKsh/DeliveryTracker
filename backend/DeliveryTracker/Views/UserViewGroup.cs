@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 
@@ -22,7 +22,7 @@ namespace DeliveryTracker.Views
             var invitationsView = new InvitationsView(2);
             dict[invitationsView.Name] = invitationsView;
 
-            this.Views = dict.ToImmutableDictionary();
+            this.Views = new ReadOnlyDictionary<string, IView>(dict);
         }
     }
 }

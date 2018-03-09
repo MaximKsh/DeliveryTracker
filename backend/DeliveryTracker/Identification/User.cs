@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 namespace DeliveryTracker.Identification
 {
     [SuppressMessage("ReSharper", "UnusedAutoPropertyAccessor.Global")]
-    public class User : DictionaryObject
+    public class User : EventDictionaryObject
     {
         /// <summary>
         /// ID пользователя.
