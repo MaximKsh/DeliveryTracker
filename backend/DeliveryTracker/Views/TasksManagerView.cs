@@ -97,7 +97,7 @@ where instance_id = @instance_id and author_id = @author_id
                 {
                     while (await reader.ReadAsync())
                     {
-                        list.Add(reader.GetProduct());
+                        list.Add(reader.GetTaskInfo());
                     }
                 }
             }

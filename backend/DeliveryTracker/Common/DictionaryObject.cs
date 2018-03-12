@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
@@ -97,7 +98,16 @@ namespace DeliveryTracker.Common
             var converter = TypeDescriptor.GetConverter(typeof(T));
             try
             {
-                var result = (T) converter.ConvertFrom(obj);
+                T result;
+                if (converter.CanConvertFrom(obj.GetType()))
+                {
+                    result = (T) converter.ConvertFrom(obj);
+                }
+                else
+                {
+                    result = (T) converter.ConvertFromString(obj.ToString());
+                }
+                
                 this.Dictionary[key] = result;
                 return result;
             }

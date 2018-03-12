@@ -97,7 +97,7 @@ where instance_id = @instance_id
                 {
                     while (await reader.ReadAsync())
                     {
-                        list.Add(reader.GetClient());
+                        list.Add(reader.GetWarehouse());
                     }
                 }
             }

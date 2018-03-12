@@ -191,6 +191,7 @@ namespace DeliveryTrackerWeb.Tests.Integration
                     Entity = new Product()
                     {
                         Name = "Sushi",
+                        Cost = 100,
                     }.GetDictionary(),
                 });
             

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
@@ -20,10 +21,11 @@ select
     {ReferenceHelper.GetPaymentTypeColumns()}
 from payment_types
 where instance_id = @instance_id
+{{0}}
 ;
 ";
 
-        private const string SqlCount = @"
+        private static readonly string SqlCount = $@"
 select count(1)
 from payment_types
 where instance_id = @instance_id
@@ -89,7 +91,16 @@ where instance_id = @instance_id
             var list = new List<IDictionaryObject>();
             using (var command = oc.CreateCommand())
             {
-                command.CommandText = SqlGet;
+                var stringBuilder = new StringBuilder();
+                if (parameters.TryGetValue("name", out var values)
+                    && values.Length == 1)
+                {
+                    var name = values[0];
+                    stringBuilder.AppendLine("and name like @name");
+                    command.Parameters.AddWithValue("name", name + "%");
+                }
+                
+                command.CommandText = string.Format(SqlGet, stringBuilder);
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
 
                 using (var reader = await command.ExecuteReaderAsync())
