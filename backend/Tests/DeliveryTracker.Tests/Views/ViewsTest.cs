@@ -68,10 +68,10 @@ namespace DeliveryTracker.Tests.Views
             var digest = await viewGroup.GetDigestAsync();
             var abstractResult = await viewGroup.ExecuteViewAsync(
                 "ProductsView", 
-                new Dictionary<string, string[]>().ToImmutableDictionary());
+                new Dictionary<string, IReadOnlyList<string>>());
             var typifiedResult = await viewGroup.ExecuteViewAsync<Product>(
                 "ProductsView",
-                new Dictionary<string, string[]>().ToImmutableDictionary());
+                new Dictionary<string, IReadOnlyList<string>>());
 
             // Assert
         }

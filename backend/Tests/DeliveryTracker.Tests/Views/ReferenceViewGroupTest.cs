@@ -98,7 +98,7 @@ namespace DeliveryTracker.Tests.Views
             // Act
             var abstractResult = await viewGroup.ExecuteViewAsync(
                 "ProductsView", 
-                new Dictionary<string, string[]>().ToImmutableDictionary());
+                new Dictionary<string, IReadOnlyList<string>>());
 
             // Assert
             Assert.True(abstractResult.Success);
@@ -123,7 +123,7 @@ namespace DeliveryTracker.Tests.Views
             // Act
             var abstractResult = await viewGroup.ExecuteViewAsync(
                 "PaymentTypesView", 
-                new Dictionary<string, string[]>().ToImmutableDictionary());
+                new Dictionary<string, IReadOnlyList<string>>());
 
             // Assert
             Assert.True(abstractResult.Success);
@@ -149,7 +149,7 @@ namespace DeliveryTracker.Tests.Views
             // Act
             var abstractResult = await viewGroup.ExecuteViewAsync(
                 "ClientsView", 
-                new Dictionary<string, string[]>().ToImmutableDictionary());
+                new Dictionary<string, IReadOnlyList<string>>());
 
             // Assert
             Assert.True(abstractResult.Success);
@@ -174,7 +174,7 @@ namespace DeliveryTracker.Tests.Views
             // Act
             var abstractResult = await viewGroup.ExecuteViewAsync(
                 "WarehousesView", 
-                new Dictionary<string, string[]>().ToImmutableDictionary());
+                new Dictionary<string, IReadOnlyList<string>>());
 
             // Assert
             Assert.True(abstractResult.Success);

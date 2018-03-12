@@ -63,7 +63,7 @@ where instance_id = @instance_id and role = @role
         public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
             NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
-            IImmutableDictionary<string, string[]> parameters)
+            IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
             var result = await this.GetCountAsync(oc, userCredentials, parameters);
             if (!result.Success)
@@ -81,9 +81,10 @@ where instance_id = @instance_id and role = @role
         }
         
         /// <inheritdoc />
-        public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(NpgsqlConnectionWrapper oc,
+        public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
+            NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
-            IImmutableDictionary<string, string[]> parameters)
+            IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
             var list = new List<IDictionaryObject>();
             using (var command = oc.CreateCommand())
@@ -105,9 +106,10 @@ where instance_id = @instance_id and role = @role
         }
 
         /// <inheritdoc />
-        public async Task<ServiceResult<long>> GetCountAsync(NpgsqlConnectionWrapper oc,
+        public async Task<ServiceResult<long>> GetCountAsync(
+            NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
-            IImmutableDictionary<string, string[]> parameters)
+            IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
             using (var command = oc.CreateCommand())
             {

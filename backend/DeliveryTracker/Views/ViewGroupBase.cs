@@ -57,7 +57,7 @@ namespace DeliveryTracker.Views
         public virtual async Task<ServiceResult<Dictionary<string, ViewDigest>>> GetDigestAsync(
             NpgsqlConnectionWrapper oc = null)
         {
-            var parameters = new Dictionary<string, string[]>().ToImmutableDictionary();
+            var parameters = new Dictionary<string, IReadOnlyList<string>>();
             var credentials = this.Accessor.GetUserCredentials();
             var digest = new Dictionary<string, ViewDigest>(this.Views.Count);
             using (var conn = oc ?? this.Cp.Create())
@@ -85,7 +85,7 @@ namespace DeliveryTracker.Views
         /// <inheritdoc />
         public virtual async Task<ServiceResult<IList<T>>> ExecuteViewAsync<T>(
             string viewName,
-            IImmutableDictionary<string, string[]> parameters,
+            IReadOnlyDictionary<string, IReadOnlyList<string>> parameters,
             NpgsqlConnectionWrapper oc = null)
         {
             var result = await this.ExecuteViewAsync(viewName, parameters, oc);
@@ -108,7 +108,7 @@ namespace DeliveryTracker.Views
         /// <inheritdoc />
         public virtual async Task<ServiceResult<IList<IDictionaryObject>>> ExecuteViewAsync(
             string viewName,
-            IImmutableDictionary<string, string[]> parameters,
+            IReadOnlyDictionary<string, IReadOnlyList<string>> parameters,
             NpgsqlConnectionWrapper oc = null)
         {
             if (!this.Views.TryGetValue(viewName, out var view))

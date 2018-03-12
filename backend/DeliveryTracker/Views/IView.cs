@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
@@ -30,8 +29,8 @@ namespace DeliveryTracker.Views
         Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
             NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
-            IImmutableDictionary<string, string[]> parameters);
-        
+            IReadOnlyDictionary<string, IReadOnlyList<string>> parameters);
+
         /// <summary>
         /// Получить результат представления.
         /// </summary>
@@ -42,7 +41,7 @@ namespace DeliveryTracker.Views
         Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
             NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
-            IImmutableDictionary<string, string[]> parameters);
+            IReadOnlyDictionary<string, IReadOnlyList<string>> parameters);
 
 
         /// <summary>
@@ -55,6 +54,6 @@ namespace DeliveryTracker.Views
         Task<ServiceResult<long>> GetCountAsync(
             NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
-            IImmutableDictionary<string, string[]> parameters);
+            IReadOnlyDictionary<string, IReadOnlyList<string>> parameters);
     }
 }

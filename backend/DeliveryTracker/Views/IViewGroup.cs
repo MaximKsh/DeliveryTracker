@@ -38,7 +38,7 @@ namespace DeliveryTracker.Views
         /// <returns></returns>
         Task<ServiceResult<IList<T>>> ExecuteViewAsync<T>(
             string viewName,
-            IImmutableDictionary<string, string[]> parameters,
+            IReadOnlyDictionary<string, IReadOnlyList<string>> parameters,
             NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace DeliveryTracker.Views
         /// <returns></returns>
         Task<ServiceResult<IList<IDictionaryObject>>> ExecuteViewAsync(
             string viewName,
-            IImmutableDictionary<string, string[]> parameters,
+            IReadOnlyDictionary<string, IReadOnlyList<string>> parameters,
             NpgsqlConnectionWrapper oc = null);
 
     }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using DeliveryTracker.Views;
@@ -90,9 +91,8 @@ namespace DeliveryTrackerWeb.Controllers
         [HttpGet("{viewGroup}/{viewName}")]
         public async Task<IActionResult> GetViewResult(string viewGroup, string viewName)
         {
-            var parameters = this.Request.Query
-                .Select(p => new KeyValuePair<string, string[]>(p.Key, p.Value.ToArray()))
-                .ToImmutableDictionary();
+            var parameters = new ReadOnlyDictionary<string, IReadOnlyList<string>>(
+                this.Request.Query.ToDictionary(k => k.Key, v => (IReadOnlyList<string>)v.Value.ToList().AsReadOnly()));
             
             var groupResult = this.viewService.GetViewGroup(viewGroup);
             if (!groupResult.Success)
