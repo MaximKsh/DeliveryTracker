@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
@@ -20,6 +20,10 @@ select
     {ReferenceHelper.GetProductColumns()}
 from products
 where instance_id = @instance_id
+{{0}}
+
+order by name
+limit {ViewHelper.DefaultViewLimit}
 ;
 ";
 
@@ -89,7 +93,11 @@ where instance_id = @instance_id
             var list = new List<IDictionaryObject>();
             using (var command = oc.CreateCommand())
             {
-                command.CommandText = SqlGet;
+                var sb = new StringBuilder(256);
+                ViewHelper.TryAddContainsParameter(parameters, command, sb, "name");
+                ViewHelper.TryAddAfterParameter(parameters, command, sb, "products", "name");
+                
+                command.CommandText = string.Format(SqlGet, sb);
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
 
                 using (var reader = await command.ExecuteReaderAsync())

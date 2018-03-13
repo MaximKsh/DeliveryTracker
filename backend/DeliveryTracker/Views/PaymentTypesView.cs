@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
@@ -22,6 +21,9 @@ select
 from payment_types
 where instance_id = @instance_id
 {{0}}
+
+order by name
+limit {ViewHelper.DefaultViewLimit}
 ;
 ";
 
@@ -91,16 +93,11 @@ where instance_id = @instance_id
             var list = new List<IDictionaryObject>();
             using (var command = oc.CreateCommand())
             {
-                var stringBuilder = new StringBuilder();
-                if (parameters.TryGetValue("name", out var values)
-                    && values.Count == 1)
-                {
-                    var name = values[0];
-                    stringBuilder.AppendLine("and name like @name");
-                    command.Parameters.AddWithValue("name", name + "%");
-                }
+                var sb = new StringBuilder(256);
+                ViewHelper.TryAddStartsWithParameter(parameters, command, sb, "name");
+                ViewHelper.TryAddAfterParameter(parameters, command, sb, "payment_types", "name");
                 
-                command.CommandText = string.Format(SqlGet, stringBuilder);
+                command.CommandText = string.Format(SqlGet, sb);
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
 
                 using (var reader = await command.ExecuteReaderAsync())
