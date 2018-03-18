@@ -9,6 +9,7 @@ namespace DeliveryTracker.References
         {
             "id", 
             "instance_id", 
+            "deleted",
         }.AsReadOnly();
         
         public static readonly IReadOnlyList<string> CollectionColumnList = new List<string>

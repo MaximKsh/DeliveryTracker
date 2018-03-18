@@ -88,6 +88,9 @@ if __name__ == '__main__':
     cur = conn.cursor()
     cur_dir = getcwd()
 
+    cur.execute("""CREATE SCHEMA IF NOT EXISTS "public"; """)
+    conn.commit()
+
     migrations = get_migration_history(conn, cur)
     directories = list([f for f in listdir(cur_dir) if isdir(join(cur_dir, f)) and f.startswith('migration_')])
     directories.sort(key=first_int_from_str)

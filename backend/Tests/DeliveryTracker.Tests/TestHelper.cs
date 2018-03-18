@@ -34,9 +34,14 @@ returning " + IdentificationHelper.GetUserColumns() + ";";
 
         
         private static readonly string SqlInsertInstance = $@"
+
 insert into instances({InstanceHelper.GetInstanceColumns()})
 values ({InstanceHelper.GetInstanceColumns("@")})
 returning {InstanceHelper.GetInstanceColumns()}
+;
+insert into entries_statistics(instance_id)
+values (@id)
+returning 1
 ;";
 
         public const string CorrectPassword = "123Bb!";
@@ -66,10 +71,14 @@ returning {InstanceHelper.GetInstanceColumns()}
                 command.Parameters.Add(new NpgsqlParameter("creator_id", Guid.Empty));
                 using (var reader = command.ExecuteReader())
                 {
+                    Instance result = null;
                     if (reader.Read())
                     {
-                        return reader.GetInstance();
+                        result = reader.GetInstance();
                     }
+                    reader.Read();
+                    reader.NextResult();
+                    return result;
                 }
 
                 return null;

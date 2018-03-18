@@ -62,11 +62,12 @@ namespace DeliveryTracker.References
         public async Task<ServiceResult<ReferenceEntityBase>> GetAsync(
             string type,
             Guid id,
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null)
         {
             if (this.services.TryGetValue(type, out var service))
             {
-                return await service.GetAsync(id, oc);
+                return await service.GetAsync(id, withDeleted, oc);
             }
             return new ServiceResult<ReferenceEntityBase>(ErrorFactory.ReferenceTypeNotFound(type));
         }
@@ -75,11 +76,12 @@ namespace DeliveryTracker.References
         public async Task<ServiceResult<IList<ReferenceEntityBase>>> GetAsync(
             string type,
             ICollection<Guid> ids,
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null)
         {
             if (this.services.TryGetValue(type, out var service))
             {
-                return await service.GetAsync(ids, oc);
+                return await service.GetAsync(ids, withDeleted, oc);
             }
             return new ServiceResult<IList<ReferenceEntityBase>>(ErrorFactory.ReferenceTypeNotFound(type));
         }

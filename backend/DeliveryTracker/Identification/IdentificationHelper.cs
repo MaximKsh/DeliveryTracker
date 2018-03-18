@@ -11,6 +11,7 @@ namespace DeliveryTracker.Identification
         public static readonly IReadOnlyList<string> UserColumnList = new List<string>
         {
             "id", 
+            "deleted",
             "code", 
             "role",
             "instance_id",

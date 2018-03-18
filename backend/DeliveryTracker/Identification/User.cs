@@ -19,6 +19,15 @@ namespace DeliveryTracker.Identification
         }
 
         /// <summary>
+        /// Пользователь удален.
+        /// </summary>
+        public bool Deleted
+        {
+            get => this.Get<bool>(nameof(this.Deleted));
+            set => this.Set(nameof(this.Deleted), value);
+        }
+        
+        /// <summary>
         /// Инстанс пользователя.
         /// </summary>
         public Guid InstanceId 

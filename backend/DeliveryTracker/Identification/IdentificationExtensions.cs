@@ -102,6 +102,7 @@ namespace DeliveryTracker.Identification
             var user = new User
             {
                 Id = reader.GetGuid(idx++),
+                Deleted = reader.GetBoolean(idx++),
                 Code = reader.GetString(idx++),
                 Role = reader.GetGuid(idx++),
                 InstanceId = reader.GetGuid(idx++),

@@ -32,22 +32,33 @@ returning " + ReferenceHelper.GetWarehouseColumns() + ";";
 update warehouses
 set
 {0}
-where id = @id and instance_id = @instance_id
+where id = @id and instance_id = @instance_id and deleted = false
 returning " + ReferenceHelper.GetWarehouseColumns() + ";";
 
-        private static readonly string SqlGet = @"
+        private static readonly string SqlGetWithDeleted = @"
 select " + ReferenceHelper.GetWarehouseColumns() + @"
 from warehouses
 where id = @id and instance_id = @instance_id;";
         
-        private static readonly string SqlGetList = @"
+        private static readonly string SqlGet = @"
+select " + ReferenceHelper.GetWarehouseColumns() + @"
+from warehouses
+where id = @id and instance_id = @instance_id and deleted = false;";
+        
+        private static readonly string SqlGetListWithDeleted = @"
 select " + ReferenceHelper.GetWarehouseColumns() + @"
 from warehouses
 where id = ANY (@ids) and instance_id = @instance_id;";
         
+        private static readonly string SqlGetList = @"
+select " + ReferenceHelper.GetWarehouseColumns() + @"
+from warehouses
+where id = ANY (@ids) and instance_id = @instance_id and deleted = false;";
+        
         private const string SqlDelete = @"
-delete from warehouses
-where id = @id and instance_id = @instance_id
+update warehouses
+set deleted = true
+where id = @id and instance_id = @instance_id  and deleted = false
 ;
 ";
         
@@ -108,18 +119,24 @@ where id = @id and instance_id = @instance_id
         protected override ExecutionParameters SetCommandGet(
             NpgsqlCommand command,
             Guid id,
+            bool withDeleted,
             UserCredentials credentials)
         {
-            command.CommandText = SqlGet;
+            command.CommandText = withDeleted 
+                ? SqlGetWithDeleted
+                : SqlGet;
             return null;
         }
 
         protected override ExecutionParameters SetCommandGetList(
             NpgsqlCommand command,
             ICollection<Guid> ids,
+            bool withDeleted,
             UserCredentials credentials)
         {
-            command.CommandText = SqlGetList;
+            command.CommandText = withDeleted 
+                ? SqlGetListWithDeleted
+                : SqlGetList;
             return null;
         }
 

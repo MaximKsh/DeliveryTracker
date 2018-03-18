@@ -21,7 +21,7 @@ namespace DeliveryTrackerWeb.Tests.Integration
             
             Assert.Equal(HttpStatusCode.OK, groupsListResult.StatusCode);
             Assert.Equal(
-                new [] {"UserViewGroup", "ReferenceViewGroup"}.OrderBy(p => p), 
+                new [] {"UserViewGroup", "TaskViewGroup", "ReferenceViewGroup"}.OrderBy(p => p), 
                 groupsListResult.Result.Groups.OrderBy(p => p));
 
         }

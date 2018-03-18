@@ -31,17 +31,20 @@ returning {InstanceHelper.GetInvitationColumns()};
 select
 {InstanceHelper.GetInvitationColumns()}
 from invitations
-where invitation_code = @code;
+where invitation_code = @code
+    and deleted = false;
 ";
         
         private static readonly string SqlDelete = $@"
-delete from invitations
-where invitation_code = @code
+update invitations
+set deleted = true
+where invitation_code = @code and deleted = false
 ;
 ";
         
         private static readonly string SqlDeleteExpired = $@"
-delete from invitations
+update invitations
+set deleted = true
 where expires < (now() AT TIME ZONE 'UTC');
 ";
         

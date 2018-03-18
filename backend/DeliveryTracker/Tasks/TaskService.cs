@@ -243,7 +243,7 @@ namespace DeliveryTracker.Tasks
                 
                 if (taskInfo.WarehouseId.HasValue)
                 {
-                    var result = await this.referenceFacade.GetAsync(nameof(Warehouse), taskInfo.WarehouseId.Value, cw);
+                    var result = await this.referenceFacade.GetAsync(nameof(Warehouse), taskInfo.WarehouseId.Value, true, cw);
                     if (!result.Success)
                     {
                         return new ServiceResult<TaskPackage>(result.Errors);
@@ -253,7 +253,7 @@ namespace DeliveryTracker.Tasks
                 
                 if (taskInfo.PaymentTypeId.HasValue)
                 {
-                    var result = await this.referenceFacade.GetAsync(nameof(PaymentType), taskInfo.PaymentTypeId.Value, cw);
+                    var result = await this.referenceFacade.GetAsync(nameof(PaymentType), taskInfo.PaymentTypeId.Value, true, cw);
                     if (!result.Success)
                     {
                         return new ServiceResult<TaskPackage>(result.Errors);
@@ -263,7 +263,7 @@ namespace DeliveryTracker.Tasks
                 
                 if (taskInfo.ClientId.HasValue)
                 {
-                    var result = await this.referenceFacade.GetAsync(nameof(Client), taskInfo.ClientId.Value, cw);
+                    var result = await this.referenceFacade.GetAsync(nameof(Client), taskInfo.ClientId.Value, true, cw);
                     if (!result.Success)
                     {
                         return new ServiceResult<TaskPackage>(result.Errors);
@@ -276,7 +276,7 @@ namespace DeliveryTracker.Tasks
                 {
                     userIds.Add(taskInfo.PerformerId.Value);
                 }
-                var getUsersResult = await this.userManager.GetAsync(userIds, credentials.InstanceId,  cw);
+                var getUsersResult = await this.userManager.GetAsync(userIds, credentials.InstanceId, true, oc: cw);
                 if (!getUsersResult.Success)
                 {
                     return new ServiceResult<TaskPackage>(getUsersResult.Errors);
@@ -368,7 +368,7 @@ namespace DeliveryTracker.Tasks
                     return new ServiceResult<TaskPackage>(result.Errors);
                 }
                 
-                var getUsersResult = await this.userManager.GetAsync(userIds, credentials.InstanceId,  cw);
+                var getUsersResult = await this.userManager.GetAsync(userIds, credentials.InstanceId, true, oc: cw);
                 if (!getUsersResult.Success)
                 {
                     return new ServiceResult<TaskPackage>(getUsersResult.Errors);
@@ -399,7 +399,11 @@ namespace DeliveryTracker.Tasks
             ICollection<Guid> ids,
             NpgsqlConnectionWrapper cw)
         {
-            var result = await this.referenceFacade.GetAsync(type, ids, cw);
+            if (ids.Count == 0)
+            {
+                return new ServiceResult<IList<ReferenceEntityBase>>();
+            }
+            var result = await this.referenceFacade.GetAsync(type, ids, true, cw);
             if (!result.Success)
             {
                 return result;

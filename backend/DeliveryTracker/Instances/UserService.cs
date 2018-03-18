@@ -38,7 +38,7 @@ namespace DeliveryTracker.Instances
             var credentials = this.credentialsAccessor.GetUserCredentials();
             if (credentials.Valid)
             {
-                return await this.userManager.GetAsync(userId, credentials.InstanceId, oc);    
+                return await this.userManager.GetAsync(userId, credentials.InstanceId, oc: oc);    
             }
             return new ServiceResult<User>(ErrorFactory.AccessDenied());
         }

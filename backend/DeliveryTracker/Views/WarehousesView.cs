@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
@@ -24,8 +24,8 @@ where instance_id = @instance_id
 ";
 
         private const string SqlCount = @"
-select count(1)
-from warehouses
+select warehouses_count
+from entries_statistics
 where instance_id = @instance_id
 ;
 ";
@@ -90,9 +90,12 @@ where instance_id = @instance_id
             var list = new List<IDictionaryObject>();
             using (var command = oc.CreateCommand())
             {
-                command.CommandText = SqlGet;
+                var sb = new StringBuilder(256);
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
-
+                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search");
+                ViewHelper.TryAddAfterParameter(parameters, command, sb, "warehouses", "name");
+                
+                command.CommandText = string.Format(SqlGet, sb);
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
@@ -115,7 +118,6 @@ where instance_id = @instance_id
             {
                 command.CommandText = SqlCount;
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
-
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }

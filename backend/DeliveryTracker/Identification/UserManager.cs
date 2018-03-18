@@ -40,33 +40,61 @@ returning " + IdentificationHelper.GetUserColumns() + ";";
 update users
 set
 {0}
-where id = @id and instance_id = @instance_id
+where id = @id 
+    and instance_id = @instance_id 
+    and deleted = false
 returning " + IdentificationHelper.GetUserColumns() + ";";
 
+        
+        private static readonly string SqlGetWithDeleted = @"
+select " + IdentificationHelper.GetUserColumns() + @"
+from users
+where id = @id 
+    and instance_id = @instance_id
+;";
+        
+        private static readonly string SqlGetListWithDeleted = @"
+select " + IdentificationHelper.GetUserColumns() + @"
+from users
+where id = ANY(@ids) 
+    and instance_id = @instance_id
+;";
+        
         private static readonly string SqlGet = @"
 select " + IdentificationHelper.GetUserColumns() + @"
 from users
-where id = @id and instance_id = @instance_id;";
+where id = @id 
+    and instance_id = @instance_id
+    and deleted = false
+;";
         
         private static readonly string SqlGetList = @"
 select " + IdentificationHelper.GetUserColumns() + @"
 from users
-where id = ANY(@ids) and instance_id = @instance_id;";
+where id = ANY(@ids) 
+    and instance_id = @instance_id
+    and deleted = false
+;";
         
         private static readonly string SqlGetByCode = @"
 select " + IdentificationHelper.GetUserColumns() + @"
 from users
-where code = @code and instance_id = @instance_id
+where code = @code
+    and instance_id = @instance_id 
+    and deleted = false
 ;";
         
         private const string SqlGetId = @"
 select id
 from users
-where code = @code and instance_id = @instance_id
+where code = @code
+    and instance_id = @instance_id 
+    and deleted = false
 ;";
         
         private const string SqlDelete = @"
-delete from users
+update users
+set deleted = true
 where id = @id and instance_id = @instance_id
 ;
 ";
@@ -131,7 +159,11 @@ where id = @id and instance_id = @instance_id
 
         
         /// <inheritdoc />
-        public async Task<ServiceResult<User>> GetAsync(Guid userId, Guid instanceId, NpgsqlConnectionWrapper oc = null)
+        public async Task<ServiceResult<User>> GetAsync(
+            Guid userId, 
+            Guid instanceId,
+            bool withDeleted = false,
+            NpgsqlConnectionWrapper oc = null)
         {
             var validationResult = new ParametersValidator()
                 .AddNotEmptyGuidRule("userId", userId)
@@ -146,7 +178,9 @@ where id = @id and instance_id = @instance_id
             {
                 using (var command = connWrapper.CreateCommand())
                 {
-                    command.CommandText = SqlGet;
+                    command.CommandText = withDeleted
+                        ? SqlGetWithDeleted
+                        : SqlGet;
                     command.Parameters.Add(new NpgsqlParameter("id", userId));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                     using (var reader = await command.ExecuteReaderAsync())
@@ -165,6 +199,7 @@ where id = @id and instance_id = @instance_id
         public async Task<ServiceResult<IList<User>>> GetAsync(
             ICollection<Guid> userIds,
             Guid instanceId,
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null)
         {
             if (userIds.Count == 0)
@@ -189,7 +224,9 @@ where id = @id and instance_id = @instance_id
             {
                 using (var command = connWrapper.CreateCommand())
                 {
-                    command.CommandText = SqlGetList;
+                    command.CommandText = withDeleted
+                        ? SqlGetListWithDeleted
+                        : SqlGetList;
                     command.Parameters.Add(new NpgsqlParameter("ids", idsParam).WithArrayType(NpgsqlDbType.Uuid));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                     using (var reader = await command.ExecuteReaderAsync())

@@ -75,11 +75,13 @@ namespace DeliveryTracker.References
         protected abstract ExecutionParameters SetCommandGet(
             NpgsqlCommand command, 
             Guid id, 
+            bool withDeleted,
             UserCredentials credentials);
 
         protected abstract ExecutionParameters SetCommandGetList(
             NpgsqlCommand command, 
             ICollection<Guid> ids, 
+            bool withDeleted,
             UserCredentials credentials);
         
         protected abstract ExecutionParameters SetCommandDelete(
@@ -173,6 +175,7 @@ namespace DeliveryTracker.References
                         var id = Guid.NewGuid();
                         command.Parameters.Add(new NpgsqlParameter("id", id));
                         command.Parameters.Add(new NpgsqlParameter("instance_id", credentials.InstanceId));
+                        command.Parameters.Add(new NpgsqlParameter("deleted", false));
 
                         var parameters = this.SetCommandCreate(command, newData, id, credentials);
                         var ctx = new ReferenceServiceExecutionContext
@@ -211,7 +214,10 @@ namespace DeliveryTracker.References
         }
 
         /// <inheritdoc />
-        public virtual async Task<ServiceResult<T>> GetAsync(Guid id, NpgsqlConnectionWrapper oc = null)
+        public virtual async Task<ServiceResult<T>> GetAsync(
+            Guid id, 
+            bool withDeleted = false,
+            NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.Accessor.GetUserCredentials();
             if (!this.CanGet(id, credentials))
@@ -227,7 +233,7 @@ namespace DeliveryTracker.References
                     command.Parameters.Add(new NpgsqlParameter("id", id));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", credentials.InstanceId));
 
-                    var parameters = this.SetCommandGet(command, id, credentials);
+                    var parameters = this.SetCommandGet(command, id, withDeleted, credentials);
                     var ctx = new ReferenceServiceExecutionContext
                     {
                         Action = ReferenceExecutionAction.Get,
@@ -246,7 +252,10 @@ namespace DeliveryTracker.References
         }
 
         /// <inheritdoc />
-        public virtual async Task<ServiceResult<IList<T>>> GetAsync(ICollection<Guid> ids, NpgsqlConnectionWrapper oc = null)
+        public virtual async Task<ServiceResult<IList<T>>> GetAsync(
+            ICollection<Guid> ids,
+            bool withDeleted = false,
+            NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.Accessor.GetUserCredentials();
             if (!this.CanGetList(ids, credentials))
@@ -267,7 +276,7 @@ namespace DeliveryTracker.References
                     command.Parameters.Add(new NpgsqlParameter("ids", idsParam).WithArrayType(NpgsqlDbType.Uuid));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", credentials.InstanceId));
 
-                    var parameters = this.SetCommandGetList(command, ids, credentials);
+                    var parameters = this.SetCommandGetList(command, ids, withDeleted, credentials);
                     var ctx = new ReferenceServiceExecutionContext
                     {
                         Action = ReferenceExecutionAction.Get,
@@ -406,9 +415,10 @@ namespace DeliveryTracker.References
         /// <inheritdoc />
         async Task<ServiceResult<ReferenceEntityBase>> IReferenceService.GetAsync(
             Guid id,
+            bool withDeleted,
             NpgsqlConnectionWrapper oc)
         {
-            var result = await this.GetAsync(id, oc);
+            var result = await this.GetAsync(id, withDeleted, oc);
             return result.Success
                 ? new ServiceResult<ReferenceEntityBase>(result.Result) 
                 : new ServiceResult<ReferenceEntityBase>(result.Errors);
@@ -417,9 +427,10 @@ namespace DeliveryTracker.References
         /// <inheritdoc />  
         async Task<ServiceResult<IList<ReferenceEntityBase>>> IReferenceService.GetAsync(
             ICollection<Guid> ids,
+            bool withDeleted,
             NpgsqlConnectionWrapper oc)
         {
-            var result = await this.GetAsync(ids, oc);
+            var result = await this.GetAsync(ids, withDeleted, oc);
             var list = result.Result?.Cast<ReferenceEntityBase>().ToList();
             return list != null
                 ? new ServiceResult<IList<ReferenceEntityBase>>(list, result.Errors) 

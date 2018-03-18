@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
@@ -20,15 +20,27 @@ select
     {InstanceHelper.GetInvitationColumns()}
 from invitations
 where instance_id = @instance_id
+    and deleted = false
+    {{0}}
+order by expires desc
+limit {ViewHelper.DefaultViewLimit}
 ;
 ";
 
         private const string SqlCount = @"
-select count(1)
-from invitations
+select managers_invitations_count + performers_invitations_count
+from entries_statistics
 where instance_id = @instance_id
 ;
 ";
+
+        private const string SqlCountPerformers = @"
+select performers_invitations_count
+from entries_statistics
+where instance_id = @instance_id
+;
+";
+        
 
         #endregion
         
@@ -90,8 +102,16 @@ where instance_id = @instance_id
             var list = new List<IDictionaryObject>();
             using (var command = oc.CreateCommand())
             {
-                command.CommandText = SqlGet;
+                var sb = new StringBuilder(256);
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
+                if (userCredentials.Role == DefaultRoles.ManagerRole)
+                {
+                    ViewHelper.AddEqualsParameter(command, sb, "role", "role", DefaultRoles.PerformerRole);
+                }
+                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search");
+                ViewHelper.TryAddAfterParameter(parameters, command, sb, "invitations", "expires", true);
+
+                command.CommandText = string.Format(SqlGet, sb);
 
                 using (var reader = await command.ExecuteReaderAsync())
                 {
@@ -114,7 +134,9 @@ where instance_id = @instance_id
             
             using (var command = oc.CreateCommand())
             {
-                command.CommandText = SqlCount;
+                command.CommandText = userCredentials.Role == DefaultRoles.CreatorRole
+                    ? SqlCount
+                    : SqlCountPerformers;
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
 
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());

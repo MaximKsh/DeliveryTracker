@@ -14,7 +14,9 @@ namespace DeliveryTracker.Identification
         /// <param name="user">Данные о добавляемом пользователе</param>
         /// <param name="oc">Открытое соединение с базой. Может быть null</param>
         /// <returns>Созданный объект пользователя</returns>
-        Task<ServiceResult<User>> CreateAsync(User user, NpgsqlConnectionWrapper oc = null);
+        Task<ServiceResult<User>> CreateAsync(
+            User user,
+            NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
         /// Обновить данные о пользователе с указанным id.
@@ -25,29 +27,38 @@ namespace DeliveryTracker.Identification
         /// </param>
         /// <param name="oc">Открытое соединение с базой. Может быть null.</param>
         /// <returns></returns>
-        Task<ServiceResult<User>> EditAsync(User user, NpgsqlConnectionWrapper oc = null);
+        Task<ServiceResult<User>> EditAsync(
+            User user,
+            NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
         /// Получить пользователя из инстанса по id.
         /// </summary>
         /// <param name="userId">Идентификатор пользователя.</param>
         /// <param name="instanceId">Идентификатор инстанса.</param>
+        /// <param name="withDeleted">Искать среди удаленных.</param>
         /// <param name="oc">Открытое соединение с базой</param>
         /// <returns>Пользователь или список ошибок.</returns>
-        Task<ServiceResult<User>> GetAsync(Guid userId, Guid instanceId, NpgsqlConnectionWrapper oc = null);
+        Task<ServiceResult<User>> GetAsync(
+            Guid userId,
+            Guid instanceId,
+            bool withDeleted = false,
+            NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
         /// Получить нескольких пользователей по id.
         /// </summary>
-        /// <param name="userIds"></param>
-        /// <param name="instanceId"></param>
+        /// <param name="userIds">Идентификаторы пользователя.</param>
+        /// <param name="instanceId">Идентификатор инстанса.</param>
+        /// <param name="withDeleted">Искать среди удаленных.</param>
         /// <param name="oc"></param>
         /// <returns></returns>
         Task<ServiceResult<IList<User>>> GetAsync(
             ICollection<Guid> userIds,
             Guid instanceId,
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null);
-        
+
         /// <summary>
         /// Получить пользователя из инстанса по коду.
         /// </summary>
@@ -55,8 +66,11 @@ namespace DeliveryTracker.Identification
         /// <param name="instanceId">Идентификатор инстанса.</param>
         /// <param name="oc">Открытое соединение с базой</param>
         /// <returns>Пользователь или список ошибок.</returns>
-        Task<ServiceResult<User>> GetAsync(string code, Guid instanceId, NpgsqlConnectionWrapper oc = null);
-        
+        Task<ServiceResult<User>> GetAsync(
+            string code,
+            Guid instanceId,
+            NpgsqlConnectionWrapper oc = null);
+
         /// <summary>
         /// Получить ID пользователя по коду.
         /// </summary>
@@ -64,8 +78,11 @@ namespace DeliveryTracker.Identification
         /// <param name="instanceId"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<Guid?> GetIdAsync(string code, Guid instanceId, NpgsqlConnectionWrapper oc = null);
-        
+        Task<Guid?> GetIdAsync(
+            string code,
+            Guid instanceId,
+            NpgsqlConnectionWrapper oc = null);
+
         /// <summary>
         /// Удаление пользователя.
         /// </summary>
@@ -73,6 +90,9 @@ namespace DeliveryTracker.Identification
         /// <param name="instanceId"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult> DeleteAsync(Guid userId, Guid instanceId, NpgsqlConnectionWrapper oc = null);
+        Task<ServiceResult> DeleteAsync(
+            Guid userId,
+            Guid instanceId,
+            NpgsqlConnectionWrapper oc = null);
     }
 }

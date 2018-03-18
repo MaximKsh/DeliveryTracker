@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
@@ -20,12 +20,15 @@ select
     {ReferenceHelper.GetClientColumns()}
 from clients
 where instance_id = @instance_id
+    {{0}}
+order by surname
+limit {ViewHelper.DefaultViewLimit}
 ;
 ";
 
         private const string SqlCount = @"
-select count(1)
-from clients
+select clients_count
+from entries_statistics
 where instance_id = @instance_id
 ;
 ";
@@ -89,9 +92,13 @@ where instance_id = @instance_id
             var list = new List<IDictionaryObject>();
             using (var command = oc.CreateCommand())
             {
-                command.CommandText = SqlGet;
+                var sb = new StringBuilder(256);
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
+                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search");
+                ViewHelper.TryAddAfterParameter(parameters, command, sb, "clients", "surname");
 
+                command.CommandText = string.Format(SqlGet, sb);
+                
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())

@@ -107,7 +107,7 @@ namespace DeliveryTracker.Instances
 
             var credentials = validateResult.Result;
 
-            var userResult = await this.userManager.GetAsync(credentials.Id, credentials.InstanceId, oc);
+            var userResult = await this.userManager.GetAsync(credentials.Id, credentials.InstanceId, oc: oc);
             if (!userResult.Success)
             {
                 return new ServiceResult<AccountServiceResult>(userResult.Errors);
@@ -217,7 +217,7 @@ namespace DeliveryTracker.Instances
         public async Task<ServiceResult<AccountServiceResult>> GetAsync(NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.userCredentialsAccessor.GetUserCredentials();
-            var getResult = await this.userManager.GetAsync(credentials.Id, credentials.InstanceId, oc);
+            var getResult = await this.userManager.GetAsync(credentials.Id, credentials.InstanceId, oc: oc);
             if (getResult.Success)
             {
                 return new ServiceResult<AccountServiceResult>(new AccountServiceResult

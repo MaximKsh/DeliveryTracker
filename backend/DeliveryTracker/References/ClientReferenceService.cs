@@ -40,29 +40,39 @@ returning " + ReferenceHelper.GetAddressColumns() + ";";
         private static readonly string SqlGet = @"
 select " + ReferenceHelper.GetClientColumns() + @"
 from clients
-where id = @id and instance_id = @instance_id
+where id = @id and instance_id = @instance_id {0}
 ;";
         private static readonly string SqlGetAddresses = @"
 select " + ReferenceHelper.GetAddressColumns() + @"
 from client_addresses
-where instance_id = @instance_id and parent_id = @id;";
+where instance_id = @instance_id and parent_id = @id {0}
+;";
 
         private static readonly string SqlGetFull = 
-            SqlGet + SqlGetAddresses;
+            string.Format(SqlGet + SqlGetAddresses, " and deleted = false");
+        
+        private static readonly string SqlGetFullWithDeleted = 
+            string.Format(SqlGet + SqlGetAddresses, string.Empty);
+        
         
         private static readonly string SqlGetList = @"
 select " + ReferenceHelper.GetClientColumns() + @"
 from clients
-where id = ANY (@ids) and instance_id = @instance_id
+where id = ANY (@ids) and instance_id = @instance_id {0}
 ;";
         private static readonly string SqlGetListAddresses = @"
 select " + ReferenceHelper.GetAddressColumns() + @"
 from client_addresses
-where instance_id = @instance_id and parent_id = ANY (@ids);";
+where instance_id = @instance_id and parent_id = ANY (@ids) {0}
+;";
 
         
         private static readonly string SqlGetListFull = 
-            SqlGetList + SqlGetListAddresses;
+            string.Format(SqlGetList + SqlGetListAddresses," and deleted = false");
+        
+        
+        private static readonly string SqlGetListFullWithDeleted = 
+            string.Format(SqlGetList + SqlGetListAddresses, string.Empty);
         
         
         
@@ -70,7 +80,7 @@ where instance_id = @instance_id and parent_id = ANY (@ids);";
 update clients
 set
 {0}
-where id = @id and instance_id = @instance_id
+where id = @id and instance_id = @instance_id and deleted = false
 returning " + ReferenceHelper.GetClientColumns() + @";";
         
         private static readonly string SqlCreateAddressesReturning1 = @"
@@ -87,25 +97,28 @@ returning 1;
 update client_addresses
 set
 {0}
-where id = @n{1}_address_id and instance_id = @instance_id and parent_id = @id
+where id = @n{1}_address_id and instance_id = @instance_id and parent_id = @id and deleted = false
 returning 1;
 ";
         
         private static readonly string SqlDeleteAddresses = @"
-delete from client_addresses
-where ARRAY[id] <@ @address_ids and instance_id = @instance_id and parent_id = @id
+update client_addresses
+set deleted = true
+where ARRAY[id] <@ @address_ids and instance_id = @instance_id and parent_id = @id and deleted = false
 returning 1
 ;";
         
         
         
         private const string SqlDelete = @"
-delete from client_addresses
-where instance_id = @instance_id and parent_id = @id
+update client_addresses
+set deleted = true
+where instance_id = @instance_id and parent_id = @id and deleted = false
 returning 1
 ;
-delete from clients
-where id = @id and instance_id = @instance_id
+update clients
+set deleted = true
+where id = @id and instance_id = @instance_id and deleted = false
 returning 1
 ;
 ";
@@ -194,7 +207,7 @@ returning 1
             appendedFields += command.AppendIfNotDefault(updateFieldsBuilder, "phone_number", newData.Patronymic);
             queryStringBuilder.AppendLine(appendedFields != 0 
                 ? string.Format(SqlUpdate, updateFieldsBuilder) 
-                : SqlGet);
+                : string.Format(SqlGet, " and deleted = false"));
 
             var addressQueriesCount = 0;
             if (newData.Addresses != null
@@ -256,7 +269,7 @@ returning 1
                 }
             }
             
-            queryStringBuilder.AppendLine(SqlGetAddresses);
+            queryStringBuilder.AppendLine(string.Format(SqlGetAddresses, " and deleted = false"));
             command.CommandText = queryStringBuilder.ToString();
             return new ExecutionParameters
             {
@@ -267,9 +280,12 @@ returning 1
         protected override ExecutionParameters SetCommandGet(
             NpgsqlCommand command,
             Guid id, 
+            bool withDeleted,
             UserCredentials credentials)
         {
-            command.CommandText = SqlGetFull;
+            command.CommandText = withDeleted 
+                ? SqlGetFullWithDeleted
+                : SqlGetFull;
             return null;
         }
         
@@ -277,9 +293,12 @@ returning 1
         protected override ExecutionParameters SetCommandGetList(
             NpgsqlCommand command,
             ICollection<Guid> ids,
+            bool withDeleted,
             UserCredentials credentials)
         {
-            command.CommandText = SqlGetListFull;
+            command.CommandText = withDeleted
+                ? SqlGetListFullWithDeleted
+                : SqlGetListFull;
             return null;
         }
 

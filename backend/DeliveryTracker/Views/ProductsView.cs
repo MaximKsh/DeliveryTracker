@@ -18,7 +18,7 @@ namespace DeliveryTracker.Views
         private static readonly string SqlGet = $@"
 select
     {ReferenceHelper.GetProductColumns()}
-from products
+from products 
 where instance_id = @instance_id
 {{0}}
 
@@ -28,8 +28,8 @@ limit {ViewHelper.DefaultViewLimit}
 ";
 
         private const string SqlCount = @"
-select count(1)
-from products
+select products_count
+from entries_statistics
 where instance_id = @instance_id
 ;
 ";
@@ -94,7 +94,7 @@ where instance_id = @instance_id
             using (var command = oc.CreateCommand())
             {
                 var sb = new StringBuilder(256);
-                ViewHelper.TryAddContainsParameter(parameters, command, sb, "name");
+                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search", "name");
                 ViewHelper.TryAddAfterParameter(parameters, command, sb, "products", "name");
                 
                 command.CommandText = string.Format(SqlGet, sb);
@@ -122,7 +122,6 @@ where instance_id = @instance_id
             {
                 command.CommandText = SqlCount;
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
-
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }

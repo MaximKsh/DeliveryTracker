@@ -22,14 +22,14 @@ from payment_types
 where instance_id = @instance_id
 {{0}}
 
-order by name
+order by lower(name)
 limit {ViewHelper.DefaultViewLimit}
 ;
 ";
 
         private static readonly string SqlCount = $@"
-select count(1)
-from payment_types
+select payment_types_count
+from entries_statistics
 where instance_id = @instance_id
 ;
 ";
@@ -93,13 +93,13 @@ where instance_id = @instance_id
             var list = new List<IDictionaryObject>();
             using (var command = oc.CreateCommand())
             {
-                var sb = new StringBuilder(256);
-                ViewHelper.TryAddStartsWithParameter(parameters, command, sb, "name");
-                ViewHelper.TryAddAfterParameter(parameters, command, sb, "payment_types", "name");
                 
-                command.CommandText = string.Format(SqlGet, sb);
+                var sb = new StringBuilder(256);
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
+                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search", "name");
+                ViewHelper.TryAddAfterParameter(parameters, command, sb, "payment_types", "name");
 
+                command.CommandText = string.Format(SqlGet, sb);
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())

@@ -22,6 +22,14 @@ namespace DeliveryTracker.References
             get => this.Get<Guid>(nameof(this.InstanceId));
             set => this.Set(nameof(this.InstanceId), value);
         }
-        
+
+        /// <summary>
+        /// Сущность удалена.
+        /// </summary>
+        public bool Deleted
+        {
+            get => this.Get<bool>(nameof(this.Deleted));
+            set => this.Set(nameof(this.Deleted), value);
+        }
     }
 }

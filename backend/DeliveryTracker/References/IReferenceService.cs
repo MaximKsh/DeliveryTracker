@@ -32,20 +32,24 @@ namespace DeliveryTracker.References
         /// Получить запись из справочника.
         /// </summary>
         /// <param name="id"></param>
+        /// <param name="withDeleted"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
         Task<ServiceResult<ReferenceEntityBase>> GetAsync(
             Guid id, 
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null);
         
         /// <summary>
         /// Получить несколько записей из справочника.
         /// </summary>
         /// <param name="ids"></param>
+        /// <param name="withDeleted"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
         Task<ServiceResult<IList<ReferenceEntityBase>>> GetAsync(
             ICollection<Guid> ids, 
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null);
 
         /// <summary>

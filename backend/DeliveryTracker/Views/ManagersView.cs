@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
@@ -15,27 +15,23 @@ namespace DeliveryTracker.Views
         #region sql
         
         private static readonly string SqlGet = $@"
-(
-    select
-        {IdentificationHelper.GetUserColumns()}
-    from users
-    where instance_id = @instance_id and role = @role_creator
-    limit 1
-)
-union all
-(
-    select
-        {IdentificationHelper.GetUserColumns()}
-    from users
-    where instance_id = @instance_id and role = @role
-)
+select
+    {IdentificationHelper.GetUserColumns()}
+from users
+where instance_id = @instance_id 
+    and (role = @role or role = @role_creator)
+    and deleted = false
+    {{0}}
+
+order by surname
+limit {ViewHelper.DefaultViewLimit}
 ;
 ";
 
         private const string SqlCount = @"
-select count(1)
-from users
-where instance_id = @instance_id and role = @role
+select managers_count
+from entries_statistics
+where instance_id = @instance_id
 ;
 ";
         #endregion
@@ -99,10 +95,13 @@ where instance_id = @instance_id and role = @role
             var list = new List<IDictionaryObject>();
             using (var command = oc.CreateCommand())
             {
-                command.CommandText = SqlGet;
+                var sb = new StringBuilder(256);
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
-                command.Parameters.Add(new NpgsqlParameter("@role_creator", DefaultRoles.CreatorRole));
-                command.Parameters.Add(new NpgsqlParameter("@role", DefaultRoles.ManagerRole));
+                command.Parameters.Add(new NpgsqlParameter("role_creator", DefaultRoles.CreatorRole));
+                command.Parameters.Add(new NpgsqlParameter("role", DefaultRoles.ManagerRole));
+                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search");
+                ViewHelper.TryAddAfterParameter(parameters, command, sb, "users", "surname");
+                command.CommandText = string.Format(SqlGet, sb);
 
                 using (var reader = await command.ExecuteReaderAsync())
                 {
@@ -126,8 +125,6 @@ where instance_id = @instance_id and role = @role
             {
                 command.CommandText = SqlCount;
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
-                command.Parameters.Add(new NpgsqlParameter("role", DefaultRoles.ManagerRole));
-
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync() + 1);
             }
         }

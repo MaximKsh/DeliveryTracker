@@ -165,27 +165,21 @@ namespace DeliveryTrackerWeb.Controllers
         [Authorize]
         public async Task<IActionResult> ChangeState([FromBody] TaskRequest request)
         {
-            var taskInfo = request?.TaskInfo;
             var validationResult = new ParametersValidator()
                 .AddNotNullRule(nameof(request), request)
-                .AddNotNullRule(nameof(taskInfo), taskInfo)
-                .AddNotEmptyGuidRule($"{nameof(taskInfo)}.{nameof(taskInfo.Id)}", taskInfo?.Id ?? Guid.Empty)
-                .AddNotEmptyGuidRule($"{nameof(taskInfo)}.{nameof(taskInfo.TaskStateId)}", taskInfo?.TaskStateId ?? Guid.Empty)
+                .AddNotEmptyGuidRule($"{nameof(request)}.{nameof(request.Id)}", request.Id)
+                .AddNotEmptyGuidRule($"{nameof(request)}.{nameof(request.TransitionId)}", request.TransitionId)
                 .Validate();
-            if (!validationResult.Success
-                || taskInfo == null)
+            if (!validationResult.Success)
             {
                 return this.BadRequest(new TaskResponse(validationResult.Error));
             }
 
-            var credentials = this.accessor.GetUserCredentials();
-            taskInfo.InstanceId = credentials.InstanceId;
-            
             using (var connWrapper = this.cp.Create().Connect())
             {
                 using (var transact = connWrapper.BeginTransaction())
                 {
-                    var transitResult = await this.taskService.TransitAsync(taskInfo.Id, taskInfo.TaskStateId, connWrapper);
+                    var transitResult = await this.taskService.TransitAsync(request.Id, request.TransitionId, connWrapper);
 
                     if (!transitResult.Success)
                     {

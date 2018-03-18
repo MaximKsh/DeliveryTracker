@@ -17,7 +17,11 @@ namespace DeliveryTracker.Instances
         private static readonly string SqlInsertInstance = $@"
 insert into instances({InstanceHelper.GetInstanceColumns()})
 values ({InstanceHelper.GetInstanceColumns("@")})
-;";
+;
+insert into entries_statistics(instance_id)
+values (@id)
+;
+";
 
         private const string SqlSetInstanceCreator = @"
 update instances
@@ -29,7 +33,7 @@ where id = @id
 select
 {InstanceHelper.GetInstanceColumns()}
 from instances
-where id = @id
+where id = @id 
 ;";
         
         #endregion

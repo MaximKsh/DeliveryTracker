@@ -32,6 +32,7 @@ namespace DeliveryTracker.References
         {
             reference.Id = reader.GetGuid(idx++);
             reference.InstanceId = reader.GetGuid(idx++);
+            reference.Deleted = reader.GetBoolean(idx++);
         }
         
         public static void SetCollectionReferenceBaseFields(
