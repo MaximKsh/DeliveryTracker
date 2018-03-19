@@ -20,6 +20,7 @@ select
     {ReferenceHelper.GetPaymentTypeColumns()}
 from payment_types
 where instance_id = @instance_id
+    and deleted = false
 {{0}}
 
 order by lower(name)

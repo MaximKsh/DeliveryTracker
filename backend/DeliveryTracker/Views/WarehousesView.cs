@@ -20,6 +20,7 @@ select
     {ReferenceHelper.GetWarehouseColumns()}
 from warehouses
 where instance_id = @instance_id
+    and deleted = false
 ;
 ";
 

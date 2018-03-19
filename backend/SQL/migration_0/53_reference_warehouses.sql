@@ -25,9 +25,11 @@ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION delete_warehouses_statistics()
     RETURNS TRIGGER AS $entries_statistics$
 BEGIN
-    UPDATE entries_statistics
-    SET warehouses_count = warehouses_count - 1
-    WHERE instance_id = NEW.instance_id;
+    IF (OLD.deleted = FALSE AND NEW.deleted = TRUE) THEN
+        UPDATE entries_statistics
+        SET warehouses_count = warehouses_count - 1
+        WHERE instance_id = NEW.instance_id;
+    END IF;
     RETURN NEW;
 END;
 $entries_statistics$

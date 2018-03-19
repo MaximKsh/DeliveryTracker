@@ -20,6 +20,7 @@ select
     {ReferenceHelper.GetClientColumns()}
 from clients
 where instance_id = @instance_id
+    and deleted = false
     {{0}}
 order by surname
 limit {ViewHelper.DefaultViewLimit}
