@@ -59,6 +59,12 @@ where ""user_id"" = @user_id
 returning ""session_token_id""
 ; 
 ";
+
+        private const string SqlLogout = @"
+delete from sessions
+where user_id = @user_id
+;
+";
         
         private static readonly string SqlHasSessionRefreshToken = @"
 update ""users""
@@ -231,6 +237,24 @@ returning ""refresh_token_id"";
             return result.Success
                 ? await this.NewSessionAsync(result.Result)
                 : new ServiceResult<Session>(result.Errors);
+        }
+
+        /// <inheritdoc />
+        public async Task<ServiceResult> LogoutAsync(
+            Guid userId,
+            NpgsqlConnectionWrapper outerConnection = null)
+        {
+            using (var conn = outerConnection?.Connect() ?? this.cp.Create().Connect())
+            {
+                using (var command = conn.CreateCommand())
+                {
+                    command.CommandText = SqlLogout;
+                    command.Parameters.Add(new NpgsqlParameter("user_id", userId));
+                    return (await command.ExecuteNonQueryAsync()) == 1
+                        ? new ServiceResult()
+                        : new ServiceResult(ErrorFactory.AccessDenied());
+                }
+            }
         }
 
         /// <inheritdoc />

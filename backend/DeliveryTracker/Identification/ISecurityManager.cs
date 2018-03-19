@@ -66,6 +66,15 @@ namespace DeliveryTracker.Identification
             NpgsqlConnectionWrapper outerConnection = null);
 
         /// <summary>
+        /// Завершить сессию.
+        /// </summary>
+        /// <param name="outerConnection"></param>
+        /// <returns></returns>
+        Task<ServiceResult> LogoutAsync(
+            Guid userId,
+            NpgsqlConnectionWrapper outerConnection = null);
+
+        /// <summary>
         /// Проверить, существует ли указанная сессия
         /// </summary>
         /// <param name="userId"></param>

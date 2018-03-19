@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.Validation;
@@ -19,11 +20,21 @@ namespace DeliveryTrackerWeb.Controllers
         private readonly IAccountService accountService;
 
         private readonly ISecurityManager securityManager;
+
+        private readonly IPostgresConnectionProvider cp;
+
+        private readonly IUserCredentialsAccessor accessor;
         
-        public AccountController(IAccountService accountService, ISecurityManager securityManager)
+        public AccountController(
+            IAccountService accountService, 
+            ISecurityManager securityManager,
+            IPostgresConnectionProvider cp,
+            IUserCredentialsAccessor accessor)
         {
             this.accountService = accountService;
             this.securityManager = securityManager;
+            this.cp = cp;
+            this.accessor = accessor;
         }
         
         // account/check
@@ -55,28 +66,35 @@ namespace DeliveryTrackerWeb.Controllers
             {
                 return this.BadRequest(new AccountResponse(validationResult.Error));
             }
-            
-            var result = await this.accountService.LoginWithRegistrationAsync(codePassword);
-            if (!result.Success)
-            {
-                return this.Forbid();
-            }
-            var sessionResult = await this.securityManager.NewSessionAsync(result.Result.Credentials);
-            if (!sessionResult.Success)
-            {
-                return this.StatusCode((int)HttpStatusCode.Unauthorized, new AccountResponse(sessionResult.Errors));
-            }
 
-            var session = sessionResult.Result;
-            var statusCode = result.Result.Registered
-                ? (int)HttpStatusCode.Created
-                : (int)HttpStatusCode.OK;
-            return this.StatusCode(statusCode, new AccountResponse
+            using (var cw = this.cp.Create().Connect())
+            using (var transact = cw.BeginTransaction())
             {
-                User = result.Result.User,
-                Token = session.SessionToken,
-                RefreshToken = session.RefreshToken,
-            });
+                var result = await this.accountService.LoginWithRegistrationAsync(codePassword, cw);
+                if (!result.Success)
+                {
+                    transact.Rollback();
+                    return this.Forbid();
+                }
+                var sessionResult = await this.securityManager.NewSessionAsync(result.Result.Credentials, cw);
+                if (!sessionResult.Success)
+                {
+                    transact.Rollback();
+                    return this.StatusCode((int)HttpStatusCode.Unauthorized, new AccountResponse(sessionResult.Errors));
+                }
+
+                var session = sessionResult.Result;
+                var statusCode = result.Result.Registered
+                    ? (int)HttpStatusCode.Created
+                    : (int)HttpStatusCode.OK;
+                transact.Commit();
+                return this.StatusCode(statusCode, new AccountResponse
+                {
+                    User = result.Result.User,
+                    Token = session.SessionToken,
+                    RefreshToken = session.RefreshToken,
+                });
+            }
         }
 
         [HttpPost("refresh")]
@@ -171,8 +189,8 @@ namespace DeliveryTrackerWeb.Controllers
         [HttpPost("change_password")]
         public async Task<IActionResult> ChangePassword([FromBody] AccountRequest request)
         {
-            var oldPassword = request.CodePassword;
-            var newPassword = request.NewCodePassword;
+            var oldPassword = request?.CodePassword;
+            var newPassword = request?.NewCodePassword;
             
             var validationResult = new ParametersValidator()
                 .AddNotNullRule(nameof(request.CodePassword), oldPassword)
@@ -185,8 +203,8 @@ namespace DeliveryTrackerWeb.Controllers
             }
 
             var result = await this.accountService.ChangePasswordAsync(
-                oldPassword.Password,
-                newPassword.Password);
+                oldPassword?.Password,
+                newPassword?.Password);
             if (result.Success)
             {
                 return this.Ok();
@@ -198,5 +216,20 @@ namespace DeliveryTrackerWeb.Controllers
 
             return this.BadRequest(new AccountResponse(result.Errors));
         }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var creds = this.accessor.GetUserCredentials();
+            var result = await this.securityManager.LogoutAsync(creds.Id);
+            if (result.Success)
+            {
+                return this.Ok();
+            }
+
+            return this.Forbid();
+        }
+        
     }
 }
