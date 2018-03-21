@@ -208,6 +208,20 @@ namespace DeliveryTracker.Validation
         /// <summary>
         /// Указанное приглашение не существует.
         /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static IError InvitationNotFound(Guid id) =>
+            new Error(
+                ErrorCode.InvitationNotFound,
+                LocalizationAlias.Error.InvitationNotFound,
+                new Dictionary<string, string>
+                {
+                    ["id"] = id.ToString(),
+                });
+        
+        /// <summary>
+        /// Указанное приглашение не существует.
+        /// </summary>
         /// <param name="invitationCode"></param>
         /// <returns></returns>
         public static IError InvitationNotFound(string invitationCode) =>
@@ -273,7 +287,6 @@ namespace DeliveryTracker.Validation
         /// Не найдена тип справочника.
         /// </summary>
         /// <param name="referenceType"></param>
-        /// <param name="id"></param>
         /// <returns></returns>
         public static IError ReferenceTypeNotFound(string referenceType) =>
             new Error(

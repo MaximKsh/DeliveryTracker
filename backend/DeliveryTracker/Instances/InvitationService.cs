@@ -27,12 +27,27 @@ values ({InstanceHelper.GetInvitationColumns("@")})
 returning {InstanceHelper.GetInvitationColumns()};
 ";
 
+        private static readonly string SqlGetByID = $@"
+select
+{InstanceHelper.GetInvitationColumns()}
+from invitations
+where id = @id
+    and deleted = false;
+";
+        
         private static readonly string SqlGet = $@"
 select
 {InstanceHelper.GetInvitationColumns()}
 from invitations
 where invitation_code = @code
     and deleted = false;
+";
+        
+        private static readonly string SqlDeleteByID = $@"
+update invitations
+set deleted = true
+where id = @id and deleted = false
+;
 ";
         
         private static readonly string SqlDelete = $@"
@@ -168,7 +183,36 @@ where expires < (now() AT TIME ZONE 'UTC');
             return await this.CreateAsyncInternal(credentials.Id, credentials.InstanceId, preliminaryUserData, oc);
         }
 
-        
+        /// <inheritdoc />
+        public async Task<ServiceResult<Invitation>> GetAsync(
+            Guid id,
+            NpgsqlConnectionWrapper oc = null)
+        {
+            
+            Invitation invitation = null;
+            using (var conn = oc ?? this.cp.Create())
+            {
+                conn.Connect();
+                using (var command = conn.CreateCommand())
+                {
+                    command.CommandText = SqlGetByID;
+                    command.Parameters.Add(new NpgsqlParameter("id", id));
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if(await reader.ReadAsync())
+                        {
+                            invitation = reader.GetInvitation();
+                        }
+                    }
+                }
+            }
+
+            return invitation != null
+                ? new ServiceResult<Invitation>(invitation)
+                : new ServiceResult<Invitation>(ErrorFactory.InvitationNotFound(id));
+        }
+
+
         /// <inheritdoc />
         public async Task<ServiceResult<Invitation>> GetAsync(
             string invitationCode, 
@@ -205,7 +249,27 @@ where expires < (now() AT TIME ZONE 'UTC');
                 : new ServiceResult<Invitation>(ErrorFactory.InvitationNotFound(invitationCode));
         }
 
-        
+        /// <inheritdoc />
+        public async Task<ServiceResult> DeleteAsync(
+            Guid id,
+            NpgsqlConnectionWrapper oc = null)
+        {
+            using (var conn = oc ?? this.cp.Create())
+            {
+                conn.Connect();
+                using (var command = conn.CreateCommand())
+                {
+                    command.CommandText = SqlDeleteByID;
+                    command.Parameters.Add(new NpgsqlParameter("id", id));
+                    var success = await command.ExecuteNonQueryAsync() == 1;
+                    return success
+                        ? new ServiceResult()
+                        : new ServiceResult(ErrorFactory.InvitationNotFound(id));
+                }
+            }
+        }
+
+
         /// <inheritdoc />
         public async Task<ServiceResult> DeleteAsync(string invitationCode, NpgsqlConnectionWrapper oc = null)
         {

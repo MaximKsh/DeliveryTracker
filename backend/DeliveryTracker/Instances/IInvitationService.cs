@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
@@ -34,6 +35,16 @@ namespace DeliveryTracker.Instances
             NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
+        /// Загрузить приглашение.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="oc"></param>
+        /// <returns></returns>
+        Task<ServiceResult<Invitation>> GetAsync(
+            Guid id, 
+            NpgsqlConnectionWrapper oc = null);
+        
+        /// <summary>
         /// Загрузить приглашение по коду.
         /// </summary>
         /// <param name="invitationCode"></param>
@@ -41,6 +52,16 @@ namespace DeliveryTracker.Instances
         /// <returns></returns>
         Task<ServiceResult<Invitation>> GetAsync(
             string invitationCode,
+            NpgsqlConnectionWrapper oc = null);
+
+        /// <summary>
+        /// Удалить приглашение.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="oc"></param>
+        /// <returns></returns>
+        Task<ServiceResult> DeleteAsync(
+            Guid id, 
             NpgsqlConnectionWrapper oc = null);
         
         /// <summary>
