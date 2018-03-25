@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using DeliveryTracker.Identification;
 
 namespace DeliveryTrackerWeb.ViewModels
@@ -7,6 +8,8 @@ namespace DeliveryTrackerWeb.ViewModels
     public sealed class InvitationRequest : RequestBase
     {
         public User User { get; set; }
+        
+        public Guid? ID { get; set; }
         
         public string Code { get; set; }
         

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using DeliveryTracker.Common;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.Validation;
@@ -97,16 +98,34 @@ namespace DeliveryTrackerWeb.Controllers
         [HttpPost("delete")]
         public async Task<IActionResult> DeleteInvitation([FromBody] InvitationRequest request)
         {
-            var code = request.Code;
             var validationResult = new ParametersValidator()
-                .AddNotNullOrWhitespaceRule(nameof(request.Code), request.Code)
+                .AddNotNullRule(nameof(request), request)
                 .Validate();
             if (!validationResult.Success)
             {
                 return this.BadRequest(new InvitationResponse(validationResult.Error));
             }
+
+            var code = request.Code;
+            var id = request.ID;
+            ServiceResult result;
+            if (id.HasValue)
+            {
+                result = await this.invitationService.DeleteAsync(id.Value);
+            }
+            else if (!string.IsNullOrWhiteSpace(code))
+            {
+                result = await this.invitationService.DeleteAsync(code);
+            }
+            else
+            {
+                validationResult = new ParametersValidator()
+                    .AddNotNullOrWhitespaceRule($"{nameof(request)}.{nameof(request.Code)}", request.Code)
+                    .AddNotNullRule($"{nameof(request)}.{nameof(request.ID)}", request.ID)
+                    .Validate();
+                return this.BadRequest(new InvitationResponse(validationResult.Error));
+            }
             
-            var result = await this.invitationService.DeleteAsync(code);
             if (result.Success)
             {
                 return this.Ok();
