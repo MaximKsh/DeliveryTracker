@@ -12,7 +12,8 @@ namespace DeliveryTracker.Notifications
         {
             return new NotificationSettings(
                 SettingsName.Notifiation,
-                configuration.GetValue<string>("NotificationSettings:FirebaseKey", null));
+                configuration.GetValue<string>("NotificationSettings:FirebaseKey", null),
+                configuration.GetValue<string>("NotificationSettings:SmsRuKey", null));
         }
     }
 }

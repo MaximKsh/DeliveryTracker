@@ -47,6 +47,7 @@
   },
   
   "NotificationSettings": {
-    "FirebaseKey": null  
+    "FirebaseKey": null,
+    "SmsRuKey": null
   }
 }

@@ -380,7 +380,7 @@ where expires < (now() AT TIME ZONE 'UTC');
                 notification.Components.Add(new SmsNotificationComponent
                 {
                     Phone = invitation.PreliminaryUser.PhoneNumber,
-                    Text = $"Your_code_is_{invitation.InvitationCode}",
+                    Text = $"Welcome. Your code is {invitation.InvitationCode}",
                 });
                 this.notificationService.SendNotification(notification);
 
