@@ -1,4 +1,5 @@
-﻿using DeliveryTracker.Identification;
+﻿using DeliveryTracker.Database;
+using DeliveryTracker.Identification;
 
 namespace DeliveryTracker.Tasks.TransitionObservers
 {
@@ -9,5 +10,7 @@ namespace DeliveryTracker.Tasks.TransitionObservers
         TaskStateTransition Transition { get; }
         
         UserCredentials Credentials { get; }
+        
+        NpgsqlConnectionWrapper ConnectionWrapper { get; }
     }
 }

@@ -11,5 +11,7 @@
 
         public const string Invitation = "Invitation";
 
+        public const string Notifiation = "Notification";
+
     }
 }

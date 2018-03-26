@@ -68,6 +68,7 @@ namespace DeliveryTracker.Identification
         /// <summary>
         /// Завершить сессию.
         /// </summary>
+        /// <param name="userId"></param>
         /// <param name="outerConnection"></param>
         /// <returns></returns>
         Task<ServiceResult> LogoutAsync(

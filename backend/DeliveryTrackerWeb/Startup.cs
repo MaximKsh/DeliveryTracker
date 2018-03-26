@@ -5,6 +5,7 @@ using DeliveryTracker.Database;
 using DeliveryTracker.Geopositioning;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
+using DeliveryTracker.Notifications;
 using DeliveryTracker.References;
 using DeliveryTracker.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -47,6 +48,7 @@ namespace DeliveryTrackerWeb
                 .AddDeliveryTrackerReferences()
                 .AddDeliveryTrackerViews()
                 .AddDeliveryTrackerTasks()
+                .AddDeliveryTrackerNotifications()
                 ;
         }
 
@@ -55,7 +57,8 @@ namespace DeliveryTrackerWeb
         {
             settingsStorage
                 .AddDeliveryTrackerIdentificationSettings(this.configuration)
-                .AddDeliveryTrackerInstancesSettings(this.configuration);
+                .AddDeliveryTrackerInstancesSettings(this.configuration)
+                .AddDeliveryTrackerNotificationSettings(this.configuration);
             
             app.UseExceptionHandler(conf =>
             {

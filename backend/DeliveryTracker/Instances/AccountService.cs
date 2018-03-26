@@ -186,8 +186,8 @@ namespace DeliveryTracker.Instances
                         PhoneNumber = invitation.PreliminaryUser.PhoneNumber,
                     };
 
-                    
-                    var creationResult = await this.userManager.CreateAsync(newUser, conn);
+                    var creationResult = await this.RegisterInternalAsync(codePassword, newUser, conn);
+
                     if (!creationResult.Success)
                     {
                         transaction.Rollback();
@@ -195,7 +195,7 @@ namespace DeliveryTracker.Instances
                     }
                     transaction.Commit();
 
-                    var createdUser = creationResult.Result;
+                    var createdUser = creationResult.Result.User;
                     var userCredentials = new UserCredentials(
                         createdUser.Id,
                         createdUser.Code,

@@ -23,7 +23,7 @@ namespace DeliveryTracker.Identification
             services
                 .AddSingleton<IUserManager, UserManager>()
                 .AddSingleton<ISecurityManager, SecurityManager>()
-                
+                .AddSingleton<IDeviceManager, DeviceManager>()
                 .AddSingleton<IUserCredentialsAccessor, UserCredentialsAccessor>()
                 ;
 
@@ -142,6 +142,26 @@ namespace DeliveryTracker.Identification
                 SessionTokenId = reader.GetValueOrDefault<Guid?>(idx++),
                 RefreshTokenId = reader.GetValueOrDefault<Guid?>(idx++),
                 LastActivity = reader.GetValueOrDefault<DateTime?>(idx++),
+            };
+        }
+        
+        public static Device GetDevice(this IDataReader reader)
+        {
+            var idx = 0;
+            return reader.GetDevice(ref idx);
+        }
+        
+        public static Device GetDevice(this IDataReader reader, ref int idx)
+        {
+            return new Device
+            {
+                UserId = reader.GetGuid(idx++),
+                Type = reader.GetValueOrDefault<string>(idx++),
+                Version = reader.GetValueOrDefault<string>(idx++),
+                ApplicationType = reader.GetValueOrDefault<string>(idx++),
+                ApplicationVersion = reader.GetValueOrDefault<string>(idx++),
+                Language = reader.GetValueOrDefault<string>(idx++),
+                FirebaseId = reader.GetValueOrDefault<string>(idx++),
             };
         }
         

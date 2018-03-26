@@ -24,17 +24,21 @@ namespace DeliveryTrackerWeb.Controllers
         private readonly IPostgresConnectionProvider cp;
 
         private readonly IUserCredentialsAccessor accessor;
+
+        private readonly IDeviceManager deviceManager;
         
         public AccountController(
             IAccountService accountService, 
             ISecurityManager securityManager,
             IPostgresConnectionProvider cp,
-            IUserCredentialsAccessor accessor)
+            IUserCredentialsAccessor accessor,
+            IDeviceManager deviceManager)
         {
             this.accountService = accountService;
             this.securityManager = securityManager;
             this.cp = cp;
             this.accessor = accessor;
+            this.deviceManager = deviceManager;
         }
         
         // account/check
@@ -43,6 +47,7 @@ namespace DeliveryTrackerWeb.Controllers
         // account/about
         // account/edit
         // account/change_password
+        // account/update_device
 
         [HttpGet("check")]
         [Authorize]
@@ -229,6 +234,29 @@ namespace DeliveryTrackerWeb.Controllers
             }
 
             return this.Forbid();
+        }
+
+        [Authorize]
+        [HttpPost("update_device")]
+        public async Task<IActionResult> UpdateDevice([FromBody] AccountRequest request)
+        {
+            var validationResult = new ParametersValidator()
+                .AddNotNullRule(nameof(request), request)
+                .AddNotNullRule($"{nameof(request)}.{nameof(request.Device)}", request.Device)
+                .Validate();
+            
+            if (!validationResult.Success)
+            {
+                return this.BadRequest(new AccountResponse(validationResult.Error));
+            }
+
+            var result = await this.deviceManager.UpdateUserDeviceAsync(request.Device);
+            if (result.Success)
+            {
+                return this.Ok(new AccountResponse());
+            }
+
+            return this.BadRequest(new AccountResponse(result.Errors));
         }
         
     }

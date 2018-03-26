@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using DeliveryTracker.Common;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DeliveryTracker.Notifications
 {
@@ -15,6 +17,18 @@ namespace DeliveryTracker.Notifications
                     .AddSingleton<INotificator, SmsNotificator>()
                 ;
 
+        }
+        
+        public static ISettingsStorage AddDeliveryTrackerNotificationSettings(
+            this ISettingsStorage storage, 
+            IConfiguration configuration)
+        {
+            
+            var settings = NotificationHelper.ReadNotificationSettingsFromConf(configuration);
+
+            return storage
+                    .RegisterSettings(settings)
+                ;
         }
         
         #endregion

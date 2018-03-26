@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
+using DeliveryTracker.Notifications;
 using DeliveryTracker.Validation;
 using Microsoft.Extensions.Logging;
 using Npgsql;
@@ -74,6 +75,8 @@ where expires < (now() AT TIME ZONE 'UTC');
         private readonly InvitationSettings invitationSettings;
 
         private readonly IUserCredentialsAccessor userCredentialsAccessor;
+
+        private readonly INotificationService notificationService;
         
         private readonly ILogger<IInvitationService> logger;
         
@@ -85,12 +88,14 @@ where expires < (now() AT TIME ZONE 'UTC');
             IPostgresConnectionProvider cp,
             ISettingsStorage settingsStorage,
             IUserCredentialsAccessor userCredentialsAccessor,
-            ILogger<IInvitationService> logger)
+            ILogger<IInvitationService> logger,
+            INotificationService notificationService)
         {
             this.cp = cp;
             this.invitationSettings = settingsStorage.GetSettings<InvitationSettings>(SettingsName.Invitation);
             this.userCredentialsAccessor = userCredentialsAccessor;
             this.logger = logger;
+            this.notificationService = notificationService;
         }
         
         #endregion
@@ -367,6 +372,18 @@ where expires < (now() AT TIME ZONE 'UTC');
                         return new ServiceResult<Invitation>(ErrorFactory.InvitationCreationError());   
                     }
                 }
+            }
+
+            if(!string.IsNullOrWhiteSpace(invitation?.PreliminaryUser?.PhoneNumber))
+            {
+                var notification = new Notification();
+                notification.Components.Add(new SmsNotificationComponent
+                {
+                    Phone = invitation.PreliminaryUser.PhoneNumber,
+                    Text = $"Your_code_is_{invitation.InvitationCode}",
+                });
+                this.notificationService.SendNotification(notification);
+
             }
             return new ServiceResult<Invitation>(invitation);
         }

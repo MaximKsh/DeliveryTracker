@@ -62,7 +62,8 @@ where instance_id = @instance_id
         public IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
         {
             DefaultRoles.CreatorRole,
-            DefaultRoles.ManagerRole
+            DefaultRoles.ManagerRole,
+            DefaultRoles.PerformerRole
         }.AsReadOnly();
 
         /// <inheritdoc />

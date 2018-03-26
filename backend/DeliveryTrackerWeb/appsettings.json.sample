@@ -44,5 +44,9 @@
     "ExpiresInDays": 3,
     "CodeLength" : 6,
     "Alphabet": "23456789qwertyupasdfghkzxbnmQWERTYUPASDFGHKZXVBNM"
+  },
+  
+  "NotificationSettings": {
+    "FirebaseKey": null  
   }
 }

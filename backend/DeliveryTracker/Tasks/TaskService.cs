@@ -185,7 +185,7 @@ namespace DeliveryTracker.Tasks
                 };
 
                 await this.observerExecutor.Execute(
-                    new TransitionObserverContext(newTask, credentials, getTransitionResult.Result));
+                    new TransitionObserverContext(newTask, credentials, getTransitionResult.Result, connWrapper));
                 
                 var editResult = await this.taskManager.EditAsync(newTask, connWrapper);
 

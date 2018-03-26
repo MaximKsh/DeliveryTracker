@@ -6,13 +6,15 @@ namespace DeliveryTracker.Notifications
     {
         public interface ISmsNotificationComponent : INotificationComponent
         {
-            
+            string Text { get; set; }
+            string Phone { get; set; }
         }
 
 
         public override ServiceResult Notify(
             ISmsNotificationComponent notification)
         {
+
             return new ServiceResult();
         }
     }

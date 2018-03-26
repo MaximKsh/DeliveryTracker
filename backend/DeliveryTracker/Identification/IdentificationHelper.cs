@@ -39,6 +39,19 @@ namespace DeliveryTracker.Identification
         public static string GetSessionColumns(
             string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(SessionColumnList, prefix);
         
+        public static readonly IReadOnlyList<string> DeviceColumnList = new List<string>
+        {
+            "user_id",
+            "device_type",
+            "device_version",
+            "application_type",
+            "application_version",
+            "language",
+            "firebase_id",
+        }.AsReadOnly();
+        
+        public static string GetDeviceColumns(
+            string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(DeviceColumnList, prefix);
         
         
         public static PasswordSettings ReadPasswordSettingsFromConf(IConfiguration configuration)

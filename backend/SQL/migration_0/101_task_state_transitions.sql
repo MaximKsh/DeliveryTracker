@@ -30,8 +30,14 @@ INSERT INTO task_state_transitions(id, role, initial_state, final_state, button_
 -- Creator: InProgress -> Complete
 ('88922080-00bd-4bf7-99d6-45acf463d77b', 'fbe65847-57c0-42a9-84a9-3f95b92fd39e', 'beaff26f-2193-41ed-b2a6-983b707a216d', 'd91856f9-d1bf-4fad-a46e-c3baafabf762', 'ServerMessage_StateTransitionButton_CreatorInProgressComplete'),
 -- Creator: InProgress -> Cancel
-('0049d17b-d3d9-4c56-b05f-a21c6f1658e3', 'fbe65847-57c0-42a9-84a9-3f95b92fd39e', 'beaff26f-2193-41ed-b2a6-983b707a216d', '1483e2f3-5bcf-48ca-bcaa-870573997465', 'ServerMessage_StateTransitionButton_CreatorInProgressCancelled')
+('0049d17b-d3d9-4c56-b05f-a21c6f1658e3', 'fbe65847-57c0-42a9-84a9-3f95b92fd39e', 'beaff26f-2193-41ed-b2a6-983b707a216d', '1483e2f3-5bcf-48ca-bcaa-870573997465', 'ServerMessage_StateTransitionButton_CreatorInProgressCancelled'),
 
+-- Performer: New -> InProgress
+('27e3fc46-a2d9-4580-b7f1-bd4e786936a2', 'aa522dd3-3a11-46a0-afa7-260b70609524', '135374ad-ba12-4ada-9dc7-8f8e3b11d9e5', 'beaff26f-2193-41ed-b2a6-983b707a216d', 'ServerMessage_StateTransitionButton_CreatorNewInProgress'),
+-- Performer: InProgress -> Complete
+('0b9435eb-b9be-42ff-8a34-adb629eff570', 'aa522dd3-3a11-46a0-afa7-260b70609524', 'beaff26f-2193-41ed-b2a6-983b707a216d', 'd91856f9-d1bf-4fad-a46e-c3baafabf762', 'ServerMessage_StateTransitionButton_CreatorInProgressComplete'),
+-- Performer: InProgress -> Cancel
+('1eea8ebe-b6fb-4ae2-8195-3392f2ab7013', 'aa522dd3-3a11-46a0-afa7-260b70609524', 'beaff26f-2193-41ed-b2a6-983b707a216d', '1483e2f3-5bcf-48ca-bcaa-870573997465', 'ServerMessage_StateTransitionButton_CreatorInProgressCancelled')
 
 
 ;

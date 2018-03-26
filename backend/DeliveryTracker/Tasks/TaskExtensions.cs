@@ -20,6 +20,7 @@ namespace DeliveryTracker.Tasks
             // Observers
             services
                 .AddSingleton<ITransitionObserver, InProgressObserver>()
+                .AddSingleton<ITransitionObserver, CompleteObserver>()
                 ;
             return services;
         }

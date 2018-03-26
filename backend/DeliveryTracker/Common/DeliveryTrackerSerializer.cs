@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace DeliveryTracker.Common
@@ -15,9 +16,9 @@ namespace DeliveryTracker.Common
         #region constructor
         
         public DeliveryTrackerSerializer(
-            MvcJsonOptions mvcJsonOptions)
+            IOptions<MvcJsonOptions> mvcJsonOptions)
         {
-            this.settings = mvcJsonOptions.SerializerSettings;
+            this.settings = mvcJsonOptions.Value.SerializerSettings;
         }
         
         #endregion

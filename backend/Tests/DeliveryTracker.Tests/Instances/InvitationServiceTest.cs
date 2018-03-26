@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DeliveryTracker.Common;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
+using DeliveryTracker.Notifications;
 using DeliveryTracker.Validation;
 using Moq;
 using Xunit;
@@ -57,7 +58,8 @@ namespace DeliveryTracker.Tests.Instances
                 this.Cp, 
                 this.SettingsStorage, 
                 this.creatorCredentialsMock.Object,
-                null);
+                null,
+                new Mock<INotificationService>().Object);
         }
 
         [Fact]
@@ -88,7 +90,8 @@ namespace DeliveryTracker.Tests.Instances
                 alphabet);
             var settingsStorage = new SettingsStorage()
                 .RegisterSettings(invitationSettings);
-            var invitationService = new InvitationService(this.Cp, settingsStorage, null, null);
+            var invitationService = new InvitationService(this.Cp, settingsStorage, null, null,
+                new Mock<INotificationService>().Object);
 
             // Act
             var code = invitationService.GenerateCode();
@@ -124,7 +127,8 @@ namespace DeliveryTracker.Tests.Instances
         {
             // Arrange
             var accesor = this.accessors[accesorIndex];
-            var invitationService = new InvitationService(this.Cp, this.SettingsStorage, accesor, null);
+            var invitationService = new InvitationService(this.Cp, this.SettingsStorage, accesor, null,
+                new Mock<INotificationService>().Object);
             var userData = new User
             {
                 Role = role,
@@ -172,7 +176,8 @@ namespace DeliveryTracker.Tests.Instances
         {
             // Arrange
             var accesor = this.accessors[accesorIndex];
-            var invitationService = new InvitationService(this.Cp, this.SettingsStorage, accesor, null);
+            var invitationService = new InvitationService(this.Cp, this.SettingsStorage, accesor, null,
+                new Mock<INotificationService>().Object);
             var userData = new User
             {
                 Role = role,
