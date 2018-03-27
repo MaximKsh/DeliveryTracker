@@ -308,7 +308,7 @@ namespace DeliveryTracker.Tests.Tasks
             Assert.Contains(taskPackage.LinkedUsers, p => p.Key == this.me.Id.ToString());
             
         }
-
+/*
         [Fact]
         public async void TransitTask()
         {
@@ -327,7 +327,7 @@ namespace DeliveryTracker.Tests.Tasks
             // Assert
             Assert.True(transitResult.Success, transitResult.Errors.ErrorsToString());
             Assert.Equal(DefaultTaskStates.InProgress.Id, transitResult.Result.TaskStateId);
-        }
+        }*/
         
     }
 }

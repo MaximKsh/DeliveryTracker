@@ -214,7 +214,16 @@ namespace DeliveryTracker.Tasks
                 {
                     return new ServiceResult<TaskInfo>(fillProductsResult.Errors);
                 }
-            
+                
+                var transitionsResult = await this.stateTransitionManager.GetTransitions(
+                    credentials.Role, task.TaskStateId, cw);
+                if (!transitionsResult.Success)
+                {
+                    return new ServiceResult<TaskInfo>(transitionsResult.Errors);
+                }
+
+                task.TaskStateTransitions =  transitionsResult.Result;
+                
                 return new ServiceResult<TaskInfo>(task);    
             }
         }
@@ -284,14 +293,6 @@ namespace DeliveryTracker.Tasks
 
                 taskPackage.LinkedUsers = getUsersResult.Result.ToDictionary(k => k.Id.ToString(), v => v);
 
-                var transitionsResult = await this.stateTransitionManager.GetTransitions(
-                    credentials.Role, taskInfo.TaskStateId, cw);
-                if (!transitionsResult.Success)
-                {
-                    return new ServiceResult<TaskPackage>(transitionsResult.Errors);
-                }
-
-                taskPackage.LinkedTaskStateTransitions =  transitionsResult.Result;
             }
 
             taskPackage.TaskInfo = new List<TaskInfo> { taskInfo };
@@ -375,14 +376,6 @@ namespace DeliveryTracker.Tasks
                 }
 
                 taskPackage.LinkedUsers = getUsersResult.Result.ToDictionary(k => k.Id.ToString(), v => v);
-
-                var transitionsResult = await this.stateTransitionManager.GetTransitions(credentials.Role, initialStates, cw);
-                if (!transitionsResult.Success)
-                {
-                    return new ServiceResult<TaskPackage>(transitionsResult.Errors);
-                }
-
-                taskPackage.LinkedTaskStateTransitions =  transitionsResult.Result;
             }
             taskPackage.TaskInfo = new List<TaskInfo>( taskInfos );
 

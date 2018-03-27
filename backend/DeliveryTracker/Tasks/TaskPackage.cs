@@ -24,10 +24,6 @@ namespace DeliveryTracker.Tasks
             set => this.Set(nameof(this.LinkedUsers), value);
         }
 
-        public IList<TaskStateTransition> LinkedTaskStateTransitions
-        {
-            get => this.GetList<TaskStateTransition>(nameof(this.LinkedTaskStateTransitions));
-            set => this.Set(nameof(this.LinkedTaskStateTransitions), value);
-        }
+        
     }
 }

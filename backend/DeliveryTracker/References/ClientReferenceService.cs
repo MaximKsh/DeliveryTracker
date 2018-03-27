@@ -204,7 +204,7 @@ returning 1
             appendedFields += command.AppendIfNotDefault(updateFieldsBuilder, "surname", newData.Surname);
             appendedFields += command.AppendIfNotDefault(updateFieldsBuilder, "name", newData.Name);
             appendedFields += command.AppendIfNotDefault(updateFieldsBuilder,"patronymic", newData.Patronymic);
-            appendedFields += command.AppendIfNotDefault(updateFieldsBuilder, "phone_number", newData.Patronymic);
+            appendedFields += command.AppendIfNotDefault(updateFieldsBuilder, "phone_number", newData.PhoneNumber);
             queryStringBuilder.AppendLine(appendedFields != 0 
                 ? string.Format(SqlUpdate, updateFieldsBuilder) 
                 : string.Format(SqlGet, " and deleted = false"));

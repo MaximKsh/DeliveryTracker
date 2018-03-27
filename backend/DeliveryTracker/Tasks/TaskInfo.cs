@@ -196,7 +196,7 @@ namespace DeliveryTracker.Tasks
         }
     
         /// <summary>
-        /// Стоимость дсоставки.
+        /// Стоимость доставки.
         /// </summary>
         public decimal? DeliveryCost
         {
@@ -211,6 +211,15 @@ namespace DeliveryTracker.Tasks
         {
             get => this.GetList<TaskProduct>(nameof(this.TaskProducts));
             set => this.Set(nameof(this.TaskProducts), value);
+        }
+        
+        /// <summary>
+        /// Список переходов по заданиям.
+        /// </summary>
+        public IList<TaskStateTransition> TaskStateTransitions
+        {
+            get => this.GetList<TaskStateTransition>(nameof(this.TaskStateTransitions));
+            set => this.Set(nameof(this.TaskStateTransitions), value);
         }
     }
 }

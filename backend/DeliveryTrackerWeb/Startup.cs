@@ -17,6 +17,7 @@ using DeliveryTrackerWeb.Middleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace DeliveryTrackerWeb
 {
@@ -100,6 +101,13 @@ namespace DeliveryTrackerWeb
             services.AddMvc().AddJsonOptions(
                 p =>
                 {
+                    p.SerializerSettings.ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new DefaultNamingStrategy()
+                        {
+                            ProcessDictionaryKeys = true,
+                        }
+                    };
                     p.SerializerSettings.Converters.Add(new DictionaryObjectJsonConverter());
                     p.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                     p.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Include;
