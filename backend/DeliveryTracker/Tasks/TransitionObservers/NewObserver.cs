@@ -5,7 +5,7 @@ using DeliveryTracker.Notifications;
 
 namespace DeliveryTracker.Tasks.TransitionObservers
 {
-    public class CompleteObserver : TransitionObserverBase
+    public class NewObserver : TransitionObserverBase
     {
         private readonly INotificationService notificationService;
 
@@ -13,7 +13,7 @@ namespace DeliveryTracker.Tasks.TransitionObservers
 
         private readonly IPostgresConnectionProvider cp;
         
-        public CompleteObserver(
+        public NewObserver(
             INotificationService notificationService,
             IDeviceManager deviceManager,
             IPostgresConnectionProvider cp)
@@ -26,14 +26,13 @@ namespace DeliveryTracker.Tasks.TransitionObservers
         public override Task<bool> CanHandleTransition(
             ITransitionObserverContext ctx)
         {
-            return Task.FromResult(ctx.Transition.FinalState == DefaultTaskStates.Complete.Id
-                                   || ctx.Transition.FinalState == DefaultTaskStates.Cancelled.Id);
+            return Task.FromResult(ctx.Transition.FinalState == DefaultTaskStates.New.Id);
         }
 
         public override async Task HandleTransition(
             ITransitionObserverContext ctx)
         {
-            var userId = ctx.TaskInfo.AuthorId;
+            var userId = ctx.Credentials.Id;
             Device device;
             using (var conn = ctx.ConnectionWrapper.Connect() ?? this.cp.Create().Connect())
             {
@@ -46,10 +45,6 @@ namespace DeliveryTracker.Tasks.TransitionObservers
                 device = deviceResult.Result;
             }
             var notification = new Notification();
-            var text = ctx.Transition.FinalState == DefaultTaskStates.Complete.Id
-                ? "Your task is completed"
-                : "Your task is cancelled";
-            
             notification.Components.Add(new PushNotificationComponent
             {
                 Device = device,
@@ -57,7 +52,7 @@ namespace DeliveryTracker.Tasks.TransitionObservers
                 {
                     Action = PushActions.OpenTask,
                     Title = "Task completed",
-                    Message = text,
+                    Message = "Your task is completed",
                     Data = new TaskInfo
                     {
                         Id = ctx.TaskInfo.Id,

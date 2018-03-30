@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
+using DeliveryTracker.Notifications;
 using DeliveryTracker.References;
 using DeliveryTracker.Tasks.TransitionObservers;
 using DeliveryTracker.Validation;
@@ -28,6 +29,10 @@ namespace DeliveryTracker.Tasks
         private readonly IUserManager userManager;
 
         private readonly ITransitionObserverExecutor observerExecutor;
+
+        private readonly INotificationService notificationService;
+
+        private readonly IDeviceManager deviceManager;
         
         #endregion
         
@@ -40,7 +45,9 @@ namespace DeliveryTracker.Tasks
             IUserCredentialsAccessor accessor,
             IReferenceFacade referenceFacade,
             IUserManager userManager,
-            ITransitionObserverExecutor observerExecutor)
+            ITransitionObserverExecutor observerExecutor,
+            INotificationService notificationService,
+            IDeviceManager deviceManager)
         {
             this.cp = cp;
             this.taskManager = taskManager;
@@ -49,6 +56,8 @@ namespace DeliveryTracker.Tasks
             this.referenceFacade = referenceFacade;
             this.userManager = userManager;
             this.observerExecutor = observerExecutor;
+            this.notificationService = notificationService;
+            this.deviceManager = deviceManager;
         }
         
         #endregion
@@ -102,6 +111,11 @@ namespace DeliveryTracker.Tasks
                     {
                         transaction.Rollback();
                         return new ServiceResult<TaskInfo>(fillProductsResult.Errors);
+                    }
+
+                    if (taskInfo.PerformerId.HasValue)
+                    {
+                        await this.NotifyNew(connWrapper, taskInfo.PerformerId.Value, task.Id);                        
                     }
                     
                     transaction.Commit();
@@ -176,13 +190,18 @@ namespace DeliveryTracker.Tasks
                 }
 
                 var getTransitionResult = await this.stateTransitionManager.GetTransition(transitionId, connWrapper);
-                
-                var newTask = new TaskInfo
+
+                var taskResult = await this.taskManager.GetAsync(
+                    taskId, 
+                    credentials.InstanceId,
+                    connWrapper);
+                if (!taskResult.Success)
                 {
-                    Id = taskId,
-                    InstanceId = credentials.InstanceId,
-                    TaskStateId = getTransitionResult.Result.FinalState,
-                };
+                    return taskResult;
+                }
+
+                var newTask = taskResult.Result;
+                newTask.TaskStateId = getTransitionResult.Result.FinalState;
 
                 await this.observerExecutor.Execute(
                     new TransitionObserverContext(newTask, credentials, getTransitionResult.Result, connWrapper));
@@ -407,6 +426,38 @@ namespace DeliveryTracker.Tasks
             }
 
             return new ServiceResult<IList<ReferenceEntityBase>>();
+        }
+
+
+        private async Task NotifyNew(NpgsqlConnectionWrapper conn, Guid perfId, Guid taskId)
+        {
+            var userId = perfId;
+            var deviceResult = await this.deviceManager.GetUserDeviceAsync(userId, conn);
+            if (!deviceResult.Success)
+            {
+                return;
+            }
+
+            var device = deviceResult.Result;
+            var notification = new Notification();
+            notification.Components.Add(new PushNotificationComponent
+            {
+                Device = device,
+                Body = new PushNotificationBody
+                {
+                    Action = PushActions.OpenTask,
+                    Title = "New task for you",
+                    Message = "New task for you ",
+                    Data = new TaskInfo
+                    {
+                        Id = taskId,
+                    }
+                }
+                
+            });
+            
+            this.notificationService.SendNotification(notification);
+                   
         }
         
         
