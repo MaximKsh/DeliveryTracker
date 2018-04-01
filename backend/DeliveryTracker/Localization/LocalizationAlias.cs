@@ -122,11 +122,13 @@
         {
             private const string Pref = LocalizationStringPrefix + "_" + TaskStatesGroup + "_";
                     
-            public const string Unconfirmed = Pref + "Unconfirmed";
-            public const string New = Pref + "New";
-            public const string InProgress = Pref + "InProgress";
+            public const string Preparing = Pref + "Preparing";
+            public const string Queue = Pref + "Queue";
+            public const string Waiting = Pref + "Waiting";
+            public const string IntoWork = Pref + "IntoWork";
+            public const string Delivered = Pref + "Delivered";
             public const string Complete = Pref + "Complete";
-            public const string Cancelled = Pref + "Cancelled";
+            public const string Revoked = Pref + "Revoked";
         }
         
         #endregion

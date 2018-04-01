@@ -20,8 +20,8 @@ namespace DeliveryTracker.Tests.Tasks
             // Act
             var result = await this.manager.GetTransition(
                 DefaultRoles.ManagerRole,
-                DefaultTaskStates.Unconfirmed.Id,
-                DefaultTaskStates.New.Id);
+                DefaultTaskStates.Preparing.Id,
+                DefaultTaskStates.IntoWork.Id);
 
             // Assert
             Assert.True(result.Success);
@@ -33,7 +33,7 @@ namespace DeliveryTracker.Tests.Tasks
             // Act
             var result = await this.manager.GetTransition(
                 DefaultRoles.ManagerRole,
-                DefaultTaskStates.Unconfirmed.Id,
+                DefaultTaskStates.Preparing.Id,
                 DefaultTaskStates.Complete.Id);
 
             // Assert

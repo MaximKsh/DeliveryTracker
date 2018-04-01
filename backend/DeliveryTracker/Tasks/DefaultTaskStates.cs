@@ -7,46 +7,58 @@ namespace DeliveryTracker.Tasks
 {
     public static class DefaultTaskStates
     {
-        public static readonly TaskState Unconfirmed = 
+        public static readonly TaskState Preparing = 
             new TaskState(
-                new Guid(0x3f7d33e6, 0x5ecf, 0x41a3, 0x87, 0x6a, 0xc0, 0x34, 0x5f, 0x69, 0x0c, 0xa4),
-                "Unconfirmed",
-                LocalizationAlias.TaskStates.Unconfirmed);
+                new Guid("8c9c1011-f7c1-4cef-902f-4925f5e83f4a"),
+                nameof(Preparing),
+                LocalizationAlias.TaskStates.Preparing);
         
-        public static readonly TaskState New = 
+        public static readonly TaskState Queue = 
             new TaskState(
-                new Guid(0x135374ad, 0xba12, 0x4ada, 0x9d, 0xc7, 0x8f, 0x8e, 0x3b, 0x11, 0xd9, 0xe5),
-                "New",
-                LocalizationAlias.TaskStates.New);
+                new Guid("d4595da3-6a5f-4455-b975-7637ea429cb5"),
+                nameof(Queue),
+                LocalizationAlias.TaskStates.Queue);
         
-        public static readonly TaskState InProgress = 
+        public static readonly TaskState Waiting = 
             new TaskState(
-                new Guid(0xbeaff26f, 0x2193, 0x41ed, 0xb2, 0xa6, 0x98, 0x3b, 0x70, 0x7a, 0x21, 0x6d),
-                "InProgress",
-                LocalizationAlias.TaskStates.InProgress);
+                new Guid("0a79703f-4570-4a58-8509-9e598b1eefaf"),
+                nameof(Waiting),
+                LocalizationAlias.TaskStates.Waiting);
+        
+        public static readonly TaskState IntoWork = 
+            new TaskState(
+                new Guid("8912d18f-192a-4327-bd47-5c9963b5f2b0"),
+                nameof(IntoWork),
+                LocalizationAlias.TaskStates.IntoWork);
+        
+        public static readonly TaskState Delivered = 
+            new TaskState(
+                new Guid("020d7c7e-bb4e-4add-8b11-62a91471b7c8"),
+                nameof(Delivered),
+                LocalizationAlias.TaskStates.Delivered);
         
         public static readonly TaskState Complete = 
             new TaskState(
-                new Guid(0xd91856f9, 0xd1bf, 0x4fad, 0xa4, 0x6e, 0xc3, 0xba, 0xaf, 0xab, 0xf7, 0x62),
-                "Complete",
+                new Guid("d91856f9-d1bf-4fad-a46e-c3baafabf762"),
+                nameof(Complete),
                 LocalizationAlias.TaskStates.Complete);
         
-        public static readonly TaskState Cancelled = 
+        public static readonly TaskState Revoked = 
             new TaskState(
-                new Guid(0x1483e2f3, 0x5bcf, 0x48ca, 0xbc, 0xaa, 0x87, 0x05, 0x73, 0x99, 0x74, 0x65),
-                "Cancelled",
-                LocalizationAlias.TaskStates.Cancelled);
+                new Guid("d2e70369-3d37-420f-b176-5fa0b2c1d4a9"),
+                nameof(Revoked),
+                LocalizationAlias.TaskStates.Revoked);
         
         public static readonly IReadOnlyDictionary<Guid, TaskState> AllTaskStates = 
             new ReadOnlyDictionary<Guid, TaskState>(new Dictionary<Guid, TaskState>
             {
-                [Unconfirmed.Id] = Unconfirmed,
-                [New.Id] = New,
-                [InProgress.Id] = InProgress,
+                [Preparing.Id] = Preparing,
+                [Queue.Id] = Queue,
+                [Waiting.Id] = Waiting,
+                [IntoWork.Id] = IntoWork,
+                [Delivered.Id] = Delivered,
                 [Complete.Id] = Complete,
-                [Cancelled.Id] = Cancelled,
+                [Revoked.Id] = Revoked,
             });
-        
-        
     }
 }

@@ -43,7 +43,7 @@ namespace DeliveryTracker.Tests.Tasks
             {
                 Id = Guid.NewGuid(),
                 InstanceId = this.defaultInstance.Id,
-                TaskStateId = DefaultTaskStates.Unconfirmed.Id,
+                TaskStateId = DefaultTaskStates.Preparing.Id,
                 AuthorId = this.me.Id,
                 TaskNumber = "001",
                 Comment = "Comment",
@@ -72,7 +72,7 @@ namespace DeliveryTracker.Tests.Tasks
             {
                 Id = Guid.NewGuid(),
                 InstanceId = this.defaultInstance.Id,
-                TaskStateId = DefaultTaskStates.Unconfirmed.Id,
+                TaskStateId = DefaultTaskStates.Preparing.Id,
                 AuthorId = this.me.Id,
                 TaskNumber = "001",
             };
@@ -106,7 +106,7 @@ namespace DeliveryTracker.Tests.Tasks
             {
                 Id = Guid.NewGuid(),
                 InstanceId = this.defaultInstance.Id,
-                TaskStateId = DefaultTaskStates.Unconfirmed.Id,
+                TaskStateId = DefaultTaskStates.Preparing.Id,
                 AuthorId = this.me.Id,
                 TaskNumber = "001",
                 Comment = "Comment",
@@ -144,7 +144,7 @@ namespace DeliveryTracker.Tests.Tasks
             {
                 Id = Guid.NewGuid(),
                 InstanceId = this.defaultInstance.Id,
-                TaskStateId = DefaultTaskStates.Unconfirmed.Id,
+                TaskStateId = DefaultTaskStates.Preparing.Id,
                 AuthorId = this.me.Id,
                 TaskNumber = "001",
                 Comment = "Comment",
@@ -171,7 +171,7 @@ namespace DeliveryTracker.Tests.Tasks
             {
                 Id = Guid.NewGuid(),
                 InstanceId = this.defaultInstance.Id,
-                TaskStateId = DefaultTaskStates.Unconfirmed.Id,
+                TaskStateId = DefaultTaskStates.Preparing.Id,
                 AuthorId = this.me.Id,
                 TaskNumber = "001",
             };
@@ -212,7 +212,7 @@ namespace DeliveryTracker.Tests.Tasks
             {
                 Id = Guid.NewGuid(),
                 InstanceId = this.defaultInstance.Id,
-                TaskStateId = DefaultTaskStates.Unconfirmed.Id,
+                TaskStateId = DefaultTaskStates.Preparing.Id,
                 AuthorId = this.me.Id,
                 TaskNumber = "001",
             };
@@ -260,7 +260,7 @@ namespace DeliveryTracker.Tests.Tasks
             {
                 Id = Guid.NewGuid(),
                 InstanceId = this.defaultInstance.Id,
-                TaskStateId = DefaultTaskStates.Unconfirmed.Id,
+                TaskStateId = DefaultTaskStates.Preparing.Id,
                 AuthorId = this.me.Id,
                 TaskNumber = "001",
             };

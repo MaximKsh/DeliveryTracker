@@ -81,7 +81,7 @@ namespace DeliveryTracker.Tasks
             taskInfo.Id = Guid.NewGuid();
             taskInfo.AuthorId = credentials.Id;
             taskInfo.InstanceId = credentials.InstanceId;
-            taskInfo.TaskStateId = DefaultTaskStates.New.Id;
+            taskInfo.SetState(DefaultTaskStates.Preparing);
             
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {

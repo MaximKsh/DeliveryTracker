@@ -26,7 +26,7 @@ namespace DeliveryTracker.Tasks.TransitionObservers
         public override Task<bool> CanHandleTransition(
             ITransitionObserverContext ctx)
         {
-            return Task.FromResult(ctx.Transition.FinalState == DefaultTaskStates.New.Id);
+            return Task.FromResult(false);
         }
 
         public override async Task HandleTransition(
