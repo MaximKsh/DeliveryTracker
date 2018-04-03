@@ -53,11 +53,13 @@
         public static class PushMessage
         {
             private const string Pref = LocalizationStringPrefix + "_" + PushMessageGroup + "_";
-                    
-            public const string AddTask = Pref + "AddTask";
-            public const string CompleteTask = Pref + "CompleteTask";
-            public const string CancelTask = Pref + "CancelTask";
-            public const string TaskCancelledByManager = Pref + "TaskCancelledByManager";
+
+            public const string TaskHeader = Pref + "TaskHeader";
+            public const string TaskPlannedToYou = Pref + "TaskPlannedToYou";
+            public const string TaskWaits = Pref + "TaskWaits";
+            public const string TaskRevoked = Pref + "TaskRevoked";
+            public const string TaskReturnToPreparing = Pref + "TaskReturnToPreparing";
+            public const string TaskDelivered = Pref + "TaskDelivered";
         }
         
         #endregion

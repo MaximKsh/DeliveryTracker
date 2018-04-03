@@ -28,7 +28,7 @@ namespace DeliveryTracker.Tasks
 
         private readonly IUserManager userManager;
 
-        private readonly ITransitionObserverExecutor observerExecutor;
+        private readonly ITaskObserverExecutor observerExecutor;
 
         private readonly INotificationService notificationService;
 
@@ -45,7 +45,7 @@ namespace DeliveryTracker.Tasks
             IUserCredentialsAccessor accessor,
             IReferenceFacade referenceFacade,
             IUserManager userManager,
-            ITransitionObserverExecutor observerExecutor,
+            ITaskObserverExecutor observerExecutor,
             INotificationService notificationService,
             IDeviceManager deviceManager)
         {
@@ -113,9 +113,13 @@ namespace DeliveryTracker.Tasks
                         return new ServiceResult<TaskInfo>(fillProductsResult.Errors);
                     }
 
-                    if (taskInfo.PerformerId.HasValue)
+                    var creds = this.accessor.GetUserCredentials();
+                    var ctx = new TaskObserverContext(null, taskInfo, creds, null, connWrapper);
+                    await this.observerExecutor.ExecuteNew(ctx);
+                    if (ctx.Cancel)
                     {
-                        await this.NotifyNew(connWrapper, taskInfo.PerformerId.Value, task.Id);                        
+                        transaction.Rollback();
+                        return new ServiceResult<TaskInfo>(ctx.Errors);
                     }
                     
                     transaction.Commit();
@@ -165,6 +169,16 @@ namespace DeliveryTracker.Tasks
                         transact.Rollback();
                         return new ServiceResult<TaskInfo>(fillProductsResult.Errors);
                     }
+
+                    var creds = this.accessor.GetUserCredentials();
+                    var ctx = new TaskObserverContext(taskInfo, newTask, creds, null, connWrapper);
+                    await this.observerExecutor.ExecuteEdit(ctx);
+                    if (ctx.Cancel)
+                    {
+                        transact.Rollback();
+                        return new ServiceResult<TaskInfo>(ctx.Errors);
+                    }
+                    
                     transact.Commit();
                 
                     return new ServiceResult<TaskInfo>(newTask);   
@@ -182,6 +196,7 @@ namespace DeliveryTracker.Tasks
             var credentials = this.accessor.GetUserCredentials();
             
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
+            using(var transact = connWrapper.BeginTransaction())
             {
                 var canTransit = await this.stateTransitionManager.CanTransit(taskId, credentials.Id, transitionId, connWrapper);
                 if (!canTransit.Success)
@@ -202,11 +217,17 @@ namespace DeliveryTracker.Tasks
 
                 var newTask = taskResult.Result;
                 newTask.TaskStateId = getTransitionResult.Result.FinalState;
-
-                await this.observerExecutor.Execute(
-                    new TransitionObserverContext(newTask, credentials, getTransitionResult.Result, connWrapper));
                 
                 var editResult = await this.taskManager.EditAsync(newTask, connWrapper);
+                
+                var creds = this.accessor.GetUserCredentials();
+                var ctx = new TaskObserverContext(null, editResult.Result, creds, getTransitionResult.Result, connWrapper);
+                await this.observerExecutor.ExecuteTransition(ctx);
+                if (ctx.Cancel)
+                {
+                    transact.Rollback();
+                    return new ServiceResult<TaskInfo>(ctx.Errors);
+                }
 
                 return editResult;
             }
@@ -427,39 +448,6 @@ namespace DeliveryTracker.Tasks
 
             return new ServiceResult<IList<ReferenceEntityBase>>();
         }
-
-
-        private async Task NotifyNew(NpgsqlConnectionWrapper conn, Guid perfId, Guid taskId)
-        {
-            var userId = perfId;
-            var deviceResult = await this.deviceManager.GetUserDeviceAsync(userId, conn);
-            if (!deviceResult.Success)
-            {
-                return;
-            }
-
-            var device = deviceResult.Result;
-            var notification = new Notification();
-            notification.Components.Add(new PushNotificationComponent
-            {
-                Device = device,
-                Body = new PushNotificationBody
-                {
-                    Action = PushActions.OpenTask,
-                    Title = "New task for you",
-                    Message = "New task for you ",
-                    Data = new TaskInfo
-                    {
-                        Id = taskId,
-                    }
-                }
-                
-            });
-            
-            this.notificationService.SendNotification(notification);
-                   
-        }
-        
         
         #endregion
     }

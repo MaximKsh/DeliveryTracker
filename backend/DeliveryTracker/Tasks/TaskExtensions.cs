@@ -14,13 +14,12 @@ namespace DeliveryTracker.Tasks
                 .AddSingleton<ITaskStateTransitionManager, TaskStateTransitionManager>()
                 .AddSingleton<ITaskManager, TaskManager>()
                 .AddSingleton<ITaskService, TaskService>()
-                .AddSingleton<ITransitionObserverExecutor, TransitionObserverExecutor>()
+                .AddSingleton<ITaskObserverExecutor, TaskObserverExecutor>()
                 ;
 
             // Observers
             services
-                .AddSingleton<ITransitionObserver, InProgressObserver>()
-                .AddSingleton<ITransitionObserver, CompleteObserver>()
+                .AddSingleton<ITaskObserver, NotificationObserver>()
                 ;
             return services;
         }
