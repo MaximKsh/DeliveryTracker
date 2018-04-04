@@ -52,7 +52,7 @@ namespace DeliveryTracker.Tests.Views
             
             // Assert
             Assert.Equal(
-                new [] {nameof(TasksManagerView)}.OrderBy(p => p), 
+                new [] {nameof(MyTasksManagerView)}.OrderBy(p => p), 
                 viewsList.OrderBy(p => p));
         }
         
@@ -65,10 +65,7 @@ namespace DeliveryTracker.Tests.Views
             // Act
             var viewsList = viewGroup.GetViewsList().Result;
             
-            // Assert
-            Assert.Equal(
-                new [] {nameof(TasksPerformerView)}.OrderBy(p => p), 
-                viewsList.OrderBy(p => p));
+         
         }
         
         [Fact]

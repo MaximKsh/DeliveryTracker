@@ -133,5 +133,16 @@ namespace DeliveryTracker.Views
         }
         
         #endregion
+        
+        #region protected
+
+        protected void AddView(
+            IView view,
+            Dictionary<string, IView> views)
+        {
+            views[view.Name] = view;
+        }
+        
+        #endregion
     }
 }

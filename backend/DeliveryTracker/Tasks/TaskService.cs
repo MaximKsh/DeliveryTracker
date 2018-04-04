@@ -29,10 +29,6 @@ namespace DeliveryTracker.Tasks
         private readonly IUserManager userManager;
 
         private readonly ITaskObserverExecutor observerExecutor;
-
-        private readonly INotificationService notificationService;
-
-        private readonly IDeviceManager deviceManager;
         
         #endregion
         
@@ -45,9 +41,7 @@ namespace DeliveryTracker.Tasks
             IUserCredentialsAccessor accessor,
             IReferenceFacade referenceFacade,
             IUserManager userManager,
-            ITaskObserverExecutor observerExecutor,
-            INotificationService notificationService,
-            IDeviceManager deviceManager)
+            ITaskObserverExecutor observerExecutor)
         {
             this.cp = cp;
             this.taskManager = taskManager;
@@ -56,8 +50,6 @@ namespace DeliveryTracker.Tasks
             this.referenceFacade = referenceFacade;
             this.userManager = userManager;
             this.observerExecutor = observerExecutor;
-            this.notificationService = notificationService;
-            this.deviceManager = deviceManager;
         }
         
         #endregion

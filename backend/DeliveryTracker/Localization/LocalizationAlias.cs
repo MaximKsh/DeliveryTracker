@@ -109,8 +109,17 @@
             public const string PaymentTypesView = Pref + "PaymentTypesView";
             public const string PerformersView = Pref + "PerformersView";
             public const string ProductsView = Pref + "ProductsView";
-            public const string TasksManagersView = Pref + "TasksManagersView";
-            public const string TasksPerformerView = Pref + "TasksPerformerView";
+            public const string ActualTasksPerformerView = Pref + "ActualTasksPerformerView";
+            public const string ActualTasksManagerView = Pref + "ActualTasksManagerView";
+            public const string CompletedTasksManagerView = Pref + "CompletedTasksManagerView";
+            public const string MyTasksManagerView = Pref + "MyTasksManagerView";
+            public const string PreparingTasksManagerView = Pref + "PreparingTasksManagerView";
+            public const string QueueTasksManagerView = Pref + "QueueTasksManagerView"; 
+            public const string RevokedTasksManagerView = Pref + "RevokedTasksManagerView";
+            public const string QueueTasksPerformerView = Pref + "QueueTasksPerformerView";
+            public const string DeliveredTasksPerformerView = Pref + "DeliveredTasksPerformerView";
+            public const string CompletedTasksPerformerView = Pref + "CompletedTasksPerformerView";
+            public const string RevokedTasksPerformerView = Pref + "RevokedTasksPerformerView";
             public const string WarehousesView = Pref + "WarehousesView";
         }
         

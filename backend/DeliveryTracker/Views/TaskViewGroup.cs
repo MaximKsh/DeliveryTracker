@@ -14,11 +14,22 @@ namespace DeliveryTracker.Views
             IUserCredentialsAccessor accessor) : base(cp, accessor)
         {
             var dict = new Dictionary<string, IView>();
+
+            var managerOrder = 0;
+            this.AddView(new ActualTasksManagerView(managerOrder++), dict);
+            this.AddView(new MyTasksManagerView(managerOrder++), dict);
+            this.AddView(new PreparingTasksManagerView(managerOrder++), dict);
+            this.AddView(new QueueTasksManagerView(managerOrder++), dict);
+            this.AddView(new CompleteTasksManager(managerOrder++), dict);
+            this.AddView(new RevokedTasksManagerView(managerOrder), dict);
+
+            var performerOrder = 100;
+            this.AddView(new ActualTasksPerformerView(performerOrder++), dict);
+            this.AddView(new QueueTasksPerformerView(performerOrder++), dict);
+            this.AddView(new DeliveredTasksPerformerView(performerOrder++), dict);
+            this.AddView(new CompletedTasksPerformerView(performerOrder++), dict);
+            this.AddView(new RevokedTasksPerformerView(performerOrder), dict);
             
-            var tasksManagerView = new TasksManagerView(0);
-            dict[tasksManagerView.Name] = tasksManagerView;
-            var tasksPerformersView = new TasksPerformerView(100);
-            dict[tasksPerformersView.Name] = tasksPerformersView;
             this.Views = new ReadOnlyDictionary<string, IView>(dict);
         }
         
@@ -29,5 +40,6 @@ namespace DeliveryTracker.Views
         public override string Name { get; } = nameof(TaskViewGroup);
 
         #endregion
+        
     }
 }
