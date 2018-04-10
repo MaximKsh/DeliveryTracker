@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace DeliveryTracker.Tasks.TransitionObservers
 {
@@ -9,15 +10,19 @@ namespace DeliveryTracker.Tasks.TransitionObservers
         #region fields
 
         private readonly IServiceProvider provider;
+
+        private readonly Logger<TaskObserverExecutor> logger;
         
         #endregion
         
         #region constuctor
 
         public TaskObserverExecutor(
-            IServiceProvider provider)
+            IServiceProvider provider,
+            Logger<TaskObserverExecutor> logger)
         {
             this.provider = provider;
+            this.logger = logger;
         }
         
         #endregion
@@ -31,7 +36,14 @@ namespace DeliveryTracker.Tasks.TransitionObservers
 
             foreach (var observer in observers)
             { 
-                await observer.HandleNewTask(ctx);
+                try
+                {
+                    await observer.HandleNewTask(ctx);
+                }
+                catch (Exception e)
+                {
+                    this.logger.LogError(e, e.Message);
+                }
             }
         }
         
@@ -41,8 +53,15 @@ namespace DeliveryTracker.Tasks.TransitionObservers
             var observers = this.provider.GetServices<ITaskObserver>();
 
             foreach (var observer in observers)
-            { 
-                await observer.HandleEditTask(ctx);
+            {
+                try
+                {
+                    await observer.HandleEditTask(ctx);
+                }
+                catch (Exception e)
+                {
+                    this.logger.LogError(e, e.Message);
+                }
             }
         }
         
@@ -53,7 +72,14 @@ namespace DeliveryTracker.Tasks.TransitionObservers
 
             foreach (var observer in observers)
             { 
-                await observer.HandleTransition(ctx);
+                try
+                {
+                    await observer.HandleTransition(ctx);
+                }
+                catch (Exception e)
+                {
+                    this.logger.LogError(e, e.Message);
+                }
             }
         }
         
