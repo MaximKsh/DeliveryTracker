@@ -51,7 +51,7 @@ insert into task_products(id, instance_id, task_id, {TaskHelper.GetTaskProductsC
             @quantities
         ) with ordinality t(id, pid, q)
 on conflict (task_id, product_id) do update 
-set quantity = task_products.quantity + EXCLUDED.quantity
+set quantity = EXCLUDED.quantity
 returning id, quantity
 ;";
 
