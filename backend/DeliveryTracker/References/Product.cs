@@ -1,6 +1,6 @@
 ﻿namespace DeliveryTracker.References
 {
-    public class Product : ReferenceEntityBase
+    public sealed class Product : ReferenceEntryBase
     {
         /// <summary>
         /// Артикул.

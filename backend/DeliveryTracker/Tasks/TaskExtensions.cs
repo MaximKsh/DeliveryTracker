@@ -111,6 +111,7 @@ namespace DeliveryTracker.Tasks
         {
             return new TaskProduct
             {
+                TaskId = reader.GetGuid(idx++),
                 ProductId = reader.GetGuid(idx++),
                 Quantity = reader.GetInt32(idx++),
             };

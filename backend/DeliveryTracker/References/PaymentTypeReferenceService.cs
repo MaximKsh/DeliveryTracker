@@ -9,7 +9,7 @@ using Npgsql;
 
 namespace DeliveryTracker.References
 {
-    public class PaymentTypeReferenceService : ReferenceServiceBase<PaymentType>
+    public sealed class PaymentTypeReferenceService : EntryReferenceServiceBase<PaymentType>
     {
         #region sql
         
@@ -18,12 +18,12 @@ insert into payment_types (" + ReferenceHelper.GetPaymentTypeColumns() + @")
 values (" + ReferenceHelper.GetPaymentTypeColumns("@") + @")
 returning " + ReferenceHelper.GetPaymentTypeColumns() + ";";
 
-        private static readonly string SqlUpdate = @"
+        private static readonly string SqlUpdate = $@"
 update payment_types
 set
-{0}
+{{0}}
 where id = @id and instance_id = @instance_id and deleted = false
-returning " + ReferenceHelper.GetPaymentTypeColumns() + ";";
+returning {ReferenceHelper.GetPaymentTypeColumns()};";
 
         
         private static readonly string SqlGetWithDeleted = @"
@@ -66,8 +66,6 @@ where id = @id and instance_id = @instance_id and deleted = false
         #endregion
 
         #region public
-
-        public override string Name { get; } = nameof(PaymentType);
 
         public override ReferenceDescription ReferenceDescription { get; } = new ReferenceDescription
         {

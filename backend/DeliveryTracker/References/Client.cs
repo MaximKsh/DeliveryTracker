@@ -2,7 +2,7 @@
 
 namespace DeliveryTracker.References
 {
-    public class Client : ReferenceEntityBase
+    public sealed class Client : ReferenceEntryBase
     {
         /// <summary>
         /// Фамилия.
@@ -43,9 +43,9 @@ namespace DeliveryTracker.References
         /// <summary>
         /// Список адресов.
         /// </summary>
-        public IList<Address> Addresses 
+        public IList<ClientAddress> Addresses 
         {
-            get => this.GetList<Address>(nameof(this.Addresses));
+            get => this.GetList<ClientAddress>(nameof(this.Addresses));
             set => this.Set(nameof(this.Addresses), value);
         }
     }

@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
-using DeliveryTracker.Notifications;
 using DeliveryTracker.References;
 using DeliveryTracker.Tasks.TransitionObservers;
 using DeliveryTracker.Validation;
@@ -59,7 +58,7 @@ namespace DeliveryTracker.Tasks
 
         /// <inheritdoc />
         public async Task<ServiceResult<TaskInfo>> CreateAsync(
-            TaskInfo taskInfo,
+            TaskPackage taskPackage,
             NpgsqlConnectionWrapper oc = null)
         {
             
@@ -69,6 +68,14 @@ namespace DeliveryTracker.Tasks
             {
                 return new ServiceResult<TaskInfo>(ErrorFactory.AccessDenied());
             }
+
+            if (taskPackage.TaskInfo?.Count > 0 != true)
+            {
+                return new ServiceResult<TaskInfo>(ErrorFactory.TaskCreationError());
+            }
+
+            var taskInfo = taskPackage.TaskInfo[0];
+            var taskProducts = taskPackage.TaskProducts;
             
             taskInfo.Id = Guid.NewGuid();
             taskInfo.AuthorId = credentials.Id;
@@ -85,11 +92,13 @@ namespace DeliveryTracker.Tasks
                         transaction.Rollback();
                         return createResult;
                     }
+
+                    var task = createResult.Result;
                     
                     var editProductsResult = await this.taskManager.EditProductsAsync(
                         taskInfo.Id,
                         taskInfo.InstanceId,
-                        taskInfo.TaskProducts,
+                        taskProducts,
                         connWrapper);
                     if (!editProductsResult.Success)
                     {
@@ -97,14 +106,15 @@ namespace DeliveryTracker.Tasks
                         return new ServiceResult<TaskInfo>(editProductsResult.Errors);
                     }
 
-                    var task = createResult.Result;
-                    var fillProductsResult = await this.taskManager.FillProductsAsync(task, connWrapper);
-                    if (!fillProductsResult.Success)
+                    var transitionsResult = await this.stateTransitionManager.GetTransitions(
+                        credentials.Role, task.TaskStateId, connWrapper);
+                    if (!transitionsResult.Success)
                     {
-                        transaction.Rollback();
-                        return new ServiceResult<TaskInfo>(fillProductsResult.Errors);
+                        return new ServiceResult<TaskInfo>(transitionsResult.Errors);
                     }
 
+                    task.TaskStateTransitions = transitionsResult.Result;
+                    
                     var creds = this.accessor.GetUserCredentials();
                     var ctx = new TaskObserverContext(null, taskInfo, creds, null, connWrapper);
                     await this.observerExecutor.ExecuteNew(ctx);
@@ -122,9 +132,18 @@ namespace DeliveryTracker.Tasks
 
         /// <inheritdoc />
         public async Task<ServiceResult<TaskInfo>> EditTaskAsync(
-            TaskInfo taskInfo,
+            TaskPackage taskPackage,
             NpgsqlConnectionWrapper oc = null)
         {
+            if (taskPackage.TaskInfo?.Count > 0 != true)
+            {
+                return new ServiceResult<TaskInfo>(ErrorFactory.TaskCreationError());
+            }
+
+            var creds = this.accessor.GetUserCredentials();
+            var taskInfo = taskPackage.TaskInfo[0];
+            var taskProducts = taskPackage.TaskProducts;
+            
             if (taskInfo.TaskStateId != default)
             {
                 return new ServiceResult<TaskInfo>(
@@ -142,10 +161,12 @@ namespace DeliveryTracker.Tasks
                         return editResult;
                     }
 
+                    var task = editResult.Result;
+
                     var editProductsResult = await this.taskManager.EditProductsAsync(
                         taskInfo.Id,
-                        taskInfo.InstanceId,
-                        taskInfo.TaskProducts,
+                        creds.InstanceId,
+                        taskProducts,
                         connWrapper);
                     if (!editProductsResult.Success)
                     {
@@ -153,17 +174,16 @@ namespace DeliveryTracker.Tasks
                         return new ServiceResult<TaskInfo>(editProductsResult.Errors);
                     }
 
-                    var newTask = editResult.Result;
-                    var fillProductsResult = await this.taskManager.FillProductsAsync(
-                        newTask, connWrapper);
-                    if (!fillProductsResult.Success)
+                    var transitionsResult = await this.stateTransitionManager.GetTransitions(
+                        creds.Role, task.TaskStateId, connWrapper);
+                    if (!transitionsResult.Success)
                     {
-                        transact.Rollback();
-                        return new ServiceResult<TaskInfo>(fillProductsResult.Errors);
+                        return new ServiceResult<TaskInfo>(transitionsResult.Errors);
                     }
 
-                    var creds = this.accessor.GetUserCredentials();
-                    var ctx = new TaskObserverContext(taskInfo, newTask, creds, null, connWrapper);
+                    task.TaskStateTransitions = transitionsResult.Result;
+
+                    var ctx = new TaskObserverContext(taskInfo, task, creds, null, connWrapper);
                     await this.observerExecutor.ExecuteEdit(ctx);
                     if (ctx.Cancel)
                     {
@@ -173,7 +193,7 @@ namespace DeliveryTracker.Tasks
                     
                     transact.Commit();
                 
-                    return new ServiceResult<TaskInfo>(newTask);   
+                    return new ServiceResult<TaskInfo>(task);   
                 }
             }
                    
@@ -240,12 +260,6 @@ namespace DeliveryTracker.Tasks
                 }
 
                 var task = result.Result;
-                var fillProductsResult = await this.taskManager.FillProductsAsync(
-                    task, cw);
-                if (!fillProductsResult.Success)
-                {
-                    return new ServiceResult<TaskInfo>(fillProductsResult.Errors);
-                }
                 
                 var transitionsResult = await this.stateTransitionManager.GetTransitions(
                     credentials.Role, task.TaskStateId, cw);
@@ -254,7 +268,7 @@ namespace DeliveryTracker.Tasks
                     return new ServiceResult<TaskInfo>(transitionsResult.Errors);
                 }
 
-                task.TaskStateTransitions =  transitionsResult.Result;
+                task.TaskStateTransitions = transitionsResult.Result;
                 
                 return new ServiceResult<TaskInfo>(task);    
             }
@@ -268,13 +282,21 @@ namespace DeliveryTracker.Tasks
             var taskPackage = new TaskPackage();
             using (var cw = oc?.Connect() ?? this.cp.Create().Connect())
             {
+                var taskProductsResult = await this.taskManager.GetProductsAsync(taskInfo.Id, credentials.InstanceId, cw);
+                if (!taskProductsResult.Success)
+                {
+                    return new ServiceResult<TaskPackage>(taskProductsResult.Errors);
+                }
+
+                taskPackage.TaskProducts = taskProductsResult.Result;
+                
                 taskPackage.LinkedReferences = new Dictionary<string, DictionaryObject>(8);
-                if (taskInfo.TaskProducts?.Count > 0)
+                if (taskPackage.TaskProducts?.Count > 0)
                 {
                     var result = await this.AddToReferences(
                         taskPackage, 
                         nameof(Product), 
-                        taskInfo.TaskProducts.Select(p => p.ProductId).ToArray(), 
+                        taskPackage.TaskProducts.Select(p => p.ProductId).ToArray(), 
                         cw);
                     if (!result.Success)
                     {
@@ -289,7 +311,7 @@ namespace DeliveryTracker.Tasks
                     {
                         return new ServiceResult<TaskPackage>(result.Errors);
                     }
-                    taskPackage.LinkedReferences.Add(result.Result.Id.ToString(), result.Result);
+                    taskPackage.LinkedReferences.Add(result.Result.Entry.Id.ToString(), result.Result);
                 }
                 
                 if (taskInfo.PaymentTypeId.HasValue)
@@ -299,7 +321,7 @@ namespace DeliveryTracker.Tasks
                     {
                         return new ServiceResult<TaskPackage>(result.Errors);
                     }
-                    taskPackage.LinkedReferences.Add(result.Result.Id.ToString(), result.Result);
+                    taskPackage.LinkedReferences.Add(result.Result.Entry.Id.ToString(), result.Result);
                 }
                 
                 if (taskInfo.ClientId.HasValue)
@@ -309,7 +331,7 @@ namespace DeliveryTracker.Tasks
                     {
                         return new ServiceResult<TaskPackage>(result.Errors);
                     }
-                    taskPackage.LinkedReferences.Add(result.Result.Id.ToString(), result.Result);
+                    taskPackage.LinkedReferences.Add(result.Result.Entry.Id.ToString(), result.Result);
                 }
 
                 var userIds = new List<Guid> { taskInfo.AuthorId };
@@ -348,13 +370,7 @@ namespace DeliveryTracker.Tasks
             var initialStates = new HashSet<Guid>(taskInfos.Count);
             foreach (var taskInfo in taskInfos)
             {
-                if (taskInfo.TaskProducts != null)
-                {
-                    foreach (var item in taskInfo.TaskProducts.Select(p => p.ProductId))
-                    {
-                        productIds.Add(item);   
-                    }
-                }
+                
                 if (taskInfo.WarehouseId.HasValue)
                 {
                     warehousesIds.Add(taskInfo.WarehouseId.Value);   
@@ -378,6 +394,23 @@ namespace DeliveryTracker.Tasks
 
             using (var cw = oc?.Connect() ?? this.cp.Create().Connect())
             {
+                var taskProductsResult = await this.taskManager.GetProductsAsync(
+                    taskInfos.Select(p => p.Id), credentials.InstanceId, cw);
+                if (!taskProductsResult.Success)
+                {
+                    return new ServiceResult<TaskPackage>(taskProductsResult.Errors);
+                }
+
+                taskPackage.TaskProducts = taskProductsResult.Result;
+                if (taskPackage.TaskProducts.Count > 0)
+                {
+                    foreach (var item in taskPackage.TaskProducts.Select(p => p.ProductId))
+                    {
+                        productIds.Add(item);   
+                    }
+                }
+                
+                
                 taskPackage.LinkedReferences = new Dictionary<string, DictionaryObject>(
                     productIds.Count + warehousesIds.Count + paymentTypeIds.Count + clientsIds.Count);
                 var result = await this.AddToReferences(taskPackage, nameof(Product), productIds, cw);
@@ -418,7 +451,7 @@ namespace DeliveryTracker.Tasks
         
         #region private
 
-        private async Task<ServiceResult<IList<ReferenceEntityBase>>> AddToReferences(
+        private async Task<ServiceResult> AddToReferences(
             TaskPackage taskPackage,
             string type,
             ICollection<Guid> ids,
@@ -426,7 +459,7 @@ namespace DeliveryTracker.Tasks
         {
             if (ids.Count == 0)
             {
-                return new ServiceResult<IList<ReferenceEntityBase>>();
+                return ServiceResult.Successful;
             }
             var result = await this.referenceFacade.GetAsync(type, ids, true, cw);
             if (!result.Success)
@@ -435,10 +468,10 @@ namespace DeliveryTracker.Tasks
             }
             foreach (var item in result.Result)
             {
-                taskPackage.LinkedReferences.Add(item.Id.ToString(), item);
+                taskPackage.LinkedReferences.Add(item.Entry.Id.ToString(), item);
             }
 
-            return new ServiceResult<IList<ReferenceEntityBase>>();
+            return ServiceResult.Successful;
         }
         
         #endregion

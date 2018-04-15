@@ -35,13 +35,13 @@ namespace DeliveryTracker.Tests.References
                 "Ivanov",
                 "Ivan",
                 "Ivanovich",
-                new List<Address>
+                new List<ClientAddress>
                 {
-                    new Address
+                    new ClientAddress
                     {
                         RawAddress = "Abcd"
                     },
-                    new Address
+                    new ClientAddress
                     {
                         RawAddress = "asdfasfasd"
                     }
@@ -59,7 +59,7 @@ namespace DeliveryTracker.Tests.References
                 string.Empty,
                 string.Empty,
                 string.Empty,
-                new List<Address>()
+                new List<ClientAddress>()
             };
             yield return new object[]
             {
@@ -72,7 +72,7 @@ namespace DeliveryTracker.Tests.References
         
         [Theory]
         [MemberData(nameof(GetClientParameters))]
-        public async void CreateClient(string surname, string name, string patronymic, List<Address> addresses)
+        public async void CreateClient(string surname, string name, string patronymic, List<ClientAddress> addresses)
         {
             // Arrange
             var client = new Client
@@ -91,8 +91,8 @@ namespace DeliveryTracker.Tests.References
             Assert.Equal(surname, createResult.Result.Surname);
             Assert.Equal(name, createResult.Result.Name);
             Assert.Equal(patronymic, createResult.Result.Patronymic);
-            var addressesExpectedFuncArray = (addresses ?? (new List<Address>()))
-                .Select(p => (Action<Address>) (a => Assert.Equal(a.RawAddress, p.RawAddress)))
+            var addressesExpectedFuncArray = (addresses ?? (new List<ClientAddress>()))
+                .Select(p => (Action<ClientAddress>) (a => Assert.Equal(a.RawAddress, p.RawAddress)))
                 .ToArray();
             Assert.Collection(
                 createResult.Result.Addresses, 
@@ -108,21 +108,21 @@ namespace DeliveryTracker.Tests.References
                 Surname = "Ivanov",
                 Name = "Ivan",
                 Patronymic = "Ivanovich",
-                Addresses = new List<Address>
+                Addresses = new List<ClientAddress>
                 {
-                    new Address
+                    new ClientAddress
                     {
                         RawAddress = "Zero"
                     },
-                    new Address
+                    new ClientAddress
                     {
                         RawAddress = "First"
                     },
-                    new Address
+                    new ClientAddress
                     {
                         RawAddress = "Second"
                     },
-                    new Address
+                    new ClientAddress
                     {
                         RawAddress = "Third"
                     },
@@ -135,28 +135,28 @@ namespace DeliveryTracker.Tests.References
                 Id = client.Id,
                 Surname = "Petrov",
                 Name = "",
-                Addresses = new List<Address>
+                Addresses = new List<ClientAddress>
                 {
-                    new Address
+                    new ClientAddress
                     {
-                        Action = CollectionEntityAction.Delete,
+                        Action = ReferenceAction.Delete,
                         Id = client.Addresses.First(p => p.RawAddress == "First").Id,
                     },
-                    new Address
+                    new ClientAddress
                     {
-                        Action = CollectionEntityAction.Edit,
+                        Action = ReferenceAction.Edit,
                         Id = client.Addresses.First(p => p.RawAddress == "Second").Id,
                         RawAddress = "Second New"
                     },
-                    new Address
+                    new ClientAddress
                     {
-                        Action = CollectionEntityAction.Edit,
+                        Action = ReferenceAction.Edit,
                         Id = client.Addresses.First(p => p.RawAddress == "Third").Id,
                         RawAddress = "Third New"
                     },
-                    new Address
+                    new ClientAddress
                     {
-                        Action = CollectionEntityAction.Create,
+                        Action = ReferenceAction.Create,
                         RawAddress = "New"
                     },
                 }
@@ -216,7 +216,7 @@ namespace DeliveryTracker.Tests.References
         
         [Theory]
         [MemberData(nameof(GetClientParameters))]
-        public async void GetClient(string surname, string name, string patronymic, List<Address> addresses)
+        public async void GetClient(string surname, string name, string patronymic, List<ClientAddress> addresses)
         {
             // Arrange
             var client = new Client
@@ -236,8 +236,8 @@ namespace DeliveryTracker.Tests.References
             Assert.Equal(surname, getResult.Result.Surname);
             Assert.Equal(name, getResult.Result.Name);
             Assert.Equal(patronymic, getResult.Result.Patronymic);
-            var addressesExpectedFuncArray = (addresses ?? (new List<Address>()))
-                .Select(p => (Action<Address>) (a => Assert.Equal(a.RawAddress, p.RawAddress)))
+            var addressesExpectedFuncArray = (addresses ?? (new List<ClientAddress>()))
+                .Select(p => (Action<ClientAddress>) (a => Assert.Equal(a.RawAddress, p.RawAddress)))
                 .ToArray();
             Assert.Collection(
                 getResult.Result.Addresses, 
@@ -256,7 +256,7 @@ namespace DeliveryTracker.Tests.References
                     Surname = data[0] as string,
                     Name = data[1] as string,
                     Patronymic = data[2] as string,
-                    Addresses = data[3] as List<Address>
+                    Addresses = data[3] as List<ClientAddress>
                 };
                 var createResult = await this.clientService.CreateAsync(client);
                 ids.Add(createResult.Result.Id);
@@ -276,7 +276,7 @@ namespace DeliveryTracker.Tests.References
         
         [Theory]
         [MemberData(nameof(GetClientParameters))]
-        public async void DeleteClient(string surname, string name, string patronymic, List<Address> addresses)
+        public async void DeleteClient(string surname, string name, string patronymic, List<ClientAddress> addresses)
         {
             // Arrange
             var client = new Client

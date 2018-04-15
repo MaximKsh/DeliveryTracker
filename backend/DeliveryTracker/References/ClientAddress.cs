@@ -3,7 +3,7 @@ using DeliveryTracker.Geopositioning;
 
 namespace DeliveryTracker.References
 {
-    public class Address : ReferenceCollectionBase
+    public sealed class ClientAddress : ReferenceCollectionBase
     {
         /// <summary>
         /// Неформатированный адрес.

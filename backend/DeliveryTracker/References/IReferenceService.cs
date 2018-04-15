@@ -24,7 +24,7 @@ namespace DeliveryTracker.References
         /// <param name="newData"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<ReferenceEntityBase>> CreateAsync(
+        Task<ServiceResult<ReferenceEntryBase>> CreateAsync(
             IDictionary<string, object> newData,
             NpgsqlConnectionWrapper oc = null);
 
@@ -35,7 +35,7 @@ namespace DeliveryTracker.References
         /// <param name="withDeleted"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<ReferenceEntityBase>> GetAsync(
+        Task<ServiceResult<ReferenceEntryBase>> GetAsync(
             Guid id, 
             bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null);
@@ -47,7 +47,7 @@ namespace DeliveryTracker.References
         /// <param name="withDeleted"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<IList<ReferenceEntityBase>>> GetAsync(
+        Task<ServiceResult<IList<ReferenceEntryBase>>> GetAsync(
             ICollection<Guid> ids, 
             bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null);
@@ -58,7 +58,7 @@ namespace DeliveryTracker.References
         /// <param name="newData"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<ReferenceEntityBase>> EditAsync(
+        Task<ServiceResult<ReferenceEntryBase>> EditAsync(
             IDictionary<string, object> newData, 
             NpgsqlConnectionWrapper oc = null);
 
@@ -70,6 +70,26 @@ namespace DeliveryTracker.References
         /// <returns></returns>
         Task<ServiceResult> DeleteAsync(
             Guid id, 
+            NpgsqlConnectionWrapper oc = null);
+
+        /// <summary>
+        /// Запаковать запись из справочника.
+        /// </summary>
+        /// <param name="entry"></param>
+        /// <param name="oc"></param>
+        /// <returns></returns>
+        Task<ServiceResult<ReferencePackage>> PackAsync(
+            ReferenceEntryBase entry,
+            NpgsqlConnectionWrapper oc = null);
+        
+        /// <summary>
+        /// Запаковать несколько запись из справочника.
+        /// </summary>
+        /// <param name="entries"></param>
+        /// <param name="oc"></param>
+        /// <returns></returns>
+        Task<ServiceResult<IList<ReferencePackage>>> PackAsync(
+            ICollection<ReferenceEntryBase> entries,
             NpgsqlConnectionWrapper oc = null);
     }
 }

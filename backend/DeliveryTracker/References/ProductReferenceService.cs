@@ -9,7 +9,7 @@ using Npgsql;
 
 namespace DeliveryTracker.References
 {
-    public class ProductReferenceService : ReferenceServiceBase<Product>
+    public sealed class ProductReferenceService : EntryReferenceServiceBase<Product>
     {
         #region sql
         
@@ -71,8 +71,6 @@ where id = @id and instance_id = @instance_id and deleted = false
         #endregion
 
         #region public
-
-        public override string Name { get; } = nameof(Product);
 
         public override ReferenceDescription ReferenceDescription { get; } = new ReferenceDescription
         {

@@ -6,6 +6,15 @@ namespace DeliveryTracker.Tasks
     public sealed class TaskProduct : DictionaryObject, IEquatable<TaskProduct>
     {
         /// <summary>
+        /// Идентификатор задания.
+        /// </summary>
+        public Guid TaskId 
+        {
+            get => this.Get<Guid>(nameof(this.TaskId));
+            set => this.Set(nameof(this.TaskId), value);
+        }
+        
+        /// <summary>
         /// Идентификатор товара.
         /// </summary>
         public Guid ProductId

@@ -11,18 +11,16 @@ namespace DeliveryTracker.Tasks.TransitionObservers
 
         private readonly IServiceProvider provider;
 
-        private readonly Logger<TaskObserverExecutor> logger;
+        //private readonly Logger<TaskObserverExecutor> logger;
         
         #endregion
         
         #region constuctor
 
         public TaskObserverExecutor(
-            IServiceProvider provider,
-            Logger<TaskObserverExecutor> logger)
+            IServiceProvider provider)
         {
             this.provider = provider;
-            this.logger = logger;
         }
         
         #endregion
@@ -42,7 +40,7 @@ namespace DeliveryTracker.Tasks.TransitionObservers
                 }
                 catch (Exception e)
                 {
-                    this.logger.LogError(e, e.Message);
+                    //this.logger.LogError(e, e.Message);
                 }
             }
         }
@@ -60,7 +58,7 @@ namespace DeliveryTracker.Tasks.TransitionObservers
                 }
                 catch (Exception e)
                 {
-                    this.logger.LogError(e, e.Message);
+                    //this.logger.LogError(e, e.Message);
                 }
             }
         }
@@ -78,7 +76,7 @@ namespace DeliveryTracker.Tasks.TransitionObservers
                 }
                 catch (Exception e)
                 {
-                    this.logger.LogError(e, e.Message);
+                    //this.logger.LogError(e, e.Message);
                 }
             }
         }

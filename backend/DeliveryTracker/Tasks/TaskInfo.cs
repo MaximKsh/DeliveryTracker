@@ -203,18 +203,9 @@ namespace DeliveryTracker.Tasks
             get => this.Get<decimal?>(nameof(this.DeliveryCost));
             set => this.Set(nameof(this.DeliveryCost), value);
         }
-
-        /// <summary>
-        /// Список товаров и количество.
-        /// </summary>
-        public IList<TaskProduct> TaskProducts
-        {
-            get => this.GetList<TaskProduct>(nameof(this.TaskProducts));
-            set => this.Set(nameof(this.TaskProducts), value);
-        }
         
         /// <summary>
-        /// Список переходов по заданиям.
+        /// Список переходов по заданию.
         /// </summary>
         public IList<TaskStateTransition> TaskStateTransitions
         {

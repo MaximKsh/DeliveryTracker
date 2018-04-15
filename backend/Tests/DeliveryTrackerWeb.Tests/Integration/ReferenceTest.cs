@@ -26,13 +26,13 @@ namespace DeliveryTrackerWeb.Tests.Integration
                         Name = "Ivan",
                         Patronymic = "Alexeevich",
                         PhoneNumber = "12313",
-                        Addresses = new List<Address>
+                        Addresses = new List<ClientAddress>
                         {
-                            new Address
+                            new ClientAddress
                             {
                                 RawAddress = "First"
                             },
-                            new Address
+                            new ClientAddress
                             {
                                 RawAddress = "Second"
                             }
@@ -60,23 +60,23 @@ namespace DeliveryTrackerWeb.Tests.Integration
                     {
                         Id = resultClient.Id,
                         Surname = "Ivanov",
-                        Addresses = new List<Address>
+                        Addresses = new List<ClientAddress>
                         {
-                            new Address
+                            new ClientAddress
                             {
                                 Id = resultClient.Addresses.First(a => a.RawAddress == "First").Id,
-                                Action = CollectionEntityAction.Delete,
+                                Action = ReferenceAction.Delete,
                                 RawAddress = "First"
                             },
-                            new Address
+                            new ClientAddress
                             {
-                                Action = CollectionEntityAction.Edit,
+                                Action = ReferenceAction.Edit,
                                 Id = resultClient.Addresses.First(a => a.RawAddress == "Second").Id,
                                 RawAddress = "Second Edit"
                             },
-                            new Address
+                            new ClientAddress
                             {
-                                Action = CollectionEntityAction.Create,
+                                Action = ReferenceAction.Create,
                                 RawAddress = "Third"
                             },
                         }

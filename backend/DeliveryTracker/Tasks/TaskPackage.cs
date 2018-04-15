@@ -24,6 +24,10 @@ namespace DeliveryTracker.Tasks
             set => this.Set(nameof(this.LinkedUsers), value);
         }
 
-        
+        public IList<TaskProduct> TaskProducts
+        {
+            get => this.GetList<TaskProduct>(nameof(this.TaskProducts));
+            set => this.Set(nameof(this.TaskProducts), value);
+        }
     }
 }

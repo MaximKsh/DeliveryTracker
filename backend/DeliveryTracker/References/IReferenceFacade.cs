@@ -13,7 +13,7 @@ namespace DeliveryTracker.References
         /// Получить список доступных справочников.
         /// </summary>
         /// <returns></returns>
-        IDictionary<string, ReferenceDescription> GetReferencesList();
+        IReadOnlyDictionary<string, ReferenceDescription> GetReferencesList();
         
         /// <summary>
         /// Создать новую запись в справочнике
@@ -22,7 +22,7 @@ namespace DeliveryTracker.References
         /// <param name="value">Создаваемый объект</param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<ReferenceEntityBase>> CreateAsync(
+        Task<ServiceResult<ReferencePackage>> CreateAsync(
             string type,
             IDictionary<string, object> value,
             NpgsqlConnectionWrapper oc = null);
@@ -35,7 +35,7 @@ namespace DeliveryTracker.References
         /// <param name="withDeleted"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<ReferenceEntityBase>> GetAsync(
+        Task<ServiceResult<ReferencePackage>> GetAsync(
             string type,
             Guid id, 
             bool withDeleted = false,
@@ -49,7 +49,7 @@ namespace DeliveryTracker.References
         /// <param name="withDeleted"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<IList<ReferenceEntityBase>>> GetAsync(
+        Task<ServiceResult<IList<ReferencePackage>>> GetAsync(
             string type,
             ICollection<Guid> ids,
             bool withDeleted = false,
@@ -62,7 +62,7 @@ namespace DeliveryTracker.References
         /// <param name="newData"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<ReferenceEntityBase>> EditAsync(
+        Task<ServiceResult<ReferencePackage>> EditAsync(
             string type, 
             IDictionary<string, object> newData, 
             NpgsqlConnectionWrapper oc = null);

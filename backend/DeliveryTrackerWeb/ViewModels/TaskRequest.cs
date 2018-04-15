@@ -9,6 +9,6 @@ namespace DeliveryTrackerWeb.ViewModels
         
         public Guid TransitionId { get; set; }
         
-        public TaskInfo TaskInfo { get; set; }
+        public TaskPackage TaskPackage { get; set; }
     }
 }

@@ -17,6 +17,8 @@ namespace DeliveryTracker.References
                 .AddSingleton<IReferenceService, ProductReferenceService>()
                 .AddSingleton<IReferenceService, ClientReferenceService>()
                 .AddSingleton<IReferenceService, WarehouseReferenceService>()
+                
+                .AddSingleton<ICollectionReferenceService, ClientAddressReferenceService>()
                 ;
 
         }
@@ -27,7 +29,7 @@ namespace DeliveryTracker.References
         
         public static void SetReferenceBaseFields(
             this IDataReader reader,
-            ReferenceEntityBase reference, 
+            ReferenceEntryBase reference, 
             ref int idx)
         {
             reference.Id = reader.GetGuid(idx++);
@@ -60,15 +62,15 @@ namespace DeliveryTracker.References
             return client;
         }
         
-        public static Address GetAddress(this IDataReader reader)
+        public static ClientAddress GetAddress(this IDataReader reader)
         {
             var idx = 0;
             return reader.GetAddress(ref idx);
         }
         
-        public static Address GetAddress(this IDataReader reader, ref int idx)
+        public static ClientAddress GetAddress(this IDataReader reader, ref int idx)
         {
-            var address = new Address();
+            var address = new ClientAddress();
             reader.SetReferenceBaseFields(address, ref idx);
             reader.SetCollectionReferenceBaseFields(address, ref idx);
             address.RawAddress = reader.GetValueOrDefault<string>(idx++);
