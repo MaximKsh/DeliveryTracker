@@ -297,6 +297,22 @@ namespace DeliveryTracker.References
         }
 
         /// <inheritdoc />
+        public async Task<ServiceResult<ReferencePackage>> PackAsync(
+            T entry,
+            NpgsqlConnectionWrapper oc = null)
+        {
+            return await this.PackAsync((ReferenceEntryBase)entry, oc);
+        }
+
+        /// <inheritdoc />
+        public async Task<ServiceResult<IList<ReferencePackage>>> PackAsync(
+            ICollection<T> entries,
+            NpgsqlConnectionWrapper oc = null)
+        {
+            return await this.PackAsync(entries.Cast<ReferenceEntryBase>().ToArray(), oc);
+        }
+
+        /// <inheritdoc />
         public async Task<ServiceResult<ReferenceEntryBase>> CreateAsync(
             IDictionary<string, object> newData,
             NpgsqlConnectionWrapper oc = null)

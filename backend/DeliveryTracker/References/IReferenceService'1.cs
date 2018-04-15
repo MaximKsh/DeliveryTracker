@@ -66,5 +66,25 @@ namespace DeliveryTracker.References
         new Task<ServiceResult> DeleteAsync(
             Guid id, 
             NpgsqlConnectionWrapper oc = null);
+        
+        /// <summary>
+        /// Запаковать запись из справочника.
+        /// </summary>
+        /// <param name="entry"></param>
+        /// <param name="oc"></param>
+        /// <returns></returns>
+        Task<ServiceResult<ReferencePackage>> PackAsync(
+            T entry,
+            NpgsqlConnectionWrapper oc = null);
+        
+        /// <summary>
+        /// Запаковать несколько записей из справочника.
+        /// </summary>
+        /// <param name="entries"></param>
+        /// <param name="oc"></param>
+        /// <returns></returns>
+        Task<ServiceResult<IList<ReferencePackage>>> PackAsync(
+            ICollection<T> entries,
+            NpgsqlConnectionWrapper oc = null);
     }
 }

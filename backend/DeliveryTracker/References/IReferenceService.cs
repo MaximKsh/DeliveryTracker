@@ -83,7 +83,7 @@ namespace DeliveryTracker.References
             NpgsqlConnectionWrapper oc = null);
         
         /// <summary>
-        /// Запаковать несколько запись из справочника.
+        /// Запаковать несколько записей из справочника.
         /// </summary>
         /// <param name="entries"></param>
         /// <param name="oc"></param>
