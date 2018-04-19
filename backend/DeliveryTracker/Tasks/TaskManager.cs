@@ -37,11 +37,11 @@ where ""id"" = @id and instance_id = @instance_id
 ";
 
         private static readonly string SqlEditTaskProducts = $@"
-insert into task_products(id, instance_id, task_id, {TaskHelper.GetTaskProductsColumns()})
+insert into task_products(id, instance_id, parent_id, {TaskHelper.GetTaskProductsColumns()})
     select
         t.id,
         @instance_id,
-        @task_id,
+        @parent_id,
         t.pid,
         t.q
     from
@@ -63,14 +63,14 @@ where id = ANY(@ids)
         private static readonly string SqlGetOneTaskProducts = $@"
 select {TaskHelper.GetTaskProductsColumns()}
 from task_products
-where task_id = @id and instance_id = @instance_id
+where parent_id = @id and instance_id = @instance_id
 ;";
         
 
         private static readonly string SqlGetTaskProducts = $@"
-select {TaskHelper.GetTaskProductsColumns()}, task_id
+select {TaskHelper.GetTaskProductsColumns()}, parent_id
 from task_products
-where task_id = ANY(@ids) and instance_id = @instance_id
+where parent_id = ANY(@ids) and instance_id = @instance_id
 ;";
         
         
@@ -221,7 +221,7 @@ where ""id"" = @id and instance_id = @instance_id
                     using (var command = connWrapper.CreateCommand())
                     {
                         command.CommandText = SqlEditTaskProducts;
-                        command.Parameters.Add(new NpgsqlParameter("task_id", id));
+                        command.Parameters.Add(new NpgsqlParameter("parent_id", id));
                         command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                         command.Parameters.Add(new NpgsqlParameter("ids", ids).WithArrayType(NpgsqlDbType.Uuid));
                         command.Parameters.Add(

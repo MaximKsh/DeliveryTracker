@@ -9,7 +9,8 @@ namespace DeliveryTracker.Views
     public sealed class CompleteTasksManager: TaskViewBase
     {
         public CompleteTasksManager(
-            int order) : base(order)
+            int order,
+            ITaskService taskService) : base(order, taskService)
         {
         }
 

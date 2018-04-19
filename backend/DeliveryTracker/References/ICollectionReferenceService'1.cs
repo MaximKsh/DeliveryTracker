@@ -40,15 +40,17 @@ namespace DeliveryTracker.References
         Task<ServiceResult> EditAsync(
             T newData,
             NpgsqlConnectionWrapper oc = null);
-        
+
         /// <summary>
         /// Удалить элемент из коллекции.
         /// </summary>
         /// <param name="id"></param>
+        /// <param name="parentId"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
         new Task<ServiceResult> DeleteAsync(
             Guid id, 
+            Guid parentId,
             NpgsqlConnectionWrapper oc = null);
         
     }

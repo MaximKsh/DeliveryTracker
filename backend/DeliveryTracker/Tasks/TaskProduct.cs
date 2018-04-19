@@ -1,19 +1,11 @@
 ﻿using System;
 using DeliveryTracker.Common;
+using DeliveryTracker.References;
 
 namespace DeliveryTracker.Tasks
 {
-    public sealed class TaskProduct : DictionaryObject, IEquatable<TaskProduct>
+    public sealed class TaskProduct : ReferenceCollectionBase, IEquatable<TaskProduct>
     {
-        /// <summary>
-        /// Идентификатор задания.
-        /// </summary>
-        public Guid TaskId 
-        {
-            get => this.Get<Guid>(nameof(this.TaskId));
-            set => this.Set(nameof(this.TaskId), value);
-        }
-        
         /// <summary>
         /// Идентификатор товара.
         /// </summary>

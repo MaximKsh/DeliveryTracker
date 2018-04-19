@@ -42,6 +42,7 @@ where instance_id = @instance_id
         #region fields
         
         protected readonly int Order;
+        protected readonly ITaskService TaskService;
 
         private readonly Lazy<string> sqlGetLazy;
         private readonly Lazy<string> sqlCountLazy;
@@ -51,9 +52,11 @@ where instance_id = @instance_id
         #region constuctor
         
         protected TaskViewBase(
-            int order)
+            int order,
+            ITaskService taskService)
         {
             this.Order = order;
+            this.TaskService = taskService;
             this.sqlGetLazy = new Lazy<string>(() => this.ExtendSqlGet(SqlGet), LazyThreadSafetyMode.PublicationOnly);
             this.sqlCountLazy = new Lazy<string>(() => this.ExtendSqlCount(SqlCount), LazyThreadSafetyMode.PublicationOnly);
         }
@@ -94,7 +97,7 @@ where instance_id = @instance_id
             UserCredentials userCredentials,
             IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
-            var list = new List<IDictionaryObject>();
+            var list = new List<TaskInfo>();
             using (var command = oc.CreateCommand())
             {
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
@@ -114,8 +117,10 @@ where instance_id = @instance_id
                     }
                 }
             }
+
+            var package = await this.TaskService.PackTasksAsync(list, oc);
             
-            return new ServiceResult<IList<IDictionaryObject>>(list);
+            return new ServiceResult<IList<IDictionaryObject>>(new List<IDictionaryObject> { package.Result });
         }
 
         /// <inheritdoc />

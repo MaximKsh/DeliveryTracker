@@ -25,7 +25,7 @@ namespace DeliveryTracker.Tests.References
                     .Setup(x => x.GetUserCredentials())
                     .Returns(new UserCredentials(me));
             }
-            this.clientService = new ClientReferenceService(this.Cp, accessor.Object);
+            this.clientService = new ClientReferenceService(this.Cp, accessor.Object, null);
         }
 
         public static IEnumerable<object[]> GetClientParameters()

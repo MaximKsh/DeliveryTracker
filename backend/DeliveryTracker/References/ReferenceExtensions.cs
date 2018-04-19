@@ -13,12 +13,17 @@ namespace DeliveryTracker.References
         {
             return services
                 .AddSingleton<IReferenceFacade, ReferenceFacade>()
-                .AddSingleton<IReferenceService, PaymentTypeReferenceService>()
-                .AddSingleton<IReferenceService, ProductReferenceService>()
-                .AddSingleton<IReferenceService, ClientReferenceService>()
-                .AddSingleton<IReferenceService, WarehouseReferenceService>()
+                .AddSingleton<IReferenceService<PaymentType>, PaymentTypeReferenceService>()
+                .AddSingleton<IReferenceService>(x => x.GetService<IReferenceService<PaymentType>>())
+                .AddSingleton<IReferenceService<Product>, ProductReferenceService>()
+                .AddSingleton<IReferenceService>(x => x.GetService<IReferenceService<Product>>())
+                .AddSingleton<IReferenceService<Client>, ClientReferenceService>()
+                .AddSingleton<IReferenceService>(x => x.GetService<IReferenceService<Client>>())
+                .AddSingleton<IReferenceService<Warehouse>, WarehouseReferenceService>()
+                .AddSingleton<IReferenceService>(x => x.GetService<IReferenceService<Warehouse>>())
                 
-                .AddSingleton<ICollectionReferenceService, ClientAddressReferenceService>()
+                .AddSingleton<ICollectionReferenceService<ClientAddress>, ClientAddressReferenceService>()
+                .AddSingleton<ICollectionReferenceService>(x => x.GetService<ICollectionReferenceService<ClientAddress>>())
                 ;
 
         }

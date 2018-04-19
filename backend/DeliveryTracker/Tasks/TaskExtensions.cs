@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using DeliveryTracker.Database;
+using DeliveryTracker.References;
 using DeliveryTracker.Tasks.TransitionObservers;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -109,9 +110,12 @@ namespace DeliveryTracker.Tasks
         
         public static TaskProduct GetTaskProduct(this IDataReader reader, ref int idx)
         {
+            var taskProduct = new TaskProduct();
+            reader.SetReferenceBaseFields(taskProduct, ref idx);
+            reader.SetCollectionReferenceBaseFields(taskProduct, ref idx);
+            
             return new TaskProduct
             {
-                TaskId = reader.GetGuid(idx++),
                 ProductId = reader.GetGuid(idx++),
                 Quantity = reader.GetInt32(idx++),
             };

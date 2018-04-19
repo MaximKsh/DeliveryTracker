@@ -211,6 +211,7 @@ namespace DeliveryTracker.References
         /// <inheritdoc />
         public async Task<ServiceResult> DeleteAsync(
             Guid id,
+            Guid parentId,
             NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.Accessor.GetUserCredentials();
@@ -228,6 +229,7 @@ namespace DeliveryTracker.References
                     {
                         command.Parameters.Add(new NpgsqlParameter("id", id));
                         command.Parameters.Add(new NpgsqlParameter("instance_id", credentials.InstanceId));
+                        command.Parameters.Add(new NpgsqlParameter("parent_id", parentId));
 
                         var parameters = this.SetCommandDelete(command, id, credentials);
                         var ctx = new ReferenceServiceExecutionContext
@@ -292,9 +294,10 @@ namespace DeliveryTracker.References
         /// <inheritdoc />
         async Task<ServiceResult> ICollectionReferenceService.DeleteAsync(
             Guid id,
+            Guid parentId,
             NpgsqlConnectionWrapper oc)
         {
-            return await this.DeleteAsync(id, oc);
+            return await this.DeleteAsync(id, parentId, oc);
         }
         
         #endregion

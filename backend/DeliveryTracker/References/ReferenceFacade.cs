@@ -73,30 +73,38 @@ namespace DeliveryTracker.References
             using (var conn = oc?.Connect() ?? this.cp.Create().Connect())
             using (var transact = conn.BeginTransaction())
             {
-                var package = new ReferencePackage();
-                package.SetDictionary(value);
-                
-                var result = await service.CreateAsync(package.Entry.GetDictionary(), conn);
+                if (!JsonHelper.TryGetSubdictionary(value, nameof(ReferencePackage.Entry), out var entryDict))
+                {
+                    return new ServiceResult<ReferencePackage>(ErrorFactory.ReferenceCreationError(type));
+                }
+
+                var result = await service.CreateAsync(entryDict , conn);
                 if (!result.Success)
                 {
                     transact.Rollback();
                     return new ServiceResult<ReferencePackage>(result.Errors);
                 }
 
-                foreach (var collection in package.Collections)
+                if (JsonHelper.TryGetSubdictionaryList(value, nameof(ReferencePackage.Collections), out var collectionsList))
                 {
-                    if (!this.collectionServices.TryGetValue(collection.Type, out var collectionService))
+                    foreach (var collection in collectionsList)
                     {
-                        continue;
-                    }
-                    var collectionResult = await collectionService.CreateAsync(collection.GetDictionary(), conn);
-                    if (!collectionResult.Success)
-                    {
-                        transact.Rollback();
-                        return new ServiceResult<ReferencePackage>(collectionResult.Errors);
+                        if (!collection.TryGetValue(nameof(ReferenceEntryBase.Type), out var typeObj)
+                            || !(typeObj is string collectionType)
+                            || !this.collectionServices.TryGetValue(collectionType, out var collectionService))
+                        {
+                            continue;
+                        }
+                        
+                        var collectionResult = await collectionService.CreateAsync(collection, conn);
+                        if (!collectionResult.Success)
+                        {
+                            transact.Rollback();
+                            return new ServiceResult<ReferencePackage>(collectionResult.Errors);
+                        }
                     }
                 }
-
+                
                 var entry = result.Result;
                 var packResult = await service.PackAsync(entry, conn);
                 if (packResult.Success)
@@ -167,7 +175,7 @@ namespace DeliveryTracker.References
             IDictionary<string, object> newData,
             NpgsqlConnectionWrapper oc = null)
         {
-            if (this.services.TryGetValue(type, out var service))
+            if (!this.services.TryGetValue(type, out var service))
             {
                 return new ServiceResult<ReferencePackage>(ErrorFactory.ReferenceTypeNotFound(type));
             }
@@ -175,43 +183,71 @@ namespace DeliveryTracker.References
             using (var conn = oc?.Connect() ?? this.cp.Create().Connect())
             using (var transact = conn.BeginTransaction())
             {
-                var package = new ReferencePackage();
-                package.SetDictionary(newData);
+                if (!JsonHelper.TryGetSubdictionary(newData, nameof(ReferencePackage.Entry), out var entryDict))
+                {
+                    return new ServiceResult<ReferencePackage>(ErrorFactory.ReferenceCreationError(type));
+                }
                 
-                var editResult = await service.EditAsync(newData, oc);
+                var editResult = await service.EditAsync(entryDict, oc);
                 if (!editResult.Success)
                 {
                     transact.Rollback();
                     return new ServiceResult<ReferencePackage>(editResult.Errors);
                 }
 
+                if (JsonHelper.TryGetSubdictionaryList(
+                    newData,
+                    nameof(ReferencePackage.Collections),
+                    out var collectionsList))
+                {
+                    foreach (var collection in collectionsList)
+                    {
+                        if (!collection.TryGetValue(nameof(ReferenceEntryBase.Type), out var typeObj)
+                            || !(typeObj is string collectionType)
+                            || !this.collectionServices.TryGetValue(collectionType, out var collectionService)
+                            || !collection.TryGetValue(nameof(ReferenceCollectionBase.Action), out var actionObj)
+                            || !Enum.TryParse(typeof(ReferenceAction), actionObj.ToString(), out var action))
+                        {
+                            continue;
+                        }
+                        
+                        var collectionResult = ServiceResult.Successful; 
+                        
+                        // ReSharper disable once SwitchStatementMissingSomeCases
+                        switch (action)
+                        {
+                            case ReferenceAction.Create:
+                                collectionResult = await collectionService.CreateAsync(collection, conn);
+                                break;
+                            case ReferenceAction.Edit:
+                                collectionResult = await collectionService.EditAsync(collection, conn);
+                                break;
+                            case ReferenceAction.Delete:
+                                if (collection.TryGetValue(nameof(ReferenceEntryBase.Id), out var idObj)
+                                    && (idObj is Guid id || Guid.TryParse(idObj.ToString(), out id))
+                                    && collection.TryGetValue(nameof(ReferenceCollectionBase.ParentId), out var pidObj)
+                                    && (pidObj is Guid pid || Guid.TryParse(pidObj.ToString(), out pid)))
+                                {
+                                    collectionResult = await collectionService.DeleteAsync(id, pid, conn);
+                                }
+                                break;
+                        } 
+                        if (!collectionResult.Success)
+                        {
+                            transact.Rollback();
+                            return new ServiceResult<ReferencePackage>(collectionResult.Errors);
+                        }
+                    }
+                    
+                }
+                
+                /*
                 foreach (var collection in package.Collections)
                 {
-                    if (!this.collectionServices.TryGetValue(collection.Type, out var collectionService))
-                    {
-                        continue;
-                    }
+                    
 
-                    var collectionResult = ServiceResult.Successful; 
-                    // ReSharper disable once SwitchStatementMissingSomeCases
-                    switch (collection.Action)
-                    {
-                        case ReferenceAction.Create:
-                            collectionResult = await collectionService.CreateAsync(collection.GetDictionary(), conn);
-                            break;
-                        case ReferenceAction.Edit:
-                            collectionResult = await collectionService.EditAsync(collection.GetDictionary(), conn);
-                            break;
-                        case ReferenceAction.Delete:
-                            collectionResult = await collectionService.DeleteAsync(collection.Id, conn);
-                            break;
-                    } 
-                    if (!collectionResult.Success)
-                    {
-                        transact.Rollback();
-                        return new ServiceResult<ReferencePackage>(collectionResult.Errors);
-                    }
-                }
+                    
+                }*/
                 
                 var packageResult = await service.PackAsync(editResult.Result, conn);
                 if (!packageResult.Success)

@@ -69,7 +69,9 @@ namespace DeliveryTracker.References
                 {
                     using (var command = conn.CreateCommand())
                     {
-                        var id = Guid.NewGuid();
+                        var id = newData.Id != default
+                            ? newData.Id
+                            : Guid.NewGuid();
                         command.Parameters.Add(new NpgsqlParameter("id", id));
                         command.Parameters.Add(new NpgsqlParameter("instance_id", credentials.InstanceId));
                         command.Parameters.Add(new NpgsqlParameter("deleted", false));
@@ -297,19 +299,28 @@ namespace DeliveryTracker.References
         }
 
         /// <inheritdoc />
-        public async Task<ServiceResult<ReferencePackage>> PackAsync(
+        public virtual async Task<ServiceResult<ReferencePackage>> PackAsync(
             T entry,
             NpgsqlConnectionWrapper oc = null)
         {
-            return await this.PackAsync((ReferenceEntryBase)entry, oc);
+            var package = new ReferencePackage
+            {
+                Entry = entry,
+            };
+
+            return await Task.FromResult(new ServiceResult<ReferencePackage>(package));
         }
 
         /// <inheritdoc />
-        public async Task<ServiceResult<IList<ReferencePackage>>> PackAsync(
+        public virtual async Task<ServiceResult<IList<ReferencePackage>>> PackAsync(
             ICollection<T> entries,
             NpgsqlConnectionWrapper oc = null)
         {
-            return await this.PackAsync(entries.Cast<ReferenceEntryBase>().ToArray(), oc);
+            var packages = entries
+                .Select(entry => new ReferencePackage {Entry = entry})
+                .ToList();
+
+            return await Task.FromResult(new ServiceResult<IList<ReferencePackage>>(packages));
         }
 
         /// <inheritdoc />
