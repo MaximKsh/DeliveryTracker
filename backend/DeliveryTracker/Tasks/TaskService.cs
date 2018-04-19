@@ -77,7 +77,9 @@ namespace DeliveryTracker.Tasks
             var taskInfo = taskPackage.TaskInfo[0];
             var taskProducts = taskPackage.TaskProducts;
             
-            taskInfo.Id = Guid.NewGuid();
+            taskInfo.Id = taskInfo.Id != default 
+                ? taskInfo.Id 
+                : Guid.NewGuid();
             taskInfo.AuthorId = credentials.Id;
             taskInfo.InstanceId = credentials.InstanceId;
             taskInfo.SetState(DefaultTaskStates.Preparing);
