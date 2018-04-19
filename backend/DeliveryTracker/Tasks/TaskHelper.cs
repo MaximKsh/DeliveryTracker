@@ -40,6 +40,9 @@ namespace DeliveryTracker.Tasks
 
         public static readonly IReadOnlyList<string> TaskProductColumns = new List<string>
         {
+            "id", 
+            "instance_id", 
+            "parent_id",
             "product_id", 
             "quantity", 
         }.AsReadOnly();

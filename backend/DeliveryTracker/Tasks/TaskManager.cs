@@ -37,7 +37,7 @@ where ""id"" = @id and instance_id = @instance_id
 ";
 
         private static readonly string SqlEditTaskProducts = $@"
-insert into task_products(id, instance_id, parent_id, {TaskHelper.GetTaskProductsColumns()})
+insert into task_products({TaskHelper.GetTaskProductsColumns()})
     select
         t.id,
         @instance_id,
@@ -50,7 +50,7 @@ insert into task_products(id, instance_id, parent_id, {TaskHelper.GetTaskProduct
             @product_ids,
             @quantities
         ) with ordinality t(id, pid, q)
-on conflict (task_id, product_id) do update 
+on conflict (parent_id, product_id) do update 
 set quantity = EXCLUDED.quantity
 returning id, quantity
 ;";
@@ -282,7 +282,7 @@ where ""id"" = @id and instance_id = @instance_id
             var idArray = taskIds.ToArray();
             if (idArray.Length == 0)
             {
-                return new ServiceResult<IList<TaskProduct>>();
+                return new ServiceResult<IList<TaskProduct>>(new List<TaskProduct>());
             }
 
             var taskProducts = new List<TaskProduct>();
@@ -443,7 +443,7 @@ where ""id"" = @id and instance_id = @instance_id
                     parametersCounter += command.AppendIfNotDefault(builder, "delivery_actual", taskInfo.DeliveryActual);
                     parametersCounter += command.AppendIfNotDefault(builder, "comment", taskInfo.Comment);
                     parametersCounter += command.AppendIfNotDefault(builder, "warehouse_id", taskInfo.WarehouseId);
-                    parametersCounter += command.AppendIfNotDefault(builder, "client_id", taskInfo.ClientAddressId);
+                    parametersCounter += command.AppendIfNotDefault(builder, "client_id", taskInfo.ClientId);
                     parametersCounter += command.AppendIfNotDefault(builder, "client_address_id", taskInfo.ClientAddressId);
                     parametersCounter += command.AppendIfNotDefault(builder, "payment_type_id", taskInfo.PaymentTypeId);
                     parametersCounter += command.AppendIfNotDefault(builder, "cost", taskInfo.Cost);

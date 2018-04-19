@@ -111,14 +111,12 @@ namespace DeliveryTracker.Tasks
         public static TaskProduct GetTaskProduct(this IDataReader reader, ref int idx)
         {
             var taskProduct = new TaskProduct();
-            reader.SetReferenceBaseFields(taskProduct, ref idx);
+            taskProduct.Id = reader.GetGuid(idx++);
+            taskProduct.InstanceId = reader.GetGuid(idx++);
             reader.SetCollectionReferenceBaseFields(taskProduct, ref idx);
-            
-            return new TaskProduct
-            {
-                ProductId = reader.GetGuid(idx++),
-                Quantity = reader.GetInt32(idx++),
-            };
+            taskProduct.ProductId = reader.GetGuid(idx++);
+            taskProduct.Quantity = reader.GetInt32(idx++);
+            return taskProduct;
         }
         
         #endregion
