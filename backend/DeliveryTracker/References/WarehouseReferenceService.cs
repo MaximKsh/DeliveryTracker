@@ -13,45 +13,47 @@ namespace DeliveryTracker.References
     {
         #region sql
         
-        private static readonly string SqlCreate = @"
+        private static readonly string SqlCreate = $@"
 insert into warehouses (
     id,
     instance_id,
     name,
     raw_address
+    {{0}}
 )
 values (
     @id,
     @instance_id,
     @name,
     @raw_address
+    {{1}}
 )
-returning " + ReferenceHelper.GetWarehouseColumns() + ";";
+returning {ReferenceHelper.GetWarehouseColumns()};";
 
-        private static readonly string SqlUpdate = @"
+        private static readonly string SqlUpdate = $@"
 update warehouses
 set
-{0}
+{{0}}
 where id = @id and instance_id = @instance_id and deleted = false
-returning " + ReferenceHelper.GetWarehouseColumns() + ";";
+returning {ReferenceHelper.GetWarehouseColumns()};";
 
-        private static readonly string SqlGetWithDeleted = @"
-select " + ReferenceHelper.GetWarehouseColumns() + @"
+        private static readonly string SqlGetWithDeleted = $@"
+select {ReferenceHelper.GetWarehouseColumns()}
 from warehouses
 where id = @id and instance_id = @instance_id;";
         
-        private static readonly string SqlGet = @"
-select " + ReferenceHelper.GetWarehouseColumns() + @"
+        private static readonly string SqlGet = $@"
+select {ReferenceHelper.GetWarehouseColumns()}
 from warehouses
 where id = @id and instance_id = @instance_id and deleted = false;";
         
-        private static readonly string SqlGetListWithDeleted = @"
-select " + ReferenceHelper.GetWarehouseColumns() + @"
+        private static readonly string SqlGetListWithDeleted = $@"
+select {ReferenceHelper.GetWarehouseColumns()}
 from warehouses
 where id = ANY (@ids) and instance_id = @instance_id;";
         
-        private static readonly string SqlGetList = @"
-select " + ReferenceHelper.GetWarehouseColumns() + @"
+        private static readonly string SqlGetList = $@"
+select {ReferenceHelper.GetWarehouseColumns()}
 from warehouses
 where id = ANY (@ids) and instance_id = @instance_id and deleted = false;";
         
@@ -91,10 +93,19 @@ where id = @id and instance_id = @instance_id  and deleted = false
             Guid id,
             UserCredentials credentials)
         {
-            command.CommandText = SqlCreate;
             command.Parameters.Add(new NpgsqlParameter("name", newData.Name).CanBeNull());
             command.Parameters.Add(new NpgsqlParameter("raw_address", newData.RawAddress).CanBeNull());
-            
+            var geopositionColumnName = string.Empty;
+            var geopositionColumnValue = string.Empty;
+            if (newData.Geoposition != null)
+            {
+                geopositionColumnName = "geoposition";
+                geopositionColumnValue = ", st_setsrid(ST_MakePoint(@lon, @lat), 4326)::geography";
+                command.Parameters.Add(new NpgsqlParameter("lon", newData.Geoposition.Longitude));
+                command.Parameters.Add(new NpgsqlParameter("lat", newData.Geoposition.Latitude));
+            }            
+            command.CommandText = string.Format(SqlCreate, geopositionColumnName, geopositionColumnValue);
+
             return null;
         }
 
@@ -108,6 +119,18 @@ where id = @id and instance_id = @instance_id  and deleted = false
             parametersCounter += command.AppendIfNotDefault(queryStringBuilder, "name", newData.Name);
             parametersCounter += command.AppendIfNotDefault(queryStringBuilder, "raw_address", newData.RawAddress);
 
+            if (newData.Geoposition != null)
+            {
+                if (parametersCounter != 0)
+                {
+                    queryStringBuilder.Append(",");
+                }
+                queryStringBuilder.AppendLine("geoposition = st_setsrid(ST_MakePoint(@lon, @lat), 4326)::geography");
+
+                command.Parameters.Add(new NpgsqlParameter("lon", newData.Geoposition.Longitude));
+                command.Parameters.Add(new NpgsqlParameter("lat", newData.Geoposition.Latitude));
+            } 
+            
             command.CommandText = parametersCounter > 0
                 ? string.Format(SqlUpdate, queryStringBuilder.ToString())
                 : SqlGet;

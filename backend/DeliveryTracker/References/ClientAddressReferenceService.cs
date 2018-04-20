@@ -17,8 +17,14 @@ insert into client_addresses (
     id,
     instance_id,
     parent_id,
-    raw_address)
-values (@id, @instance_id, @parent_id, @raw_address);";
+    raw_address
+    {0})
+values (
+    @id, 
+    @instance_id,
+    @parent_id, 
+    @raw_address
+    {1});";
         
         private static readonly string SqlGetAddresses = $@"
 select {ReferenceHelper.GetAddressColumns()}
@@ -59,9 +65,18 @@ where id = @id and instance_id = @instance_id and parent_id = @parent_id and del
             Guid id,
             UserCredentials credentials)
         {
-            var builder = new StringBuilder();
-            command.AppendIfNotDefault(builder, "raw_address", newData.RawAddress);
-            command.CommandText = string.Format(SqlCreateAddresses, builder.ToString());
+            command.Parameters.Add(new NpgsqlParameter("raw_address", newData.RawAddress));
+            var geopositionColumnName = string.Empty;
+            var geopositionColumnValue = string.Empty;
+            if (newData.Geoposition != null)
+            {
+                geopositionColumnName = "geoposition";
+                geopositionColumnValue = ", st_setsrid(ST_MakePoint(@lon, @lat), 4326)::geography";
+                command.Parameters.Add(new NpgsqlParameter("lon", newData.Geoposition.Longitude));
+                command.Parameters.Add(new NpgsqlParameter("lat", newData.Geoposition.Latitude));
+            } 
+            
+            command.CommandText = string.Format(SqlCreateAddresses, geopositionColumnName, geopositionColumnValue);
 
             return null;
         }
@@ -74,6 +89,17 @@ where id = @id and instance_id = @instance_id and parent_id = @parent_id and del
             var sb = new StringBuilder();
             var appendedFields = 0;
             appendedFields += command.AppendIfNotDefault(sb, "raw_address", newData.RawAddress);
+            if (newData.Geoposition != null)
+            {
+                if (appendedFields != 0)
+                {
+                    sb.Append(",");
+                }
+                sb.AppendLine("geoposition = st_setsrid(ST_MakePoint(@lon, @lat), 4326)::geography");
+
+                command.Parameters.Add(new NpgsqlParameter("lon", newData.Geoposition.Longitude));
+                command.Parameters.Add(new NpgsqlParameter("lat", newData.Geoposition.Latitude));
+            } 
 
             command.CommandText = appendedFields > 0
                 ? string.Format(SqlUpdateAddress, sb.ToString())
