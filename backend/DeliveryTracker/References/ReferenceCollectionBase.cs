@@ -2,7 +2,7 @@
 
 namespace DeliveryTracker.References
 {
-    public abstract class ReferenceCollectionBase : ReferenceEntityBase
+    public class ReferenceCollectionBase : ReferenceEntryBase
     {
         /// <summary>
         /// Идентификатор родительской записи справочника.
@@ -18,11 +18,11 @@ namespace DeliveryTracker.References
         /// Действие, которое необходимо соверить с записью при редактировании
         /// родительской записи.
         /// Актуально только при выполнении редактирования родительской.
-        /// В базе не сохраняетсяю
+        /// В базе не сохраняется.
         /// </summary>
-        public CollectionEntityAction Action
+        public ReferenceAction Action
         {
-            get => this.Get<CollectionEntityAction>(nameof(this.Action));
+            get => this.Get<ReferenceAction>(nameof(this.Action));
             set => this.Set(nameof(this.Action), value);
         }
         

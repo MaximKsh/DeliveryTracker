@@ -11,7 +11,7 @@ using NpgsqlTypes;
 
 namespace DeliveryTracker.Tasks
 {
-    public class TaskManager : ITaskManager
+    public sealed class TaskManager : ITaskManager
     {
         #region sql
         
@@ -37,11 +37,11 @@ where ""id"" = @id and instance_id = @instance_id
 ";
 
         private static readonly string SqlEditTaskProducts = $@"
-insert into task_products(id, instance_id, task_id, {TaskHelper.GetTaskProductsColumns()})
+insert into task_products({TaskHelper.GetTaskProductsColumns()})
     select
         t.id,
         @instance_id,
-        @task_id,
+        @parent_id,
         t.pid,
         t.q
     from
@@ -50,7 +50,7 @@ insert into task_products(id, instance_id, task_id, {TaskHelper.GetTaskProductsC
             @product_ids,
             @quantities
         ) with ordinality t(id, pid, q)
-on conflict (task_id, product_id) do update 
+on conflict (parent_id, product_id) do update 
 set quantity = EXCLUDED.quantity
 returning id, quantity
 ;";
@@ -63,14 +63,14 @@ where id = ANY(@ids)
         private static readonly string SqlGetOneTaskProducts = $@"
 select {TaskHelper.GetTaskProductsColumns()}
 from task_products
-where task_id = @id and instance_id = @instance_id
+where parent_id = @id and instance_id = @instance_id
 ;";
         
 
         private static readonly string SqlGetTaskProducts = $@"
-select {TaskHelper.GetTaskProductsColumns()}, task_id
+select {TaskHelper.GetTaskProductsColumns()}, parent_id
 from task_products
-where task_id = ANY(@ids) and instance_id = @instance_id
+where parent_id = ANY(@ids) and instance_id = @instance_id
 ;";
         
         
@@ -83,83 +83,8 @@ where ""id"" = @id and instance_id = @instance_id
         
         #endregion
         
-        #region nested types
-
-        private interface ITaskInfoFastAccessor
-        {
-            void Add(
-                TaskInfo tInfo);
-
-            bool TryGet(
-                Guid tId,
-                out TaskInfo tInfo);
-        }
-        
-        private struct DictionaryTaskInfoFastAccessor : ITaskInfoFastAccessor
-        {
-            private readonly Dictionary<Guid, TaskInfo> tasks;
-
-            public DictionaryTaskInfoFastAccessor(int capacity)
-            {
-                this.tasks = new Dictionary<Guid, TaskInfo>(capacity);
-            }
-
-            public void Add(
-                TaskInfo tInfo)
-            {
-                this.tasks.Add(tInfo.Id, tInfo);
-            }
-
-            public bool TryGet(
-                Guid tId,
-                out TaskInfo tInfo)
-            {
-                return this.tasks.TryGetValue(tId, out tInfo);
-            }
-        }
-
-        private struct ArrayTaskInfoFastAccessor : ITaskInfoFastAccessor
-        {
-            private readonly TaskInfo[] tasks;
-
-            private int count;
-
-            public ArrayTaskInfoFastAccessor(int capacity)
-            {
-                this.tasks = new TaskInfo[capacity];
-                this.count = 0;
-            }
-
-            public void Add(
-                TaskInfo tInfo)
-            {
-                this.tasks[this.count++] = tInfo;
-            }
-
-            public bool TryGet(
-                Guid tId,
-                out TaskInfo tInfo)
-            {
-                tInfo = null;
-                for (var i = 0; i < this.count; i++)
-                {
-                    if (tId == this.tasks[i].Id)
-                    {
-                        tInfo = this.tasks[i];
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-        }
-        
-        #endregion
-        
         #region fields
 
-        private const int FastAccessorBound = 10;
-        
         private readonly IPostgresConnectionProvider cp;
 
         #endregion
@@ -296,7 +221,7 @@ where ""id"" = @id and instance_id = @instance_id
                     using (var command = connWrapper.CreateCommand())
                     {
                         command.CommandText = SqlEditTaskProducts;
-                        command.Parameters.Add(new NpgsqlParameter("task_id", id));
+                        command.Parameters.Add(new NpgsqlParameter("parent_id", id));
                         command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                         command.Parameters.Add(new NpgsqlParameter("ids", ids).WithArrayType(NpgsqlDbType.Uuid));
                         command.Parameters.Add(
@@ -349,39 +274,24 @@ where ""id"" = @id and instance_id = @instance_id
             return new ServiceResult();
         }
 
-        public async Task<ServiceResult> FillProductsAsync(
-            IList<TaskInfo> taskInfo,
+        public async Task<ServiceResult<IList<TaskProduct>>> GetProductsAsync(
+            IEnumerable<Guid> taskIds,
+            Guid instanceId,
             NpgsqlConnectionWrapper oc = null)
         {
-            if (taskInfo.Count == 0)
+            var idArray = taskIds.ToArray();
+            if (idArray.Length == 0)
             {
-                return new ServiceResult();
+                return new ServiceResult<IList<TaskProduct>>(new List<TaskProduct>());
             }
 
-            var instanceId = taskInfo[0].InstanceId;
-            var taskIds = new Guid[taskInfo.Count];
-            var tasksFastAccessor = taskInfo.Count > FastAccessorBound
-                ? (ITaskInfoFastAccessor)new DictionaryTaskInfoFastAccessor(taskInfo.Count)
-                : new ArrayTaskInfoFastAccessor(taskInfo.Count); 
-            for (var i = 0; i < taskInfo.Count; i++)
-            {
-                var info = taskInfo[i];
-                if (info.InstanceId != instanceId)
-                {
-                    return new ServiceResult(ErrorFactory.AccessDenied());
-                }
-
-                taskIds[i] = taskInfo[i].Id;
-                info.TaskProducts = new List<TaskProduct>();
-                tasksFastAccessor.Add(info);
-            }
-
+            var taskProducts = new List<TaskProduct>();
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {
                 using (var command = connWrapper.CreateCommand())
                 {
                     command.CommandText = SqlGetTaskProducts;
-                    command.Parameters.Add(new NpgsqlParameter("ids", taskIds).WithArrayType(NpgsqlDbType.Uuid));
+                    command.Parameters.Add(new NpgsqlParameter("ids", idArray).WithArrayType(NpgsqlDbType.Uuid));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                     using (var reader = await command.ExecuteReaderAsync())
                     {
@@ -389,44 +299,39 @@ where ""id"" = @id and instance_id = @instance_id
                         {
                             var idx = 0;
                             var taskProduct = reader.GetTaskProduct(ref idx);
-                            var taskId = reader.GetGuid(idx);
-                            
-                            if(tasksFastAccessor.TryGet(taskId, out var ti))
-                            {
-                                ti.TaskProducts.Add(taskProduct);        
-                            }
+                            taskProducts.Add(taskProduct);        
                         }
                     }
                 }
             }
 
-            return new ServiceResult();
+            return new ServiceResult<IList<TaskProduct>>(taskProducts);
         }
         
-        public async Task<ServiceResult> FillProductsAsync(
-            TaskInfo taskInfo,
+        public async Task<ServiceResult<IList<TaskProduct>>> GetProductsAsync(
+            Guid taskId,
+            Guid instanceId,
             NpgsqlConnectionWrapper oc = null)
         {
-            var instanceId = taskInfo.InstanceId;
-            taskInfo.TaskProducts = new List<TaskProduct>();
+            var taskProducts = new List<TaskProduct>();
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
             {
                 using (var command = connWrapper.CreateCommand())
                 {
                     command.CommandText = SqlGetOneTaskProducts;
-                    command.Parameters.Add(new NpgsqlParameter("id", taskInfo.Id));
+                    command.Parameters.Add(new NpgsqlParameter("id", taskId));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                     using (var reader = await command.ExecuteReaderAsync())
                     {
                         while (await reader.ReadAsync())
                         {
-                            taskInfo.TaskProducts.Add(reader.GetTaskProduct());
+                            taskProducts.Add(reader.GetTaskProduct());
                         }
                     }
                 }
             }
 
-            return new ServiceResult();
+            return new ServiceResult<IList<TaskProduct>>(taskProducts);
         }
 
         public async Task<ServiceResult> DeleteAsync(
@@ -538,7 +443,7 @@ where ""id"" = @id and instance_id = @instance_id
                     parametersCounter += command.AppendIfNotDefault(builder, "delivery_actual", taskInfo.DeliveryActual);
                     parametersCounter += command.AppendIfNotDefault(builder, "comment", taskInfo.Comment);
                     parametersCounter += command.AppendIfNotDefault(builder, "warehouse_id", taskInfo.WarehouseId);
-                    parametersCounter += command.AppendIfNotDefault(builder, "client_id", taskInfo.ClientAddressId);
+                    parametersCounter += command.AppendIfNotDefault(builder, "client_id", taskInfo.ClientId);
                     parametersCounter += command.AppendIfNotDefault(builder, "client_address_id", taskInfo.ClientAddressId);
                     parametersCounter += command.AppendIfNotDefault(builder, "payment_type_id", taskInfo.PaymentTypeId);
                     parametersCounter += command.AppendIfNotDefault(builder, "cost", taskInfo.Cost);

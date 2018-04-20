@@ -9,11 +9,11 @@ namespace DeliveryTracker.Tasks
     public interface ITaskService
     {
         Task<ServiceResult<TaskInfo>> CreateAsync(
-            TaskInfo taskInfo,
+            TaskPackage taskInfo,
             NpgsqlConnectionWrapper oc = null);
 
         Task<ServiceResult<TaskInfo>> EditTaskAsync(
-            TaskInfo taskInfo,
+            TaskPackage taskInfo,
             NpgsqlConnectionWrapper oc = null);
 
         Task<ServiceResult<TaskInfo>> TransitAsync(

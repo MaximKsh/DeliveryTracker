@@ -9,7 +9,8 @@ namespace DeliveryTracker.Views
     public sealed class QueueTasksPerformerView: TaskViewBase
     {
         public QueueTasksPerformerView(
-            int order) : base(order)
+            int order,
+            ITaskService taskService) : base(order, taskService)
         {
         }
 

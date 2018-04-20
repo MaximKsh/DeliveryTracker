@@ -57,21 +57,25 @@ namespace DeliveryTracker.Tasks
         /// <summary>
         /// Заполнить информацию о задании списком товаров.
         /// </summary>
-        /// <param name="taskInfo"></param>
+        /// <param name="taskId"></param>
+        /// <param name="instanceId"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult> FillProductsAsync(
-            TaskInfo taskInfo,
+        Task<ServiceResult<IList<TaskProduct>>> GetProductsAsync(
+            Guid taskId,
+            Guid instanceId,
             NpgsqlConnectionWrapper oc = null);
-        
+
         /// <summary>
         /// Заполнить информацию о заданиях списком товаров.
         /// </summary>
-        /// <param name="taskInfo"></param>
+        /// <param name="taskIds"></param>
+        /// <param name="instanceId"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult> FillProductsAsync(
-            IList<TaskInfo> taskInfo,
+        Task<ServiceResult<IList<TaskProduct>>> GetProductsAsync(
+            IEnumerable<Guid> taskIds,
+            Guid instanceId,
             NpgsqlConnectionWrapper oc = null);
         
         /// <summary>

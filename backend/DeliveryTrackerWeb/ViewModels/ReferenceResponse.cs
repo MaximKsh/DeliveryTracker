@@ -21,7 +21,7 @@ namespace DeliveryTrackerWeb.ViewModels
         
         public IDictionary<string, object> Entity { get; set; }
         
-        public IDictionary<string, ReferenceDescription> ReferencesList { get; set; }
+        public IReadOnlyDictionary<string, ReferenceDescription> ReferencesList { get; set; }
         
     }
 }

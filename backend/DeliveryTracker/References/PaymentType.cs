@@ -1,7 +1,8 @@
 ﻿namespace DeliveryTracker.References
 {
-    public class PaymentType : ReferenceEntityBase
+    public sealed class PaymentType : ReferenceEntryBase
     {
+        
         /// <summary>
         /// Название типа оплаты.
         /// </summary>

@@ -2,7 +2,7 @@
 
 namespace DeliveryTracker.References
 {
-    public class Warehouse : ReferenceEntityBase
+    public sealed class Warehouse : ReferenceEntryBase
     {
         /// <summary>
         /// Название.

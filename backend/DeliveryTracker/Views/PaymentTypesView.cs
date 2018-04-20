@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
@@ -39,15 +40,19 @@ where instance_id = @instance_id
         #region fields
         
         private readonly int order;
+
+        private readonly IReferenceService<PaymentType> paymentTypeReferenceService;
         
         #endregion
         
         #region constuctor
         
         public PaymentTypesView(
-            int order)
+            int order,
+            IReferenceService<PaymentType> paymentTypeReferenceService)
         {
             this.order = order;
+            this.paymentTypeReferenceService = paymentTypeReferenceService;
         }
         
         #endregion
@@ -91,7 +96,7 @@ where instance_id = @instance_id
             UserCredentials userCredentials,
             IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
-            var list = new List<IDictionaryObject>();
+            var list = new List<PaymentType>();
             using (var command = oc.CreateCommand())
             {
                 
@@ -109,8 +114,10 @@ where instance_id = @instance_id
                     }
                 }
             }
+
+            var package = await this.paymentTypeReferenceService.PackAsync(list, oc);
             
-            return new ServiceResult<IList<IDictionaryObject>>(list);
+            return new ServiceResult<IList<IDictionaryObject>>(package.Result.Cast<IDictionaryObject>().ToList());
         }
 
         /// <inheritdoc />

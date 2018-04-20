@@ -3,8 +3,23 @@ using DeliveryTracker.Common;
 
 namespace DeliveryTracker.References
 {
-    public abstract class ReferenceEntityBase : DictionaryObject
+    public class ReferenceEntryBase : DictionaryObject
     {
+        public ReferenceEntryBase()
+        {
+            this.Type = this.GetType().Name;
+        }
+        
+        /// <summary>
+        /// Тип элемента.
+        /// Менять самостоятельно не рекомендуется.
+        /// </summary>
+        public string Type 
+        {
+            get => this.Get<string>(nameof(this.Type));
+            set => this.Set(nameof(this.Type), value);
+        }
+        
         /// <summary>
         /// Id.
         /// </summary>

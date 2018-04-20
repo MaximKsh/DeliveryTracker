@@ -18,8 +18,6 @@ namespace DeliveryTrackerWeb.Controllers
         private readonly ITaskService taskService;
 
         private readonly IPostgresConnectionProvider cp;
-
-        private readonly IUserCredentialsAccessor accessor;
         
         #endregion
 
@@ -27,12 +25,10 @@ namespace DeliveryTrackerWeb.Controllers
 
         public TaskController(
             ITaskService taskService,
-            IPostgresConnectionProvider cp,
-            IUserCredentialsAccessor accessor)
+            IPostgresConnectionProvider cp)
         {
             this.taskService = taskService;
             this.cp = cp;
-            this.accessor = accessor;
         }
 
         #endregion
@@ -47,11 +43,10 @@ namespace DeliveryTrackerWeb.Controllers
         [Authorize(AuthorizationPolicies.CreatorOrManager)]
         public async Task<IActionResult> Create([FromBody] TaskRequest request)
         {
-            var taskInfo = request?.TaskInfo;
+            var taskPackage = request?.TaskPackage;
             var validationResult = new ParametersValidator()
                 .AddNotNullRule(nameof(request), request)
-                .AddNotNullRule(nameof(taskInfo), taskInfo)
-                .AddNotNullOrWhitespaceRule($"{nameof(taskInfo)}.{nameof(taskInfo.TaskNumber)}", taskInfo?.TaskNumber)
+                .AddNotNullRule(nameof(taskPackage), taskPackage)
                 .Validate();
             if (!validationResult.Success)
             {
@@ -62,7 +57,7 @@ namespace DeliveryTrackerWeb.Controllers
             {
                 using (var transaction = connWrapper.BeginTransaction())
                 {
-                    var result = await this.taskService.CreateAsync(taskInfo, connWrapper);
+                    var result = await this.taskService.CreateAsync(taskPackage, connWrapper);
 
                     if (!result.Success)
                     {
@@ -120,26 +115,21 @@ namespace DeliveryTrackerWeb.Controllers
         [Authorize(AuthorizationPolicies.CreatorOrManager)]
         public async Task<IActionResult> Edit([FromBody] TaskRequest request)
         {
-            var taskInfo = request?.TaskInfo;
+            var taskPackage = request?.TaskPackage;
             var validationResult = new ParametersValidator()
                 .AddNotNullRule(nameof(request), request)
-                .AddNotNullRule(nameof(taskInfo), taskInfo)
-                .AddNotEmptyGuidRule($"{nameof(taskInfo)}.{nameof(taskInfo.Id)}", taskInfo?.Id ?? Guid.Empty)
+                .AddNotNullRule(nameof(taskPackage), taskPackage)
                 .Validate();
-            if (!validationResult.Success
-                || taskInfo == null)
+            if (!validationResult.Success)
             {
                 return this.BadRequest(new TaskResponse(validationResult.Error));
             }
-
-            var credentials = this.accessor.GetUserCredentials();
-            taskInfo.InstanceId = credentials.InstanceId;
             
             using (var connWrapper = this.cp.Create().Connect())
             {
                 using (var transact = connWrapper.BeginTransaction())
                 {
-                    var editResult = await this.taskService.EditTaskAsync(taskInfo, connWrapper);
+                    var editResult = await this.taskService.EditTaskAsync(taskPackage, connWrapper);
 
                     if (!editResult.Success)
                     {

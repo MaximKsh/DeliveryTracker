@@ -10,6 +10,8 @@ namespace DeliveryTracker.Common
     /// </summary>
     public class ServiceResult
     {
+        public static readonly ServiceResult Successful = new ServiceResult();
+        
         public ServiceResult(params IError[] errors)
         {
             this.Errors = new ReadOnlyCollection<IError>(errors);

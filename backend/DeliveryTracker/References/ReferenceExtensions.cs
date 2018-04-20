@@ -13,10 +13,17 @@ namespace DeliveryTracker.References
         {
             return services
                 .AddSingleton<IReferenceFacade, ReferenceFacade>()
-                .AddSingleton<IReferenceService, PaymentTypeReferenceService>()
-                .AddSingleton<IReferenceService, ProductReferenceService>()
-                .AddSingleton<IReferenceService, ClientReferenceService>()
-                .AddSingleton<IReferenceService, WarehouseReferenceService>()
+                .AddSingleton<IReferenceService<PaymentType>, PaymentTypeReferenceService>()
+                .AddSingleton<IReferenceService>(x => x.GetService<IReferenceService<PaymentType>>())
+                .AddSingleton<IReferenceService<Product>, ProductReferenceService>()
+                .AddSingleton<IReferenceService>(x => x.GetService<IReferenceService<Product>>())
+                .AddSingleton<IReferenceService<Client>, ClientReferenceService>()
+                .AddSingleton<IReferenceService>(x => x.GetService<IReferenceService<Client>>())
+                .AddSingleton<IReferenceService<Warehouse>, WarehouseReferenceService>()
+                .AddSingleton<IReferenceService>(x => x.GetService<IReferenceService<Warehouse>>())
+                
+                .AddSingleton<ICollectionReferenceService<ClientAddress>, ClientAddressReferenceService>()
+                .AddSingleton<ICollectionReferenceService>(x => x.GetService<ICollectionReferenceService<ClientAddress>>())
                 ;
 
         }
@@ -27,7 +34,7 @@ namespace DeliveryTracker.References
         
         public static void SetReferenceBaseFields(
             this IDataReader reader,
-            ReferenceEntityBase reference, 
+            ReferenceEntryBase reference, 
             ref int idx)
         {
             reference.Id = reader.GetGuid(idx++);
@@ -60,15 +67,15 @@ namespace DeliveryTracker.References
             return client;
         }
         
-        public static Address GetAddress(this IDataReader reader)
+        public static ClientAddress GetAddress(this IDataReader reader)
         {
             var idx = 0;
             return reader.GetAddress(ref idx);
         }
         
-        public static Address GetAddress(this IDataReader reader, ref int idx)
+        public static ClientAddress GetAddress(this IDataReader reader, ref int idx)
         {
-            var address = new Address();
+            var address = new ClientAddress();
             reader.SetReferenceBaseFields(address, ref idx);
             reader.SetCollectionReferenceBaseFields(address, ref idx);
             address.RawAddress = reader.GetValueOrDefault<string>(idx++);

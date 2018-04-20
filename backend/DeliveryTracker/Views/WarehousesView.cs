@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
@@ -39,15 +40,19 @@ where instance_id = @instance_id
         #region fields
         
         private readonly int order;
+
+        private readonly IReferenceService<Warehouse> warehouseReferenceService;
         
         #endregion
         
         #region constuctor
         
         public WarehousesView(
-            int order)
+            int order,
+            IReferenceService<Warehouse> warehouseReferenceService)
         {
             this.order = order;
+            this.warehouseReferenceService = warehouseReferenceService;
         }
         
         #endregion
@@ -91,7 +96,7 @@ where instance_id = @instance_id
             UserCredentials userCredentials,
             IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
-            var list = new List<IDictionaryObject>();
+            var list = new List<Warehouse>();
             using (var command = oc.CreateCommand())
             {
                 var sb = new StringBuilder(256);
@@ -109,7 +114,10 @@ where instance_id = @instance_id
                 }
             }
             
-            return new ServiceResult<IList<IDictionaryObject>>(list);
+            
+            var package = await this.warehouseReferenceService.PackAsync(list, oc);
+            
+            return new ServiceResult<IList<IDictionaryObject>>(package.Result.Cast<IDictionaryObject>().ToList());
         }
 
         /// <inheritdoc />

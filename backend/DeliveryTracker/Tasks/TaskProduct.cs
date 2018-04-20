@@ -1,9 +1,10 @@
 ﻿using System;
 using DeliveryTracker.Common;
+using DeliveryTracker.References;
 
 namespace DeliveryTracker.Tasks
 {
-    public sealed class TaskProduct : DictionaryObject, IEquatable<TaskProduct>
+    public sealed class TaskProduct : ReferenceCollectionBase, IEquatable<TaskProduct>
     {
         /// <summary>
         /// Идентификатор товара.

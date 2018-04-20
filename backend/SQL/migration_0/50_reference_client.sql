@@ -42,6 +42,10 @@ BEGIN
         UPDATE entries_statistics
         SET clients_count = clients_count - 1
         WHERE instance_id = NEW.instance_id;
+        
+        UPDATE client_addresses
+        SET deleted = true
+        WHERE parent_id = NEW.id;
     END IF;
     RETURN NEW;
 END;

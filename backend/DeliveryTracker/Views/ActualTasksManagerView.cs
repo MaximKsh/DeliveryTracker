@@ -9,7 +9,8 @@ namespace DeliveryTracker.Views
     public sealed class ActualTasksManagerView : TaskViewBase
     {
         public ActualTasksManagerView(
-            int order) : base(order)
+            int order,
+            ITaskService taskService) : base(order, taskService)
         {
         }
 
