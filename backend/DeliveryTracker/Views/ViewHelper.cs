@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using Npgsql;
 
@@ -62,9 +63,60 @@ namespace DeliveryTracker.Views
             string columnName,
             object value)
         {
+            if (columnName is null)
+            {
+                columnName = name;
+            }
             sb.AppendFormat("and {0} = @{1} {2}", columnName, name, Environment.NewLine);
             command.Parameters.Add(new NpgsqlParameter(name, value));
         }
+        
+        public static void TryAddEqualsParameter<T>(
+            IReadOnlyDictionary<string, IReadOnlyList<string>> parameters,
+            NpgsqlCommand command,
+            StringBuilder sb,
+            string name,
+            string columnName = null)
+        {
+            if (parameters.TryGetOneValue(name, out var value))
+            {
+                AddEqualsParameter<T>(command, sb, name, columnName, value);
+            }
+        }
+        
+        public static void AddEqualsParameter<T>(
+            NpgsqlCommand command,
+            StringBuilder sb,
+            string name,
+            string columnName,
+            object value)
+        {
+            T result;
+            var converter = TypeDescriptor.GetConverter(typeof(T));
+            try
+            {
+                if (converter.CanConvertFrom(value.GetType()))
+                {
+                    result = (T) converter.ConvertFrom(value);
+                }
+                else
+                {
+                    result = (T) converter.ConvertFromString(value.ToString());
+                }
+            }
+            catch (Exception)
+            {
+                return;
+            }
+            
+            if (columnName is null)
+            {
+                columnName = name;
+            }
+            sb.AppendFormat("and {0} = @{1} {2}", columnName, name, Environment.NewLine);
+            command.Parameters.Add(new NpgsqlParameter(name, result));
+        }
+        
        
         public static void TryAddCaseInsensetiveEqualsParameter(
             IReadOnlyDictionary<string, IReadOnlyList<string>> parameters,
@@ -86,7 +138,12 @@ namespace DeliveryTracker.Views
             string columnName,
             object value)
         {
-            sb.AppendFormat("and {0} = lower(@{0)) {1}", name, Environment.NewLine);
+            if (columnName is null)
+            {
+                columnName = name;
+            }
+            
+            sb.AppendFormat("and {0} = lower(@{1}) {2}",columnName, name, Environment.NewLine);
             command.Parameters.Add(new NpgsqlParameter(name, value));
         }
         
@@ -114,8 +171,13 @@ namespace DeliveryTracker.Views
             string columnName,
             object value)
         {
+            if (columnName is null)
+            {
+                columnName = name;
+            }
+            
             sb.AppendFormat("and {0} like @{1} {2}", columnName, name, Environment.NewLine);
-            command.Parameters.AddWithValue(name, value + "%");
+            command.Parameters.AddWithValue(name, $"{value}%");
         }
         
         public static void TryAddCaseInsensetiveStartsWithParameter(
@@ -138,8 +200,13 @@ namespace DeliveryTracker.Views
             string columnName,
             object value)
         {
+            if (columnName is null)
+            {
+                columnName = name;
+            }
+            
             sb.AppendFormat("and {0} like @{1} {2}", columnName, name, Environment.NewLine);
-            command.Parameters.AddWithValue(name, value + "%");
+            command.Parameters.AddWithValue(name, $"{value}%");
         }
         
         #endregion
@@ -166,8 +233,12 @@ namespace DeliveryTracker.Views
             string columnName,
             object value)
         {
+            if (columnName is null)
+            {
+                columnName = name;
+            }
             sb.AppendFormat("and {0} like @{1} {2}", columnName, name, Environment.NewLine);
-            command.Parameters.AddWithValue(name, "%" + value + "%");
+            command.Parameters.AddWithValue(name, $"%{value}%");
         }
         
         public static void TryAddCaseInsensetiveContainsParameter(
@@ -190,8 +261,12 @@ namespace DeliveryTracker.Views
             string columnName,
             object value)
         {
+            if (columnName is null)
+            {
+                columnName = name;
+            }
             sb.AppendFormat("and lower({0}) like @{1} {2}", columnName, name, Environment.NewLine);
-            command.Parameters.AddWithValue(name, "%" + value.ToString().ToLowerInvariant() + "%");
+            command.Parameters.AddWithValue(name, $"%{value.ToString().ToLowerInvariant()}%");
         }
         
         #endregion

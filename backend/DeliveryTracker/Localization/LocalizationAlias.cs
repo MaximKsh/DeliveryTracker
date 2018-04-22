@@ -112,6 +112,7 @@
             public const string ActualTasksPerformerView = Pref + "ActualTasksPerformerView";
             public const string ActualTasksManagerView = Pref + "ActualTasksManagerView";
             public const string CompletedTasksManagerView = Pref + "CompletedTasksManagerView";
+            public const string UserTasksView = Pref + "UserTasksView";
             public const string MyTasksManagerView = Pref + "MyTasksManagerView";
             public const string PreparingTasksManagerView = Pref + "PreparingTasksManagerView";
             public const string QueueTasksManagerView = Pref + "QueueTasksManagerView"; 

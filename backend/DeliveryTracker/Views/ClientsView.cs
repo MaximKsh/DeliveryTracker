@@ -101,6 +101,7 @@ where instance_id = @instance_id
                 var sb = new StringBuilder(256);
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
                 ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search");
+                ViewHelper.TryAddStartsWithParameter(parameters, command, sb, "phone_number");
                 ViewHelper.TryAddAfterParameter(parameters, command, sb, "clients", "surname");
 
                 command.CommandText = string.Format(SqlGet, sb);

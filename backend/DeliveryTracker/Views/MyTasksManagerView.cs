@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Localization;
 using DeliveryTracker.Tasks;
-using Npgsql;
 
 namespace DeliveryTracker.Views
 {
-    public sealed class MyTasksManagerView : TaskViewBase
+    public sealed class MyTasksManagerView : UserTasksView
     {
         public MyTasksManagerView(
             int order,
@@ -39,20 +39,24 @@ namespace DeliveryTracker.Views
             };
         }
 
-        protected override string ExtendSqlGet(
-            string sqlGet)
+        public override async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
+            NpgsqlConnectionWrapper oc,
+            UserCredentials userCredentials,
+            IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
-            return string.Format(sqlGet,
-                "author_id = @user_id", // Completed
-                "{0}");
+            var newParams = parameters.ToDictionary(p => p.Key, p => p.Value);
+            newParams["author_id"] = new List<string> { userCredentials.Id.ToString() }.AsReadOnly() ;
+            return await base.GetViewResultAsync(oc, userCredentials, newParams);
         }
 
-        protected override string ExtendSqlCount(
-            string sqlCount)
+        public override async Task<ServiceResult<long>> GetCountAsync(
+            NpgsqlConnectionWrapper oc,
+            UserCredentials userCredentials,
+            IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
-            return string.Format(sqlCount,
-                "author_id = @user_id" // Completed
-            ); 
+            var newParams = parameters.ToDictionary(p => p.Key, p => p.Value);
+            newParams["author_id"] = new List<string> { userCredentials.Id.ToString() }.AsReadOnly() ;
+            return await base.GetCountAsync(oc, userCredentials, newParams);
         }
     }
 }
