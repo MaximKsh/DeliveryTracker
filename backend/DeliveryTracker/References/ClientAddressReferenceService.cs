@@ -70,7 +70,7 @@ where id = @id and instance_id = @instance_id and parent_id = @parent_id and del
             var geopositionColumnValue = string.Empty;
             if (newData.Geoposition != null)
             {
-                geopositionColumnName = "geoposition";
+                geopositionColumnName = ", geoposition";
                 geopositionColumnValue = ", st_setsrid(ST_MakePoint(@lon, @lat), 4326)::geography";
                 command.Parameters.Add(new NpgsqlParameter("lon", newData.Geoposition.Longitude));
                 command.Parameters.Add(new NpgsqlParameter("lat", newData.Geoposition.Latitude));

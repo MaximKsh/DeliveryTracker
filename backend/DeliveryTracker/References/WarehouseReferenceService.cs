@@ -99,7 +99,7 @@ where id = @id and instance_id = @instance_id  and deleted = false
             var geopositionColumnValue = string.Empty;
             if (newData.Geoposition != null)
             {
-                geopositionColumnName = "geoposition";
+                geopositionColumnName = ", geoposition";
                 geopositionColumnValue = ", st_setsrid(ST_MakePoint(@lon, @lat), 4326)::geography";
                 command.Parameters.Add(new NpgsqlParameter("lon", newData.Geoposition.Longitude));
                 command.Parameters.Add(new NpgsqlParameter("lat", newData.Geoposition.Latitude));
