@@ -19,7 +19,7 @@ namespace DeliveryTracker.References
         /// </summary>
         public Geoposition Geoposition
         {
-            get => this.Get<Geoposition>(nameof(this.Geoposition));
+            get => this.GetObject<Geoposition>(nameof(this.Geoposition));
             set => this.Set(nameof(this.Geoposition), value);
         }
         

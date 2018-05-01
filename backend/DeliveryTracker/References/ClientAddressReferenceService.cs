@@ -25,7 +25,7 @@ values (
     @parent_id, 
     @raw_address
     {1});";
-        
+
         private static readonly string SqlGetAddresses = $@"
 select {ReferenceHelper.GetAddressColumns()}
 from client_addresses
@@ -68,6 +68,7 @@ where id = @id and instance_id = @instance_id and parent_id = @parent_id and del
             command.Parameters.Add(new NpgsqlParameter("raw_address", newData.RawAddress));
             var geopositionColumnName = string.Empty;
             var geopositionColumnValue = string.Empty;
+
             if (newData.Geoposition != null)
             {
                 geopositionColumnName = ", geoposition";
@@ -75,7 +76,7 @@ where id = @id and instance_id = @instance_id and parent_id = @parent_id and del
                 command.Parameters.Add(new NpgsqlParameter("lon", newData.Geoposition.Longitude));
                 command.Parameters.Add(new NpgsqlParameter("lat", newData.Geoposition.Latitude));
             } 
-            
+
             command.CommandText = string.Format(SqlCreateAddresses, geopositionColumnName, geopositionColumnValue);
 
             return null;
@@ -89,7 +90,7 @@ where id = @id and instance_id = @instance_id and parent_id = @parent_id and del
             var sb = new StringBuilder();
             var appendedFields = 0;
             appendedFields += command.AppendIfNotDefault(sb, "raw_address", newData.RawAddress);
-            if (newData.Geoposition != null)
+           /* if (newData.Geoposition != null)
             {
                 if (appendedFields != 0)
                 {
@@ -99,7 +100,7 @@ where id = @id and instance_id = @instance_id and parent_id = @parent_id and del
 
                 command.Parameters.Add(new NpgsqlParameter("lon", newData.Geoposition.Longitude));
                 command.Parameters.Add(new NpgsqlParameter("lat", newData.Geoposition.Latitude));
-            } 
+            } */
 
             command.CommandText = appendedFields > 0
                 ? string.Format(SqlUpdateAddress, sb.ToString())
