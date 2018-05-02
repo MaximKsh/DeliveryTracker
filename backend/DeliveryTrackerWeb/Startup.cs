@@ -75,6 +75,7 @@ namespace DeliveryTrackerWeb
             });
             app.UseAuthentication();
             app.UseMiddleware<CheckSessionMiddleware>();
+            app.UseMiddleware<RequestResponseLoggingMiddleware>();
             app.UseMvc();
         }
 

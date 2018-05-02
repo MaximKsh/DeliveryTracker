@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace DeliveryTrackerWeb.Middleware
 {
-    public class CheckSessionMiddleware
+    public sealed class CheckSessionMiddleware
     {
         private static readonly string AuthHeader = HttpRequestHeader.Authorization.ToString();
         
