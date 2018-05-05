@@ -45,6 +45,7 @@ namespace DeliveryTracker.Tests.Instances
                     Name = "Ivanov",
                     PhoneNumber = "111"
                 },
+                new Device(),
                 new CodePassword
                 {
                     Password = TestHelper.CorrectPassword
@@ -86,6 +87,7 @@ namespace DeliveryTracker.Tests.Instances
                     Name = "Ivanov",
                     PhoneNumber = "111"
                 },
+                new Device(),
                 new CodePassword
                 {
                     Password = TestHelper.CorrectPassword

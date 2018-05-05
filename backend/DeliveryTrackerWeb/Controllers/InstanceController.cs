@@ -1,4 +1,5 @@
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
@@ -77,12 +78,14 @@ namespace DeliveryTrackerWeb.Controllers
         {
             var instance = request.Instance;
             var creator = request.Creator;
+            var creatorDevice = request.CreatorDevice;
             var codePassword = request.CodePassword;
             
             var validationResult = new ParametersValidator()
-                .AddNotNullRule(nameof(request.Instance), request.Instance)
-                .AddNotNullRule(nameof(request.Creator), request.Creator)
-                .AddNotNullRule(nameof(request.CodePassword), request.CodePassword)
+                .AddNotNullRule(nameof(request.Instance), instance)
+                .AddNotNullRule(nameof(request.Creator), creator)
+                .AddNotNullRule(nameof(request.CreatorDevice), creatorDevice)
+                .AddNotNullRule(nameof(request.CodePassword), codePassword)
                 .Validate();
             if (!validationResult.Success)
             {
@@ -91,6 +94,7 @@ namespace DeliveryTrackerWeb.Controllers
             var result = await this.instanceService.CreateAsync(
                 instance.Name, 
                 creator,
+                creatorDevice,
                 codePassword);
             if(!result.Success)
             {

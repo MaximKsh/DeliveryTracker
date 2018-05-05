@@ -11,6 +11,8 @@ namespace DeliveryTrackerWeb.ViewModels
         
         public User Creator { get; set; }
         
+        public Device CreatorDevice { get; set; }
+        
         public CodePassword CodePassword{ get; set; }
     }
 }

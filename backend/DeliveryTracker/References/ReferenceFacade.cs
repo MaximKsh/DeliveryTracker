@@ -78,7 +78,7 @@ namespace DeliveryTracker.References
                     return new ServiceResult<ReferencePackage>(ErrorFactory.ReferenceCreationError(type));
                 }
 
-                var result = await service.CreateAsync(entryDict , conn);
+                var result = await service.CreateAsync(entryDict, oc: conn);
                 if (!result.Success)
                 {
                     transact.Rollback();
@@ -133,7 +133,7 @@ namespace DeliveryTracker.References
 
             using (var conn = oc?.Connect() ?? this.cp.Create().Connect())
             {
-                var result = await service.GetAsync(id, withDeleted, conn);
+                var result = await service.GetAsync(id, withDeleted, oc: conn);
                 if (!result.Success)
                 {
                     return new ServiceResult<ReferencePackage>(result.Errors);
@@ -158,7 +158,7 @@ namespace DeliveryTracker.References
 
             using (var conn = oc?.Connect() ?? this.cp.Create().Connect())
             {
-                var result = await service.GetAsync(ids, withDeleted, conn);
+                var result = await service.GetAsync(ids, withDeleted, oc: conn);
                 if (!result.Success)
                 {
                     return new ServiceResult<IList<ReferencePackage>>(result.Errors);
@@ -188,7 +188,7 @@ namespace DeliveryTracker.References
                     return new ServiceResult<ReferencePackage>(ErrorFactory.ReferenceCreationError(type));
                 }
                 
-                var editResult = await service.EditAsync(entryDict, oc);
+                var editResult = await service.EditAsync(entryDict, oc: oc);
                 if (!editResult.Success)
                 {
                     transact.Rollback();
@@ -269,7 +269,7 @@ namespace DeliveryTracker.References
         {
             if (this.services.TryGetValue(type, out var service))
             {
-                return await service.DeleteAsync(id, oc);
+                return await service.DeleteAsync(id, oc: oc);
             }
             return new ServiceResult(ErrorFactory.ReferenceTypeNotFound(type));
         }

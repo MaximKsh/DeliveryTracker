@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
+using DeliveryTracker.Localization;
+using DeliveryTracker.References;
 using DeliveryTracker.Validation;
 using Npgsql;
 
@@ -49,7 +51,10 @@ where id = @id
         private readonly IInvitationService invitationService;
         
         private readonly IUserCredentialsAccessor accessor;
-        
+
+        private readonly IReferenceService<PaymentType> paymentTypeReferenceService;
+
+        private readonly IDeviceManager deviceManager;
         
         #endregion
         
@@ -60,13 +65,17 @@ where id = @id
             IUserManager userManager,
             ISecurityManager securityManager, 
             IInvitationService invitationService,
-            IUserCredentialsAccessor accessor)
+            IUserCredentialsAccessor accessor,
+            IReferenceService<PaymentType> paymentTypeReferenceService,
+            IDeviceManager deviceManager)
         {
             this.cp = cp;
             this.userManager = userManager;
             this.securityManager = securityManager;
             this.invitationService = invitationService;
             this.accessor = accessor;
+            this.paymentTypeReferenceService = paymentTypeReferenceService;
+            this.deviceManager = deviceManager;
         }
         
         #endregion
@@ -77,6 +86,7 @@ where id = @id
         public async Task<ServiceResult<InstanceServiceResult>> CreateAsync(
             string instanceName, 
             User creatorInfo, 
+            Device creatorDevice,
             CodePassword codePassword, 
             NpgsqlConnectionWrapper oc = null)
         {
@@ -93,7 +103,7 @@ where id = @id
                 return new ServiceResult<InstanceServiceResult>(validationResult.Error);
             }
 
-            return await this.CreateInternalAsync(instanceName, creatorInfo, codePassword, oc);
+            return await this.CreateInternalAsync(instanceName, creatorInfo, creatorDevice, codePassword, oc);
         }
 
         /// <inheritdoc />
@@ -131,54 +141,58 @@ where id = @id
         private async Task<ServiceResult<InstanceServiceResult>> CreateInternalAsync(
             string instanceName,
             User creator,
+            Device creatorDevice,
             CodePassword codePassword, 
             NpgsqlConnectionWrapper oc = null)
         {
-            using (var connWrapper = oc ?? this.cp.Create())
+            using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
+            using (var transaction = connWrapper.BeginTransaction())
             {
-                connWrapper.Connect();
+                var instanceId = await InsertNewInstance(instanceName, connWrapper);
+                creator.Id = Guid.NewGuid();
+                creator.Code = await this.invitationService.GenerateUniqueCodeAsync(connWrapper);
+                creator.Role = DefaultRoles.CreatorRole;
+                creator.InstanceId = instanceId;
 
-                using (var transaction = connWrapper.BeginTransaction())
+                var createResult = await this.userManager.CreateAsync(creator, connWrapper);
+                if (!createResult.Success)
                 {
-                    var instanceId = await InsertNewInstance(instanceName, connWrapper);
-                    creator.Id = Guid.NewGuid();
-                    creator.Code = await this.invitationService.GenerateUniqueCodeAsync(connWrapper);
-                    creator.Role = DefaultRoles.CreatorRole;
-                    creator.InstanceId = instanceId;
-
-                    var createResult = await this.userManager.CreateAsync(creator, connWrapper);
-                    if (!createResult.Success)
-                    {
-                        transaction.Rollback();
-                        return new ServiceResult<InstanceServiceResult>(createResult.Errors);
-                    }
-
-                    var user = createResult.Result;
-                    var setPasswordResult =
-                        await this.securityManager.SetPasswordAsync(user.Id, codePassword.Password, connWrapper);
-                    if (!setPasswordResult.Success)
-                    {
-                        transaction.Rollback();
-                        return new ServiceResult<InstanceServiceResult>(setPasswordResult.Errors);
-                    }
-
-
-                    var result = new InstanceServiceResult
-                    {
-                        User = user,
-                        Credentials = setPasswordResult.Result,
-                        Instance = new Instance
-                        {
-                            Id = instanceId,
-                            Name = instanceName, 
-                            CreatorId = user.Id
-                        }
-                    };
-
-                    await SetInstanceCreator(instanceId, user.Id, connWrapper);
-                    transaction.Commit();
-                    return new ServiceResult<InstanceServiceResult>(result);
+                    transaction.Rollback();
+                    return new ServiceResult<InstanceServiceResult>(createResult.Errors);
                 }
+
+                var user = createResult.Result;
+                var setPasswordResult =
+                    await this.securityManager.SetPasswordAsync(user.Id, codePassword.Password, connWrapper);
+                if (!setPasswordResult.Success)
+                {
+                    transaction.Rollback();
+                    return new ServiceResult<InstanceServiceResult>(setPasswordResult.Errors);
+                }
+
+                var result = new InstanceServiceResult
+                {
+                    User = user,
+                    Credentials = setPasswordResult.Result,
+                    Instance = new Instance
+                    {
+                        Id = instanceId,
+                        Name = instanceName, 
+                        CreatorId = user.Id
+                    }
+                };
+
+                await SetInstanceCreator(instanceId, user.Id, connWrapper);
+
+                if (creatorDevice != null)
+                {
+                    creatorDevice.UserId = user.Id;
+                    await this.deviceManager.UpdateUserDeviceAsync(creatorDevice, connWrapper);
+                    await this.AddDefaultValues(creatorDevice.Language, instanceId, connWrapper);
+                }
+                transaction.Commit();
+                return new ServiceResult<InstanceServiceResult>(result);
+                
             }
             
         }
@@ -211,6 +225,50 @@ where id = @id
                 command.Parameters.Add(new NpgsqlParameter("creator_id", creatorId));
                 await command.ExecuteNonQueryAsync();
             }
+        }
+
+        private async Task<ServiceResult> AddDefaultValues(
+            string language,
+            Guid instanceId,
+            NpgsqlConnectionWrapper oc)
+        {
+            var paymentTypes = new[]
+            {
+                new PaymentType
+                {
+                    Id = Guid.NewGuid(),
+                    InstanceId = instanceId,
+                },
+                new PaymentType
+                {
+                    Id = Guid.NewGuid(),
+                    InstanceId = instanceId,
+                },
+            };
+            
+            switch (language)
+            {
+                case "en":
+                    paymentTypes[0].Name = LocalizationAlias.DefaultValues.CashEn;
+                    paymentTypes[1].Name = LocalizationAlias.DefaultValues.CardEn;
+                    break;
+                case "ru":
+                    paymentTypes[0].Name = LocalizationAlias.DefaultValues.CashRu;
+                    paymentTypes[1].Name = LocalizationAlias.DefaultValues.CardRu;
+                    break;
+                default:
+                    return ServiceResult.Successful;
+            }
+
+            foreach (var paymentType in paymentTypes)
+            {
+                var result = await this.paymentTypeReferenceService.CreateAsync(paymentType, false, oc);
+                if (!result.Success)
+                {
+                    return result;
+                }
+            }
+            return ServiceResult.Successful;
         }
         
         #endregion

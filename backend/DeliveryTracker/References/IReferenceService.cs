@@ -22,10 +22,12 @@ namespace DeliveryTracker.References
         /// Создать новую запись в справочнике.
         /// </summary>
         /// <param name="newData"></param>
+        /// <param name="check">Проверять разрешение</param>
         /// <param name="oc"></param>
         /// <returns></returns>
         Task<ServiceResult<ReferenceEntryBase>> CreateAsync(
             IDictionary<string, object> newData,
+            bool check = true,
             NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
@@ -33,11 +35,13 @@ namespace DeliveryTracker.References
         /// </summary>
         /// <param name="id"></param>
         /// <param name="withDeleted"></param>
+        /// <param name="check">Проверять разрешение</param>
         /// <param name="oc"></param>
         /// <returns></returns>
         Task<ServiceResult<ReferenceEntryBase>> GetAsync(
             Guid id, 
             bool withDeleted = false,
+            bool check = true,
             NpgsqlConnectionWrapper oc = null);
         
         /// <summary>
@@ -45,31 +49,37 @@ namespace DeliveryTracker.References
         /// </summary>
         /// <param name="ids"></param>
         /// <param name="withDeleted"></param>
+        /// <param name="check">Проверять разрешение</param>
         /// <param name="oc"></param>
         /// <returns></returns>
         Task<ServiceResult<IList<ReferenceEntryBase>>> GetAsync(
             ICollection<Guid> ids, 
             bool withDeleted = false,
+            bool check = true,
             NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
         /// Редактировать запись в справочнике.
         /// </summary>
         /// <param name="newData"></param>
+        /// <param name="check">Проверять разрешение</param>
         /// <param name="oc"></param>
         /// <returns></returns>
         Task<ServiceResult<ReferenceEntryBase>> EditAsync(
             IDictionary<string, object> newData, 
+            bool check = true,
             NpgsqlConnectionWrapper oc = null);
 
         /// <summary>
         /// Удалить запись из справочника.
         /// </summary>
         /// <param name="id"></param>
+        /// <param name="check">Проверять разрешение</param>
         /// <param name="oc"></param>
         /// <returns></returns>
         Task<ServiceResult> DeleteAsync(
             Guid id, 
+            bool check = true,
             NpgsqlConnectionWrapper oc = null);
 
         /// <summary>

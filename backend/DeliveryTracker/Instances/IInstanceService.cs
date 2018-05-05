@@ -16,10 +16,13 @@ namespace DeliveryTracker.Instances
         /// <param name="instance">Информация об инстансе</param>
         /// <param name="creatorInfo">Информация о создателе</param>
         /// <param name="codePassword">Пароль создателя</param>
+        /// <param name="creatorDevice">Устройство пользователя</param>
         /// <param name="oc"></param>
         /// <returns></returns>
-        Task<ServiceResult<InstanceServiceResult>> CreateAsync(string instance,
+        Task<ServiceResult<InstanceServiceResult>> CreateAsync(
+            string instance,
             User creatorInfo,
+            Device creatorDevice,
             CodePassword codePassword,
             NpgsqlConnectionWrapper oc = null);
 

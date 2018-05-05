@@ -7,6 +7,18 @@
         private const string LocalizationStringPrefix = "ServerMessage";
         
         #endregion
+
+        #region Default values
+
+        public static class DefaultValues
+        {
+            public const string CashEn = "Cash";
+            public const string CashRu = "Наличные";
+            public const string CardEn = "Credit card";
+            public const string CardRu = "Кредитная карта";
+        }
+
+        #endregion
         
         #region Error Group
 

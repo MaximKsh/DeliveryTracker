@@ -45,6 +45,7 @@ namespace DeliveryTracker.References
         /// <inheritdoc />
         public virtual async Task<ServiceResult<T>> CreateAsync(
             T newData,
+            bool check = true,
             NpgsqlConnectionWrapper oc = null)
         {
             var validationResult = new ParametersValidator()
@@ -56,7 +57,7 @@ namespace DeliveryTracker.References
             }
 
             var credentials = this.Accessor.GetUserCredentials();
-            if (!this.CanCreate(newData, credentials))
+            if (check && !this.CanCreate(newData, credentials))
             {
                 return new ServiceResult<T>(ErrorFactory.AccessDenied());
             }
@@ -72,8 +73,11 @@ namespace DeliveryTracker.References
                         var id = newData.Id != default
                             ? newData.Id
                             : Guid.NewGuid();
+                        var instanceId = check
+                            ? credentials.InstanceId
+                            : newData.InstanceId;
                         command.Parameters.Add(new NpgsqlParameter("id", id));
-                        command.Parameters.Add(new NpgsqlParameter("instance_id", credentials.InstanceId));
+                        command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                         command.Parameters.Add(new NpgsqlParameter("deleted", false));
 
                         var parameters = this.SetCommandCreate(command, newData, id, credentials);
@@ -116,10 +120,11 @@ namespace DeliveryTracker.References
         public virtual async Task<ServiceResult<T>> GetAsync(
             Guid id, 
             bool withDeleted = false,
+            bool check = true,
             NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.Accessor.GetUserCredentials();
-            if (!this.CanGet(id, credentials))
+            if (check && !this.CanGet(id, credentials))
             {
                 return new ServiceResult<T>(ErrorFactory.AccessDenied());
             }
@@ -154,10 +159,11 @@ namespace DeliveryTracker.References
         public virtual async Task<ServiceResult<IList<T>>> GetAsync(
             ICollection<Guid> ids,
             bool withDeleted = false,
+            bool check = true,
             NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.Accessor.GetUserCredentials();
-            if (!this.CanGetList(ids, credentials))
+            if (check && !this.CanGetList(ids, credentials))
             {
                 return new ServiceResult<IList<T>>(ErrorFactory.AccessDenied());
             }
@@ -196,7 +202,10 @@ namespace DeliveryTracker.References
         }
 
         /// <inheritdoc />
-        public virtual async Task<ServiceResult<T>> EditAsync(T newData, NpgsqlConnectionWrapper oc = null)
+        public virtual async Task<ServiceResult<T>> EditAsync(
+            T newData,
+            bool check = true,
+            NpgsqlConnectionWrapper oc = null)
         {
             var validationResult = new ParametersValidator()
                 .AddNotNullRule(this.Name, newData)
@@ -208,7 +217,7 @@ namespace DeliveryTracker.References
             }
 
             var credentials = this.Accessor.GetUserCredentials();
-            if (!this.CanEdit(newData, credentials))
+            if (check && !this.CanEdit(newData, credentials))
             {
                 return new ServiceResult<T>(ErrorFactory.AccessDenied());
             }
@@ -260,10 +269,13 @@ namespace DeliveryTracker.References
         }
 
         /// <inheritdoc />
-        public virtual async Task<ServiceResult> DeleteAsync(Guid id, NpgsqlConnectionWrapper oc = null)
+        public virtual async Task<ServiceResult> DeleteAsync(
+            Guid id,
+            bool check = true,
+            NpgsqlConnectionWrapper oc = null)
         {
             var credentials = this.Accessor.GetUserCredentials();
-            if (!this.CanDelete(id, credentials))
+            if (check && !this.CanDelete(id, credentials))
             {
                 return new ServiceResult(ErrorFactory.AccessDenied());
             }
@@ -326,11 +338,12 @@ namespace DeliveryTracker.References
         /// <inheritdoc />
         public async Task<ServiceResult<ReferenceEntryBase>> CreateAsync(
             IDictionary<string, object> newData,
+            bool check,
             NpgsqlConnectionWrapper oc = null)
         {
             var entity = new T();
             entity.SetDictionary(newData);
-            var result = await this.CreateAsync(entity, oc);
+            var result = await this.CreateAsync(entity, check, oc);
             return result.Success
                 ? new ServiceResult<ReferenceEntryBase>(result.Result) 
                 : new ServiceResult<ReferenceEntryBase>(result.Errors);
@@ -340,9 +353,10 @@ namespace DeliveryTracker.References
         async Task<ServiceResult<ReferenceEntryBase>> IReferenceService.GetAsync(
             Guid id,
             bool withDeleted,
+            bool check,
             NpgsqlConnectionWrapper oc)
         {
-            var result = await this.GetAsync(id, withDeleted, oc);
+            var result = await this.GetAsync(id, withDeleted, check, oc);
             return result.Success
                 ? new ServiceResult<ReferenceEntryBase>(result.Result) 
                 : new ServiceResult<ReferenceEntryBase>(result.Errors);
@@ -352,9 +366,10 @@ namespace DeliveryTracker.References
         async Task<ServiceResult<IList<ReferenceEntryBase>>> IReferenceService.GetAsync(
             ICollection<Guid> ids,
             bool withDeleted,
+            bool check,
             NpgsqlConnectionWrapper oc)
         {
-            var result = await this.GetAsync(ids, withDeleted, oc);
+            var result = await this.GetAsync(ids, withDeleted, check, oc);
             var list = result.Result?.Cast<ReferenceEntryBase>().ToList();
             return list != null
                 ? new ServiceResult<IList<ReferenceEntryBase>>(list, result.Errors) 
@@ -364,11 +379,12 @@ namespace DeliveryTracker.References
         /// <inheritdoc />
         public async Task<ServiceResult<ReferenceEntryBase>> EditAsync(
             IDictionary<string, object> newData,
+            bool check,
             NpgsqlConnectionWrapper oc = null)
         {
             var entity = new T();
             entity.SetDictionary(newData);
-            var result = await this.EditAsync(entity, oc);
+            var result = await this.EditAsync(entity, check, oc);
             return result.Success
                 ? new ServiceResult<ReferenceEntryBase>(result.Result) 
                 : new ServiceResult<ReferenceEntryBase>(result.Errors);
@@ -377,9 +393,10 @@ namespace DeliveryTracker.References
         /// <inheritdoc />
         async Task<ServiceResult> IReferenceService.DeleteAsync(
             Guid id,
+            bool check,
             NpgsqlConnectionWrapper oc)
         {
-            return await this.DeleteAsync(id, oc);
+            return await this.DeleteAsync(id, check, oc);
         }
         
         
