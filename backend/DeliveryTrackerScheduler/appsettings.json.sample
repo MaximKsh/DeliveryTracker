@@ -10,6 +10,7 @@
     }
   },
 
+
   "SessionSettings": {
     "UserOnlineTimeout": 30000,
     "SessionInactiveTimeout": 6000000
@@ -47,5 +48,10 @@
     "ExpiresInDays": 3,
     "CodeLength" : 6,
     "Alphabet": "23456789qwertyupasdfghkzxbnmQWERTYUPASDFGHKZXVBNM"
+  },
+  
+  "NotificationSettings": {
+    "FirebaseKey": null,
+    "SmsRuKey": null
   }
 }

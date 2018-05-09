@@ -8,7 +8,7 @@ namespace DeliveryTracker.Tests
         
         protected DeliveryTrackerConnectionTestBase() : base()
         {
-            this.Cp = new PostgresConnectionProvider(this.Configuration);
+            this.Cp = new PostgresConnectionProvider(this.SettingsStorage);
         }
     }
 }

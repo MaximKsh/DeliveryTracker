@@ -6,14 +6,14 @@ using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Notifications;
 using DeliveryTracker.Validation;
-using Microsoft.Extensions.Logging;
 using Npgsql;
 using NpgsqlTypes;
 
 namespace DeliveryTracker.Instances
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     /// <inheritdoc />
-    public class InvitationService : IInvitationService
+    public sealed class InvitationService : IInvitationService
     {
         #region sql
 
@@ -68,7 +68,8 @@ where expires < (now() AT TIME ZONE 'UTC');
         
         #region fields
 
-        private readonly Random random = new Random();
+        [ThreadStatic]
+        private static Random random;
         
         private readonly IPostgresConnectionProvider cp;
 
@@ -78,8 +79,6 @@ where expires < (now() AT TIME ZONE 'UTC');
 
         private readonly INotificationService notificationService;
         
-        private readonly ILogger<IInvitationService> logger;
-        
         #endregion
         
         #region constructor
@@ -88,13 +87,11 @@ where expires < (now() AT TIME ZONE 'UTC');
             IPostgresConnectionProvider cp,
             ISettingsStorage settingsStorage,
             IUserCredentialsAccessor userCredentialsAccessor,
-            ILogger<IInvitationService> logger,
             INotificationService notificationService)
         {
             this.cp = cp;
             this.invitationSettings = settingsStorage.GetSettings<InvitationSettings>(SettingsName.Invitation);
             this.userCredentialsAccessor = userCredentialsAccessor;
-            this.logger = logger;
             this.notificationService = notificationService;
         }
         
@@ -105,11 +102,15 @@ where expires < (now() AT TIME ZONE 'UTC');
         /// <inheritdoc />
         public string GenerateCode()
         {
+            if (random == null)
+            {
+                random = new Random();
+            }
             var invitationCode = new char[this.invitationSettings.CodeLength];
             var alphabetSize = this.invitationSettings.Alphabet.Length;
             for (var i = 0; i < invitationCode.Length; i++)
             {
-                invitationCode[i] = this.invitationSettings.Alphabet[this.random.Next(alphabetSize - 1)];
+                invitationCode[i] = this.invitationSettings.Alphabet[random.Next(alphabetSize - 1)];
             }
             return new string(invitationCode);
         }
@@ -150,7 +151,8 @@ where expires < (now() AT TIME ZONE 'UTC');
                             }
                             else
                             {
-                                this.logger.LogWarning($"Invitation code {code} repeated.");
+                                // TODO: add loggin here
+                                // this.logger.LogWarning($"Invitation code {code} repeated.");
                             }
                         }
 

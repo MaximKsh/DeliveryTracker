@@ -17,7 +17,7 @@ namespace DeliveryTracker.Tests.Identification
         
         public SecurityManagerTest()
         {
-            this.provider = new PostgresConnectionProvider(this.Configuration);
+            this.provider = new PostgresConnectionProvider(this.SettingsStorage);
 
             User me;
             using (var conn = this.Cp.Create())

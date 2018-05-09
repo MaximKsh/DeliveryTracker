@@ -11,7 +11,7 @@ namespace DeliveryTracker.Tests.Database
         [Fact]
         public void ProvideConnection()
         {
-            var provider = new PostgresConnectionProvider(this.Configuration);
+            var provider = new PostgresConnectionProvider(this.SettingsStorage);
             using (var conn = provider.Create())
             {
                 conn.Connect();

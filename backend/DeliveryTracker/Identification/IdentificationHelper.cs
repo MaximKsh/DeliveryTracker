@@ -95,5 +95,13 @@ namespace DeliveryTracker.Identification
                 configuration.GetValue("RefreshTokenSettings:ClockCkew", 1),
                 configuration.GetValue("RefreshTokenSettings:RequireHttps", true));
         }
+        
+        public static SessionSettings ReadSessionSettingsFromConf(IConfiguration configuration)
+        {
+            return new SessionSettings(
+                SettingsName.Session,
+                configuration.GetValue("SessionSettings:UserOnlineTimeout", -1),
+                configuration.GetValue("SessionSettings:SessionInactiveTimeout", -1));
+        }
     }
 }

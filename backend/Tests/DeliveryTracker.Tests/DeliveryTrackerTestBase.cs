@@ -1,4 +1,5 @@
 ﻿using DeliveryTracker.Common;
+using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using Microsoft.Extensions.Configuration;
@@ -12,6 +13,8 @@ namespace DeliveryTracker.Tests
         protected readonly string DefaultConnectionString;
 
         protected readonly ISettingsStorage SettingsStorage;
+
+        protected readonly DatabaseSettings DefaultDatabaseSettings;
         
         protected readonly TokenSettings DefaultTokenSettings;
         
@@ -23,6 +26,7 @@ namespace DeliveryTracker.Tests
         
         protected DeliveryTrackerTestBase()
         {
+            
             this.Configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
                 .Build();
@@ -30,6 +34,9 @@ namespace DeliveryTracker.Tests
             this.DefaultConnectionString = this.Configuration.GetConnectionString("DefaultConnection");
             
             this.SettingsStorage = new SettingsStorage();
+
+            this.DefaultDatabaseSettings = DatabaseHelper.ReadDatabaseSettingsFromConf(this.Configuration);
+            this.SettingsStorage.RegisterSettings(this.DefaultDatabaseSettings);
             
             this.DefaultRefreshTokenSettings = IdentificationHelper.ReadRefreshTokenSettingsFromConf(this.Configuration);
             this.SettingsStorage.RegisterSettings(this.DefaultRefreshTokenSettings);

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
+using DeliveryTracker.Common;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using NpgsqlTypes;
@@ -17,6 +19,15 @@ namespace DeliveryTracker.Database
                 ;
 
             return services;
+        }
+
+        public static ISettingsStorage AddDeliveryTrackerDatabaseSettings(
+            this ISettingsStorage storage,
+            IConfiguration configuration)
+        {
+            var dbSettings = DatabaseHelper.ReadDatabaseSettingsFromConf(configuration);
+            storage.RegisterSettings(dbSettings);
+            return storage;
         }
 
         public static NpgsqlParameter CanBeNull(this NpgsqlParameter parameter)
@@ -53,7 +64,7 @@ namespace DeliveryTracker.Database
             T value,
             string columnName = null)
         {
-            if (EqualityComparer<T>.Default.Equals(value,default(T)))
+            if (EqualityComparer<T>.Default.Equals(value, default))
             {
                 return 0;
             }

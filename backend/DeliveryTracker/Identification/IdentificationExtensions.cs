@@ -71,20 +71,21 @@ namespace DeliveryTracker.Identification
             this ISettingsStorage storage, 
             IConfiguration configuration)
         {
-            var onlineTimeout = configuration.GetValue("UserOnlineTimeout", -1);
-            if (onlineTimeout != -1)
-            {
-                OnlineChecker.Set(onlineTimeout);
-            }
-            
             var tokenSettings = IdentificationHelper.ReadTokenSettingsFromConf(configuration);
             var refreshTokenSettings = IdentificationHelper.ReadRefreshTokenSettingsFromConf(configuration);
             var passwordSettings = IdentificationHelper.ReadPasswordSettingsFromConf(configuration);
+            var sessionSettings = IdentificationHelper.ReadSessionSettingsFromConf(configuration);
 
+            if (sessionSettings.UserOnlineTimeoutMs != -1)
+            {
+                OnlineChecker.Set(sessionSettings.UserOnlineTimeoutMs);
+            }
+            
             return storage
                 .RegisterSettings(tokenSettings)
                 .RegisterSettings(refreshTokenSettings)
-                .RegisterSettings(passwordSettings);
+                .RegisterSettings(passwordSettings)
+                .RegisterSettings(sessionSettings);
         }
         
         #endregion
@@ -167,7 +168,6 @@ namespace DeliveryTracker.Identification
         
         #endregion
         
-
         public static UserCredentials ToUserCredentials(
             this IEnumerable<Claim> claims)
         {
@@ -200,8 +200,5 @@ namespace DeliveryTracker.Identification
                 role,
                 instanceId);
         }
-        
-        
-        
     }
 }

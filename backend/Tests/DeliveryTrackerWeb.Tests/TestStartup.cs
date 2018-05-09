@@ -5,6 +5,7 @@ using DeliveryTracker.Database;
 using DeliveryTracker.Geopositioning;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
+using DeliveryTracker.Notifications;
 using DeliveryTracker.References;
 using DeliveryTracker.Validation;
 using DeliveryTracker.Views;
@@ -51,8 +52,10 @@ namespace DeliveryTrackerWeb.Tests
         public void Configure(IApplicationBuilder app, ISettingsStorage settingsStorage)
         {
             settingsStorage
+                .AddDeliveryTrackerDatabaseSettings(this.configuration)
                 .AddDeliveryTrackerIdentificationSettings(this.configuration)
-                .AddDeliveryTrackerInstancesSettings(this.configuration);
+                .AddDeliveryTrackerInstancesSettings(this.configuration)
+                .AddDeliveryTrackerNotificationSettings(this.configuration);
             
             app.UseExceptionHandler(conf =>
             {

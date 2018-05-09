@@ -10,8 +10,10 @@
     }
   },
 
-
-  "UserOnlineTimeout": 60000,
+  "SessionSettings": {
+    "UserOnlineTimeout": 30000,
+    "SessionInactiveTimeout": 6000000
+  },
   
   "SessionTokenSettings": {
     "Key": "mysupersecret_secretkey!123",

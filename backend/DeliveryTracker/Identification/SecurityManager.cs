@@ -13,7 +13,7 @@ using Npgsql;
 
 namespace DeliveryTracker.Identification
 {
-    public class SecurityManager : ISecurityManager
+    public sealed class SecurityManager : ISecurityManager
     {
         #region sql
         
@@ -47,8 +47,8 @@ on conflict(user_id) do update set
     last_activity = now() AT TIME ZONE 'UTC'
 returning {IdentificationHelper.GetSessionColumns()};
 ";
-        
-        private static readonly string SqlHasSessionToken = @"
+
+        private const string SqlHasSessionToken = @"
 update ""users""
 set ""last_activity"" = now() AT TIME ZONE 'UTC'
 where ""id"" = @user_id
@@ -65,8 +65,8 @@ delete from sessions
 where user_id = @user_id
 ;
 ";
-        
-        private static readonly string SqlHasSessionRefreshToken = @"
+
+        private const string SqlHasSessionRefreshToken = @"
 update ""users""
 set ""last_activity"" = now() AT TIME ZONE 'UTC'
 where ""id"" = @user_id
@@ -76,12 +76,18 @@ set ""last_activity"" = now() AT TIME ZONE 'UTC'
 where ""user_id"" = @user_id
 returning ""refresh_token_id""; 
 ";
+
+        private static readonly string SqlDeleteExpired = @"
+delete from sessions
+where last_activity < @expire;
+";
         
         #endregion
         
         #region fields
         
         public const string SesssionTokenAuthType = "Token";
+        
         public const string RefreshTokenAuthType = "RefreshToken";
 
         private readonly IPostgresConnectionProvider cp;
@@ -91,6 +97,8 @@ returning ""refresh_token_id"";
         private readonly TokenSettings sessionTokenSettings;
         
         private readonly TokenSettings refreshTokenSettings;
+
+        private readonly SessionSettings sessionSettings;
 
         private readonly PasswordSettings passwordSettings;
         
@@ -109,6 +117,7 @@ returning ""refresh_token_id"";
             this.accessor = accessor;
             this.sessionTokenSettings = settingsStorage.GetSettings<TokenSettings>(SettingsName.SessionToken);
             this.refreshTokenSettings = settingsStorage.GetSettings<TokenSettings>(SettingsName.RefreshToken);
+            this.sessionSettings = settingsStorage.GetSettings<SessionSettings>(SettingsName.Session);
             this.passwordSettings = settingsStorage.GetSettings<PasswordSettings>(SettingsName.Password);
         }
 
@@ -203,21 +212,18 @@ returning ""refresh_token_id"";
             Session session;
             
             using (var conn = outerConnection?.Connect() ?? this.cp.Create().Connect())
+            using (var command = conn.CreateCommand())
             {
-                using (var command = conn.CreateCommand())
+                command.CommandText = SqlUpsertSession;
+                command.Parameters.Add(new NpgsqlParameter("id", Guid.NewGuid()));
+                command.Parameters.Add(new NpgsqlParameter("user_id", credentials.Id));
+                command.Parameters.Add(new NpgsqlParameter("session_token_id", sessionTokenId));
+                command.Parameters.Add(new NpgsqlParameter("refresh_token_id", refreshTokenId));
+                command.Parameters.Add(new NpgsqlParameter("last_activity", DateTime.UtcNow));
+                using (var reader = await command.ExecuteReaderAsync())
                 {
-                    command.CommandText = SqlUpsertSession;
-                    command.Parameters.Add(new NpgsqlParameter("id", Guid.NewGuid()));
-                    command.Parameters.Add(new NpgsqlParameter("user_id", credentials.Id));
-                    command.Parameters.Add(new NpgsqlParameter("session_token_id", sessionTokenId));
-                    command.Parameters.Add(new NpgsqlParameter("refresh_token_id", refreshTokenId));
-                    command.Parameters.Add(new NpgsqlParameter("last_activity", DateTime.UtcNow));
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        await reader.ReadAsync();
-                        session = reader.GetSession();
-                    }
-
+                    await reader.ReadAsync();
+                    session = reader.GetSession();
                 }
             }
 
@@ -245,15 +251,13 @@ returning ""refresh_token_id"";
             NpgsqlConnectionWrapper outerConnection = null)
         {
             using (var conn = outerConnection?.Connect() ?? this.cp.Create().Connect())
+            using (var command = conn.CreateCommand())
             {
-                using (var command = conn.CreateCommand())
-                {
-                    command.CommandText = SqlLogout;
-                    command.Parameters.Add(new NpgsqlParameter("user_id", userId));
-                    return (await command.ExecuteNonQueryAsync()) == 1
-                        ? new ServiceResult()
-                        : new ServiceResult(ErrorFactory.AccessDenied());
-                }
+                command.CommandText = SqlLogout;
+                command.Parameters.Add(new NpgsqlParameter("user_id", userId));
+                return (await command.ExecuteNonQueryAsync()) == 1
+                    ? ServiceResult.Successful
+                    : new ServiceResult(ErrorFactory.AccessDenied());
             }
         }
 
@@ -264,15 +268,34 @@ returning ""refresh_token_id"";
             NpgsqlConnectionWrapper outerConnection = null)
         {
             using (var conn = outerConnection?.Connect() ?? this.cp.Create().Connect())
+            using (var command = conn.CreateCommand())
             {
-                using (var command = conn.CreateCommand())
-                {
-                    command.CommandText = SqlHasSessionToken;
-                    command.Parameters.Add(new NpgsqlParameter("user_id", userId));
-                    return (await command.ExecuteScalarAsync())?.Equals(sessionTokenId) == true
-                        ? new ServiceResult()
-                        : new ServiceResult(ErrorFactory.AccessDenied());
-                }
+                command.CommandText = SqlHasSessionToken;
+                command.Parameters.Add(new NpgsqlParameter("user_id", userId));
+                return (await command.ExecuteScalarAsync())?.Equals(sessionTokenId) == true
+                    ? ServiceResult.Successful
+                    : new ServiceResult(ErrorFactory.AccessDenied());
+            }
+        }
+        
+        /// <inheritdoc />
+        public async Task<ServiceResult> DeleteAllExpiredAsync(NpgsqlConnectionWrapper oc = null)
+        {
+            if (this.sessionSettings.SessionInactiveTimeoutMs < 1)
+            {
+                return ServiceResult.Successful;
+            }
+
+            var expire = DateTime.UtcNow.AddMilliseconds(this.sessionSettings.SessionInactiveTimeoutMs);
+            
+            using (var conn = oc?.Connect() ?? this.cp.Create().Connect())
+            using (var command = conn.CreateCommand())
+
+            {
+                command.CommandText = SqlDeleteExpired;
+                command.Parameters.Add(new NpgsqlParameter("expire", expire));
+                await command.ExecuteNonQueryAsync();
+                return new ServiceResult();
             }
         }
 

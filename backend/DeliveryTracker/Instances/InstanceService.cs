@@ -12,7 +12,7 @@ namespace DeliveryTracker.Instances
 {
     // ReSharper disable once ClassNeverInstantiated.Global
     /// <inheritdoc />
-    public class InstanceService : IInstanceService
+    public sealed class InstanceService : IInstanceService
     {
         #region sql
 

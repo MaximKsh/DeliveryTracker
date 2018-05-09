@@ -7,8 +7,9 @@ using DeliveryTracker.Validation;
 
 namespace DeliveryTracker.Instances
 {
+    // ReSharper disable once ClassNeverInstantiated.Global
     /// <inheritdoc />
-    public class UserService : IUserService
+    public sealed class UserService : IUserService
     {
         #region fields
 

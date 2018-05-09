@@ -4,12 +4,14 @@ using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Validation;
-using Microsoft.Extensions.Logging;
 
 
 namespace DeliveryTracker.Instances
 {
-    public class AccountService : IAccountService
+    
+    // ReSharper disable once ClassNeverInstantiated.Global
+    /// <inheritdoc />
+    public sealed class AccountService : IAccountService
     {
         #region field
         
@@ -23,8 +25,6 @@ namespace DeliveryTracker.Instances
 
         private readonly IInvitationService invitationService;
 
-        private readonly ILogger<IAccountService> logger;
-
         #endregion
 
         #region constuctor
@@ -34,15 +34,13 @@ namespace DeliveryTracker.Instances
             IUserCredentialsAccessor userCredentialsAccessor,
             IUserManager userManager,
             ISecurityManager securityManager,
-            IInvitationService invitationService,
-            ILogger<IAccountService> logger)
+            IInvitationService invitationService)
         {
             this.cp = cp;
             this.userCredentialsAccessor = userCredentialsAccessor;
             this.userManager = userManager;
             this.securityManager = securityManager;
             this.invitationService = invitationService;
-            this.logger = logger;
         }
 
         #endregion

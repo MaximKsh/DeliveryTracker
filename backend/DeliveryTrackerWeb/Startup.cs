@@ -57,6 +57,7 @@ namespace DeliveryTrackerWeb
         public void Configure(IApplicationBuilder app, ISettingsStorage settingsStorage)
         {
             settingsStorage
+                .AddDeliveryTrackerDatabaseSettings(this.configuration)
                 .AddDeliveryTrackerIdentificationSettings(this.configuration)
                 .AddDeliveryTrackerInstancesSettings(this.configuration)
                 .AddDeliveryTrackerNotificationSettings(this.configuration);

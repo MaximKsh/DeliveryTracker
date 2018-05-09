@@ -86,5 +86,13 @@ namespace DeliveryTracker.Identification
             Guid userId,
             Guid sessionTokenId,
             NpgsqlConnectionWrapper outerConnection = null);
+
+        /// <summary>
+        /// Удалить все просроченные сессии.
+        /// </summary>
+        /// <param name="outerConnection"></param>
+        /// <returns></returns>
+        Task<ServiceResult> DeleteAllExpiredAsync(
+            NpgsqlConnectionWrapper outerConnection = null);
     }
 }

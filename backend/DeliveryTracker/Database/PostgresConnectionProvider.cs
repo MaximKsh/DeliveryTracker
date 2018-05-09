@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿
+using DeliveryTracker.Common;
 
 namespace DeliveryTracker.Database
 {
@@ -7,9 +8,10 @@ namespace DeliveryTracker.Database
     {
         private readonly string connectionString;
 
-        public PostgresConnectionProvider(IConfiguration configuration)
+        public PostgresConnectionProvider(
+            ISettingsStorage settingsStorage)
         {
-            this.connectionString = configuration.GetConnectionString("DefaultConnection");
+            this.connectionString = settingsStorage.GetSettings<DatabaseSettings>(SettingsName.Database).DefaultConnectionString;
         }
 
         /// <inheritdoc />
