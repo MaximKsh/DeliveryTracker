@@ -13,15 +13,10 @@
     <PackageReference Include="Quartz" Version="3.0.4" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="appsettings.json">
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\DeliveryTracker\DeliveryTracker.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
-    <None Update="NLog.config" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="appsettings.json" CopyToOutputDirectory="Always" />
+    <None Update="NLog.config" CopyToOutputDirectory="Always" />
   </ItemGroup>
 </Project>

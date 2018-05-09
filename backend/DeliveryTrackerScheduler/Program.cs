@@ -44,6 +44,10 @@ namespace DeliveryTrackerScheduler
             {
                 logger.Log(LogLevel.Fatal, e, "DeliveryTrackerScheduler exception");
             }
+            finally
+            {
+                LogManager.Shutdown();
+            }
         }
 
         private static async Task StartScheduler(IServiceProvider serviceProvider, Logger logger)
@@ -64,12 +68,14 @@ namespace DeliveryTrackerScheduler
                 {
                     logger.Log(LogLevel.Info, "SIGINT");
                     scheduler.Shutdown(true).Wait();
+                    LogManager.Shutdown();
                 };
                 // SIGTERM 
                 AssemblyLoadContext.Default.Unloading += context =>
                 {
                     logger.Log(LogLevel.Info, "SIGTERM");
                     scheduler.Shutdown(true).Wait();
+                    LogManager.Shutdown();
                 };
                 await Task.Delay(Timeout.Infinite);
             }
