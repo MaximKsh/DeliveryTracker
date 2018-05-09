@@ -37,6 +37,7 @@
             public const string InvitationCreationError = Pref + "InvitationCreationError";
             public const string InvitationExpired = Pref + "InvitationExpired"; 
             public const string InvitationNotFound = Pref + "InvitationNotFound";
+            public const string ObserverCancelExecution = Pref + "ObserverCancelExecution";
             public const string ReferenceCreationError = Pref + "ReferenceCreationError";
             public const string ReferenceEditError = Pref + "ReferenceEditError";
             public const string ReferenceEntryNotFound = Pref + "ReferenceEntryNotFound";

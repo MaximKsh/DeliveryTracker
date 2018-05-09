@@ -7,8 +7,9 @@ using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Localization;
 using DeliveryTracker.Tasks;
+using DeliveryTracker.Views.AuxTasks;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.Tasks
 {
     public sealed class MyTasksManagerView : UserTasksView
     {
@@ -35,7 +36,6 @@ namespace DeliveryTracker.Views
                 Count = count,
                 EntityType = nameof(TaskInfo),
                 Order = this.Order,
-                IconName = "Я не знаю"
             };
         }
 

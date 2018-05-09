@@ -2,7 +2,7 @@
 using System.Data;
 using DeliveryTracker.Database;
 using DeliveryTracker.References;
-using DeliveryTracker.Tasks.TransitionObservers;
+using DeliveryTracker.Tasks.TaskObservers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DeliveryTracker.Tasks
@@ -21,6 +21,7 @@ namespace DeliveryTracker.Tasks
             // Observers
             services
                 .AddSingleton<ITaskObserver, NotificationObserver>()
+                .AddSingleton<ITaskObserver, TaskStatisticsObserver>()
                 ;
             return services;
         }

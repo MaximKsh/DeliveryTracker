@@ -18,9 +18,9 @@ namespace DeliveryTrackerScheduler.Common
             var logger = LogManager.GetLogger(currentTypeName);
             try
             {
-                logger.Log(LogLevel.Trace, "Start.");
+                logger.Log(LogLevel.Info, "Start.");
                 await Task.Run(async () => { await this.ExecuteInternal(context, logger); });
-                logger.Log(LogLevel.Trace, "Successfuly complete.");
+                logger.Log(LogLevel.Info, "Successfuly complete.");
             }
             catch (Exception e)
             {

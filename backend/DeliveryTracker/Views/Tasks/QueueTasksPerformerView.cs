@@ -4,22 +4,20 @@ using DeliveryTracker.Identification;
 using DeliveryTracker.Localization;
 using DeliveryTracker.Tasks;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.Tasks
 {
-    public sealed class RevokedTasksManagerView: TaskViewBase
+    public sealed class QueueTasksPerformerView: TaskViewBase
     {
-        public RevokedTasksManagerView(
+        public QueueTasksPerformerView(
             int order,
             ITaskService taskService) : base(order, taskService)
         {
         }
 
-
-        public override string Name { get; } = nameof(RevokedTasksManagerView);
+        public override string Name { get; } = nameof(QueueTasksPerformerView);
         public override IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
         {
-            DefaultRoles.CreatorRole,
-            DefaultRoles.ManagerRole,
+            DefaultRoles.PerformerRole,
         }.AsReadOnly();
 
         protected override ViewDigest ViewDigestFactory(
@@ -27,11 +25,10 @@ namespace DeliveryTracker.Views
         {
             return new ViewDigest
             {
-                Caption = LocalizationAlias.Views.RevokedTasksManagerView,
+                Caption = LocalizationAlias.Views.QueueTasksPerformerView,
                 Count = count,
                 EntityType = nameof(TaskInfo),
                 Order = this.Order,
-                IconName = "Я не знаю"
             };
         }
 
@@ -39,7 +36,8 @@ namespace DeliveryTracker.Views
             string sqlGet)
         {
             return string.Format(sqlGet,
-                "state_id = 'd2e70369-3d37-420f-b176-5fa0b2c1d4a9'", // Revoked
+                "state_id = 'd4595da3-6a5f-4455-b975-7637ea429cb5' " +
+                "and performer_id = @user_id", // Queue
                 "{0}");
         }
 
@@ -47,7 +45,8 @@ namespace DeliveryTracker.Views
             string sqlCount)
         {
             return string.Format(sqlCount,
-                "state_id = 'd4595da3-6a5f-4455-b975-7637ea429cb5'" // Revoked
+                "state_id = 'd4595da3-6a5f-4455-b975-7637ea429cb5' " +
+                "and performer_id = @user_id" // Queue
             ); 
         }
     }

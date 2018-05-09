@@ -4,7 +4,7 @@ using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.References;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.References
 {
     public class ReferenceViewGroup : ViewGroupBase
     {

@@ -4,22 +4,20 @@ using DeliveryTracker.Identification;
 using DeliveryTracker.Localization;
 using DeliveryTracker.Tasks;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.Tasks
 {
-    public sealed class ActualTasksManagerView : TaskViewBase
+    public sealed class CompletedTasksPerformerView: TaskViewBase
     {
-        public ActualTasksManagerView(
+        public CompletedTasksPerformerView(
             int order,
             ITaskService taskService) : base(order, taskService)
         {
         }
 
-
-        public override string Name { get; } = nameof(ActualTasksManagerView);
+        public override string Name { get; } = nameof(CompletedTasksPerformerView);
         public override IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
         {
-            DefaultRoles.CreatorRole,
-            DefaultRoles.ManagerRole,
+            DefaultRoles.PerformerRole,
         }.AsReadOnly();
 
         protected override ViewDigest ViewDigestFactory(
@@ -27,11 +25,10 @@ namespace DeliveryTracker.Views
         {
             return new ViewDigest
             {
-                Caption = LocalizationAlias.Views.ActualTasksManagerView,
+                Caption = LocalizationAlias.Views.CompletedTasksPerformerView,
                 Count = count,
                 EntityType = nameof(TaskInfo),
                 Order = this.Order,
-                IconName = "Я не знаю"
             };
         }
 
@@ -39,9 +36,8 @@ namespace DeliveryTracker.Views
             string sqlGet)
         {
             return string.Format(sqlGet,
-                "state_id = '0a79703f-4570-4a58-8509-9e598b1eefaf' " + // Waiting
-                "  or state_id = '8912d18f-192a-4327-bd47-5c9963b5f2b0'" + // IntoWork
-                "  or state_id = '020d7c7e-bb4e-4add-8b11-62a91471b7c8'", // Delivered
+                "state_id = 'd91856f9-d1bf-4fad-a46e-c3baafabf762' " +
+                "and performer_id = @user_id", // Completed
                 "{0}");
         }
 
@@ -49,9 +45,9 @@ namespace DeliveryTracker.Views
             string sqlCount)
         {
             return string.Format(sqlCount,
-                "state_id = '0a79703f-4570-4a58-8509-9e598b1eefaf' " + // Waiting
-                "  or state_id = '8912d18f-192a-4327-bd47-5c9963b5f2b0'" + // IntoWork
-                "  or state_id = '020d7c7e-bb4e-4add-8b11-62a91471b7c8'"); // IntoWork
+                "state_id = 'd91856f9-d1bf-4fad-a46e-c3baafabf762' " +
+                "and performer_id = @user_id" // Completed
+            ); 
         }
     }
 }

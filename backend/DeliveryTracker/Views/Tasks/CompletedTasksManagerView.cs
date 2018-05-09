@@ -4,7 +4,7 @@ using DeliveryTracker.Identification;
 using DeliveryTracker.Localization;
 using DeliveryTracker.Tasks;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.Tasks
 {
     public sealed class CompleteTasksManager: TaskViewBase
     {
@@ -31,7 +31,6 @@ namespace DeliveryTracker.Views
                 Count = count,
                 EntityType = nameof(TaskInfo),
                 Order = this.Order,
-                IconName = "Я не знаю"
             };
         }
 

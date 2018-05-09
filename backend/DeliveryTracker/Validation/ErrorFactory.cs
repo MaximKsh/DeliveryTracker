@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using DeliveryTracker.Localization;
 using DeliveryTracker.Tasks;
+using DeliveryTracker.Tasks.TaskObservers;
 
 namespace DeliveryTracker.Validation
 {
@@ -235,7 +236,6 @@ namespace DeliveryTracker.Validation
         
         #endregion
         
-        
         #region references error
             
        
@@ -349,7 +349,6 @@ namespace DeliveryTracker.Validation
         
         #endregion
 
-
         #region tasks
         
         /// <summary>
@@ -426,6 +425,20 @@ namespace DeliveryTracker.Validation
                     [nameof(taskStateId)] = taskStateId.ToString(),
                     [nameof(taskStateTransitionId)] = taskStateTransitionId.ToString(),
                     [nameof(role)] = role.ToString(),
+                });
+        
+        /// <summary>
+        /// Наблюдатель отменил выполнение действия с заданием.
+        /// </summary>
+        /// <param name="observer"></param>
+        /// <returns></returns>
+        public static IError ObserverCancelExecution(ITaskObserver observer) =>
+            new Error(
+                ErrorCode.ObserverCancelExection,
+                LocalizationAlias.Error.ObserverCancelExecution,
+                new Dictionary<string, string>
+                {
+                    [nameof(observer)] = observer.GetType().Name,
                 });
         
         /// <summary>

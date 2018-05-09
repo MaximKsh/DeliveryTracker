@@ -21,10 +21,5 @@
         /// ПОрядок сортировки в списке представлений в группе.
         /// </summary>
         public int Order { get; set; }
-        
-        /// <summary>
-        /// Название иконки у представления.
-        /// </summary>
-        public string IconName { get; set; }
     }
 }

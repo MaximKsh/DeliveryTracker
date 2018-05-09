@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
@@ -14,8 +15,10 @@ using Microsoft.Extensions.DependencyInjection;
 using DeliveryTracker.Validation;
 using DeliveryTracker.Views;
 using DeliveryTrackerWeb.Middleware;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -62,18 +65,7 @@ namespace DeliveryTrackerWeb
                 .AddDeliveryTrackerInstancesSettings(this.configuration)
                 .AddDeliveryTrackerNotificationSettings(this.configuration);
             
-            app.UseExceptionHandler(conf =>
-            {
-                conf.Run(async context =>
-                {
-                    // Логирование исключения уже производится в ExceptionHandler-е
-                    context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
-                    context.Response.ContentType = "application/json";
-                    var responseString = JsonConvert
-                        .SerializeObject(ErrorFactory.ServerError());
-                    await context.Response.WriteAsync(responseString).ConfigureAwait(false);
-                });
-            });
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseAuthentication();
             app.UseMiddleware<CheckSessionMiddleware>();
             app.UseMiddleware<RequestResponseLoggingMiddleware>();

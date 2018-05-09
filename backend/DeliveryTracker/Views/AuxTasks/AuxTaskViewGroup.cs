@@ -4,7 +4,7 @@ using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Tasks;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.AuxTasks
 {
     public sealed class AuxTaskViewGroup : ViewGroupBase
     {

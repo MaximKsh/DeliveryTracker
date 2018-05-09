@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.Users
 {
     public class UserViewGroup : ViewGroupBase
     {

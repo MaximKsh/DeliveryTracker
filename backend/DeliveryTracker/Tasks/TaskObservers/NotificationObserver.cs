@@ -5,7 +5,7 @@ using DeliveryTracker.Localization;
 using DeliveryTracker.Notifications;
 using Npgsql;
 
-namespace DeliveryTracker.Tasks.TransitionObservers
+namespace DeliveryTracker.Tasks.TaskObservers
 {
     public sealed class NotificationObserver : TaskObserverBase
     {

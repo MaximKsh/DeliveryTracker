@@ -4,22 +4,20 @@ using DeliveryTracker.Identification;
 using DeliveryTracker.Localization;
 using DeliveryTracker.Tasks;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.Tasks
 {
-    public sealed class PreparingTasksManagerView: TaskViewBase
+    public sealed class RevokedTasksPerformerView : TaskViewBase
     {
-        public PreparingTasksManagerView(
+        public RevokedTasksPerformerView(
             int order,
             ITaskService taskService) : base(order, taskService)
         {
         }
 
-
-        public override string Name { get; } = nameof(PreparingTasksManagerView);
+        public override string Name { get; } = nameof(RevokedTasksPerformerView);
         public override IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
         {
-            DefaultRoles.CreatorRole,
-            DefaultRoles.ManagerRole,
+            DefaultRoles.PerformerRole,
         }.AsReadOnly();
 
         protected override ViewDigest ViewDigestFactory(
@@ -27,11 +25,10 @@ namespace DeliveryTracker.Views
         {
             return new ViewDigest
             {
-                Caption = LocalizationAlias.Views.PreparingTasksManagerView,
+                Caption = LocalizationAlias.Views.RevokedTasksPerformerView,
                 Count = count,
                 EntityType = nameof(TaskInfo),
                 Order = this.Order,
-                IconName = "Я не знаю"
             };
         }
 
@@ -39,7 +36,8 @@ namespace DeliveryTracker.Views
             string sqlGet)
         {
             return string.Format(sqlGet,
-                "state_id = '8c9c1011-f7c1-4cef-902f-4925f5e83f4a'", // Preparing
+                "state_id = 'd2e70369-3d37-420f-b176-5fa0b2c1d4a9' " +
+                "and performer_id = @user_id", // Revoked
                 "{0}");
         }
 
@@ -47,7 +45,8 @@ namespace DeliveryTracker.Views
             string sqlCount)
         {
             return string.Format(sqlCount,
-                "state_id = '8c9c1011-f7c1-4cef-902f-4925f5e83f4a'" // Preparing
+                "state_id = 'd2e70369-3d37-420f-b176-5fa0b2c1d4a9' " +
+                "and performer_id = @user_id" // Revoked
             ); 
         }
     }

@@ -6,12 +6,12 @@ using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.References;
-using DeliveryTracker.Tasks.TransitionObservers;
+using DeliveryTracker.Tasks.TaskObservers;
 using DeliveryTracker.Validation;
 
 namespace DeliveryTracker.Tasks
 {
-    public class TaskService : ITaskService
+    public sealed class TaskService : ITaskService
     {
         #region fields
 
@@ -28,7 +28,7 @@ namespace DeliveryTracker.Tasks
         private readonly IUserManager userManager;
 
         private readonly ITaskObserverExecutor observerExecutor;
-        
+
         #endregion
         
         #region constuctor
@@ -52,7 +52,6 @@ namespace DeliveryTracker.Tasks
         }
         
         #endregion
-        
         
         #region implementation
 

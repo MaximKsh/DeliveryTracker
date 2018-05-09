@@ -1,4 +1,9 @@
 ﻿using System.Collections.Generic;
+using DeliveryTracker.Views.AuxTasks;
+using DeliveryTracker.Views.References;
+using DeliveryTracker.Views.Statistics;
+using DeliveryTracker.Views.Tasks;
+using DeliveryTracker.Views.Users;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DeliveryTracker.Views
@@ -15,6 +20,7 @@ namespace DeliveryTracker.Views
                 .AddSingleton<IViewGroup, UserViewGroup>()
                 .AddSingleton<IViewGroup, TaskViewGroup>()
                 .AddSingleton<IViewGroup, AuxTaskViewGroup>()
+                .AddSingleton<IViewGroup, StatisticsViewGroup>()
                 ;
             
             return services;

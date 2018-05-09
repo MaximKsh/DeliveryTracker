@@ -1,26 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
-using DeliveryTracker.Localization;
 using DeliveryTracker.Tasks;
 using Npgsql;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.Tasks
 {
-    public class UserTasksView : IView
+    public abstract class TaskViewBase : IView
     {
-         #region sql
+        #region sql
         
         private static readonly string SqlGet = $@"
 select
     {TaskHelper.GetTasksColumns()}
 from tasks
 where instance_id = @instance_id 
-    {{0}}
+    and ({{0}})
+    {{1}}
+
+
 order by created desc
 limit {ViewHelper.DefaultViewLimit}
 ;
@@ -30,7 +33,7 @@ limit {ViewHelper.DefaultViewLimit}
 select count(1)
 from tasks
 where instance_id = @instance_id 
-    {0}
+    and ({0})
 ;
 ";
         #endregion
@@ -40,44 +43,39 @@ where instance_id = @instance_id
         
         protected readonly int Order;
         protected readonly ITaskService TaskService;
+
+        private readonly Lazy<string> sqlGetLazy;
+        private readonly Lazy<string> sqlCountLazy;
         
         #endregion
         
         #region constuctor
         
-        public UserTasksView(
+        protected TaskViewBase(
             int order,
             ITaskService taskService)
         {
             this.Order = order;
             this.TaskService = taskService;
+            this.sqlGetLazy = new Lazy<string>(() => this.ExtendSqlGet(SqlGet), LazyThreadSafetyMode.PublicationOnly);
+            this.sqlCountLazy = new Lazy<string>(() => this.ExtendSqlCount(SqlCount), LazyThreadSafetyMode.PublicationOnly);
         }
         
         #endregion
         
         #region implementation
 
-        public virtual string Name { get; } = nameof(UserTasksView);
-        
-        public virtual IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
-        {
-            DefaultRoles.CreatorRole,
-            DefaultRoles.ManagerRole,
-            DefaultRoles.PerformerRole,
-        }.AsReadOnly();
+        protected abstract ViewDigest ViewDigestFactory(long count);
 
-        protected virtual ViewDigest ViewDigestFactory(
-            long count)
-        {
-            return new ViewDigest
-            {
-                Caption = LocalizationAlias.Views.UserTasksView,
-                Count = count,
-                EntityType = nameof(TaskInfo),
-                Order = this.Order,
-                IconName = "Я не знаю"
-            };
-        }
+        protected abstract string ExtendSqlGet(string sqlGet);
+        
+        protected abstract string ExtendSqlCount(string sqlCount);
+        
+        /// <inheritdoc />
+        public abstract string Name { get; }
+        
+        /// <inheritdoc />
+        public abstract IReadOnlyList<Guid> PermittedRoles { get; }
         
         /// <inheritdoc />
         public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
@@ -94,7 +92,7 @@ where instance_id = @instance_id
         }
         
         /// <inheritdoc />
-        public virtual async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
+        public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
             NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
             IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
@@ -103,13 +101,13 @@ where instance_id = @instance_id
             using (var command = oc.CreateCommand())
             {
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
+                command.Parameters.Add(new NpgsqlParameter("user_id", userCredentials.Id));
+                
                 var sb = new StringBuilder(256);
                 ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search", "task_number");
-                ViewHelper.TryAddEqualsParameter<Guid>(parameters, command, sb, "author_id");
-                ViewHelper.TryAddEqualsParameter<Guid>(parameters, command, sb, "performer_id");
-
                 ViewHelper.TryAddAfterParameter(parameters, command, sb, "created", "tasks", true);
-                command.CommandText = string.Format(SqlGet, sb.ToString());
+                command.CommandText = string.Format(this.sqlGetLazy.Value, sb.ToString());
+                
                 
                 using (var reader = await command.ExecuteReaderAsync())
                 {
@@ -126,25 +124,22 @@ where instance_id = @instance_id
         }
 
         /// <inheritdoc />
-        public virtual async Task<ServiceResult<long>> GetCountAsync(
+        public async Task<ServiceResult<long>> GetCountAsync(
             NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
             IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
             using (var command = oc.CreateCommand())
             {
+                command.CommandText = this.sqlCountLazy.Value;
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
-                var sb = new StringBuilder(256);
-                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search", "task_number");
-                ViewHelper.TryAddEqualsParameter<Guid>(parameters, command, sb, "author_id");
-                ViewHelper.TryAddEqualsParameter<Guid>(parameters, command, sb, "performer_id");
-
-                command.CommandText = string.Format(SqlCount, sb.ToString());
+                command.Parameters.Add(new NpgsqlParameter("user_id", userCredentials.Id));
 
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }
         
         #endregion
+        
     }
 }

@@ -1,54 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Localization;
+using DeliveryTracker.References;
 using Npgsql;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.References
 {
-    public class ManagersView : IView
+    public class PaymentTypesView : IView
     {
         #region sql
         
         private static readonly string SqlGet = $@"
 select
-    {IdentificationHelper.GetUserColumns()}
-from users
-where instance_id = @instance_id 
-    and (role = @role or role = @role_creator)
+    {ReferenceHelper.GetPaymentTypeColumns()}
+from payment_types
+where instance_id = @instance_id
     and deleted = false
-    {{0}}
+{{0}}
 
-order by surname
+order by lower(name)
 limit {ViewHelper.DefaultViewLimit}
 ;
 ";
 
-        private const string SqlCount = @"
-select managers_count
+        private static readonly string SqlCount = $@"
+select payment_types_count
 from entries_statistics
 where instance_id = @instance_id
 ;
 ";
         #endregion
         
-        
         #region fields
         
         private readonly int order;
+
+        private readonly IReferenceService<PaymentType> paymentTypeReferenceService;
         
         #endregion
         
         #region constuctor
         
-        public ManagersView(
-            int order)
+        public PaymentTypesView(
+            int order,
+            IReferenceService<PaymentType> paymentTypeReferenceService)
         {
             this.order = order;
+            this.paymentTypeReferenceService = paymentTypeReferenceService;
         }
         
         #endregion
@@ -56,16 +60,15 @@ where instance_id = @instance_id
         #region implementation
         
         /// <inheritdoc />
-        public string Name { get; } = nameof(ManagersView);
+        public string Name { get; } = nameof(PaymentTypesView);
         
         /// <inheritdoc />
         public IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
         {
             DefaultRoles.CreatorRole,
-            DefaultRoles.ManagerRole,
-            DefaultRoles.PerformerRole
+            DefaultRoles.ManagerRole
         }.AsReadOnly();
-
+        
         /// <inheritdoc />
         public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
             NpgsqlConnectionWrapper oc,
@@ -79,11 +82,10 @@ where instance_id = @instance_id
             }
             return new ServiceResult<ViewDigest>(new ViewDigest
             {
-                Caption = LocalizationAlias.Views.ManagersView,
+                Caption = LocalizationAlias.Views.PaymentTypesView,
                 Count = result.Result,
-                EntityType = nameof(User),
+                EntityType = nameof(PaymentType),
                 Order = this.order,
-                IconName = "1111"
             });
         }
         
@@ -93,27 +95,28 @@ where instance_id = @instance_id
             UserCredentials userCredentials,
             IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
-            var list = new List<IDictionaryObject>();
+            var list = new List<PaymentType>();
             using (var command = oc.CreateCommand())
             {
+                
                 var sb = new StringBuilder(256);
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
-                command.Parameters.Add(new NpgsqlParameter("role_creator", DefaultRoles.CreatorRole));
-                command.Parameters.Add(new NpgsqlParameter("role", DefaultRoles.ManagerRole));
-                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search");
-                ViewHelper.TryAddAfterParameter(parameters, command, sb, "users", "surname");
-                command.CommandText = string.Format(SqlGet, sb);
+                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search", "name");
+                ViewHelper.TryAddAfterParameter(parameters, command, sb, "payment_types", "name");
 
+                command.CommandText = string.Format(SqlGet, sb);
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
                     {
-                        list.Add(reader.GetUser());
+                        list.Add(reader.GetPaymentType());
                     }
                 }
             }
+
+            var package = await this.paymentTypeReferenceService.PackAsync(list, oc);
             
-            return new ServiceResult<IList<IDictionaryObject>>(list);
+            return new ServiceResult<IList<IDictionaryObject>>(package.Result.Cast<IDictionaryObject>().ToList());
         }
 
         /// <inheritdoc />
@@ -126,7 +129,8 @@ where instance_id = @instance_id
             {
                 command.CommandText = SqlCount;
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
-                return new ServiceResult<long>((long)await command.ExecuteScalarAsync() + 1);
+
+                return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }
         

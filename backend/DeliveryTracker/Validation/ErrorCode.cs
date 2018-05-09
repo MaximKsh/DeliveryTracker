@@ -122,6 +122,11 @@
         /// Код ошибки: неправильный переход между состояниями.
         /// </summary>
         public const string IncorrectTaskStateTransition = "IncorrectTaskStateTransition";
+
+        /// <summary>
+        /// Код ошибки: наблюдатель отменил выполнение.
+        /// </summary>
+        public const string ObserverCancelExection = "ObserverCancelExecution";
         
         /// <summary>
         /// Код ошибки: ошибка создания задания.

@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace DeliveryTracker.Tasks.TransitionObservers
+namespace DeliveryTracker.Tasks.TaskObservers
 {
     public interface ITaskObserver
     {

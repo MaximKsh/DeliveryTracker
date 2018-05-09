@@ -3,6 +3,7 @@ using System.Linq;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.Views;
+using DeliveryTracker.Views.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;

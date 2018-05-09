@@ -1,26 +1,29 @@
 ﻿using System;
 using System.Threading.Tasks;
+using DeliveryTracker.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace DeliveryTracker.Tasks.TransitionObservers
+namespace DeliveryTracker.Tasks.TaskObservers
 {
-    public class TaskObserverExecutor : ITaskObserverExecutor
+    public sealed class TaskObserverExecutor : ITaskObserverExecutor
     {
         #region fields
 
         private readonly IServiceProvider provider;
 
-        //private readonly Logger<TaskObserverExecutor> logger;
+       private readonly ILogger<TaskObserverExecutor> logger;
         
         #endregion
         
         #region constuctor
 
         public TaskObserverExecutor(
-            IServiceProvider provider)
+            IServiceProvider provider,
+            ILogger<TaskObserverExecutor> logger)
         {
             this.provider = provider;
+            this.logger = logger;
         }
         
         #endregion
@@ -40,8 +43,19 @@ namespace DeliveryTracker.Tasks.TransitionObservers
                 }
                 catch (Exception e)
                 {
-                    //this.logger.LogError(e, e.Message);
+                    this.logger?.LogError($"{observer.GetType().Name} throws an exception when handling creation:{Environment.NewLine}" +
+                                          $"{e.Message}{Environment.NewLine}" +
+                                          $"{e.StackTrace}");
+
+                    ctx.Cancel = true;
                 }
+
+                if (ctx.Cancel)
+                {
+                    ctx.Errors.Add(ErrorFactory.ObserverCancelExecution(observer));
+                    return;
+                }
+                
             }
         }
         
@@ -58,7 +72,16 @@ namespace DeliveryTracker.Tasks.TransitionObservers
                 }
                 catch (Exception e)
                 {
-                    //this.logger.LogError(e, e.Message);
+                    this.logger?.LogError($"{observer.GetType().Name} throws an exception when handling editing:{Environment.NewLine}" +
+                                          $"{e.Message}{Environment.NewLine}" +
+                                          $"{e.StackTrace}");
+                    
+                    ctx.Cancel = true;
+                }
+                if (ctx.Cancel)
+                {
+                    ctx.Errors.Add(ErrorFactory.ObserverCancelExecution(observer));
+                    return;
                 }
             }
         }
@@ -76,7 +99,18 @@ namespace DeliveryTracker.Tasks.TransitionObservers
                 }
                 catch (Exception e)
                 {
-                    //this.logger.LogError(e, e.Message);
+                    this.logger?.LogError($"{observer.GetType().Name} throws an exception when handling transition:{Environment.NewLine}" +
+                                          $"{e.Message}{Environment.NewLine}" +
+                                          $"{e.StackTrace}");
+                    
+                    ctx.Cancel = true;
+                    return;
+                }
+                
+                if (ctx.Cancel)
+                {
+                    ctx.Errors.Add(ErrorFactory.ObserverCancelExecution(observer));
+                    return;
                 }
             }
         }

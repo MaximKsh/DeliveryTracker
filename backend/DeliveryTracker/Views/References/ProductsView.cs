@@ -10,26 +10,27 @@ using DeliveryTracker.Localization;
 using DeliveryTracker.References;
 using Npgsql;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.References
 {
-    public class ClientsView : IView
+    public class ProductsView : IView
     {
         #region sql
         
         private static readonly string SqlGet = $@"
 select
-    {ReferenceHelper.GetClientColumns()}
-from clients
+    {ReferenceHelper.GetProductColumns()}
+from products 
 where instance_id = @instance_id
     and deleted = false
-    {{0}}
-order by surname
+{{0}}
+
+order by name
 limit {ViewHelper.DefaultViewLimit}
 ;
 ";
 
         private const string SqlCount = @"
-select clients_count
+select products_count
 from entries_statistics
 where instance_id = @instance_id
 ;
@@ -40,18 +41,18 @@ where instance_id = @instance_id
         
         private readonly int order;
 
-        private readonly IReferenceService<Client> clientReferenceService;
+        private readonly IReferenceService<Product> productsReferenceService;
         
         #endregion
         
         #region constuctor
         
-        public ClientsView(
+        public ProductsView(
             int order,
-            IReferenceService<Client> clientReferenceService)
+            IReferenceService<Product> productsReferenceService)
         {
             this.order = order;
-            this.clientReferenceService = clientReferenceService;
+            this.productsReferenceService = productsReferenceService;
         }
         
         #endregion
@@ -59,7 +60,7 @@ where instance_id = @instance_id
         #region implementation
         
         /// <inheritdoc />
-        public string Name { get; } = nameof(ClientsView);
+        public string Name { get; } = nameof(ProductsView);
         
         /// <inheritdoc />
         public IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
@@ -67,7 +68,7 @@ where instance_id = @instance_id
             DefaultRoles.CreatorRole,
             DefaultRoles.ManagerRole
         }.AsReadOnly();
-
+        
         /// <inheritdoc />
         public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
             NpgsqlConnectionWrapper oc,
@@ -81,43 +82,41 @@ where instance_id = @instance_id
             }
             return new ServiceResult<ViewDigest>(new ViewDigest
             {
-                Caption = LocalizationAlias.Views.ClientsView,
+                Caption = LocalizationAlias.Views.ProductsView,
                 Count = result.Result,
-                EntityType = nameof(Client),
+                EntityType = nameof(Product),
                 Order = this.order,
-                IconName = "Я не знаю"
             });
         }
-
+        
         /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
             NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
             IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
-            var list = new List<Client>();
+            var list = new List<Product>();
             using (var command = oc.CreateCommand())
             {
                 var sb = new StringBuilder(256);
-                command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
-                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search");
-                ViewHelper.TryAddStartsWithParameter(parameters, command, sb, "phone_number");
-                ViewHelper.TryAddAfterParameter(parameters, command, sb, "clients", "surname");
-
-                command.CommandText = string.Format(SqlGet, sb);
+                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search", "name");
+                ViewHelper.TryAddAfterParameter(parameters, command, sb, "products", "name");
                 
+                command.CommandText = string.Format(SqlGet, sb);
+                command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
+
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
                     {
-                        list.Add(reader.GetClient());
+                        list.Add(reader.GetProduct());
                     }
                 }
             }
 
-            var packed = await this.clientReferenceService.PackAsync(list, oc);
+            var package = await this.productsReferenceService.PackAsync(list, oc);
             
-            return new ServiceResult<IList<IDictionaryObject>>(packed.Result.Cast<IDictionaryObject>().ToList());
+            return new ServiceResult<IList<IDictionaryObject>>(package.Result.Cast<IDictionaryObject>().ToList());
         }
 
         /// <inheritdoc />
@@ -130,7 +129,6 @@ where instance_id = @instance_id
             {
                 command.CommandText = SqlCount;
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
-
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }

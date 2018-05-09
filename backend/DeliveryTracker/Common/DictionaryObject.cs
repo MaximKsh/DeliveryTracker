@@ -82,6 +82,7 @@ namespace DeliveryTracker.Common
         {
             if (!this.Dictionary.TryGetValue(key, out var obj))
             {
+                this.Dictionary[key] = defaultValue;
                 return defaultValue;
             }
 
@@ -122,6 +123,7 @@ namespace DeliveryTracker.Common
         {
             if (!this.Dictionary.TryGetValue(key, out var obj))
             {
+                this.Dictionary[key] = defaultValue;
                 return defaultValue;
             }
 
@@ -151,6 +153,7 @@ namespace DeliveryTracker.Common
         {
             if (!this.Dictionary.TryGetValue(key, out var obj))
             {
+                this.Dictionary[key] = defaultValue;
                 return defaultValue;
             }
 
@@ -206,6 +209,7 @@ namespace DeliveryTracker.Common
         {
             if (!this.Dictionary.TryGetValue(key, out var obj))
             {
+                this.Dictionary[key] = defaultValue;
                 return defaultValue;
             }
 

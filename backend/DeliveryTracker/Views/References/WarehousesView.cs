@@ -1,81 +1,73 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
-using DeliveryTracker.Tasks;
+using DeliveryTracker.Localization;
+using DeliveryTracker.References;
 using Npgsql;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.References
 {
-    public abstract class TaskViewBase : IView
+    public class WarehousesView : IView
     {
         #region sql
         
         private static readonly string SqlGet = $@"
 select
-    {TaskHelper.GetTasksColumns()}
-from tasks
-where instance_id = @instance_id 
-    and ({{0}})
-    {{1}}
-
-
-order by created desc
+    {ReferenceHelper.GetWarehouseColumns()}
+from warehouses
+where instance_id = @instance_id
+    and deleted = false
+    {{0}}
+order by name
 limit {ViewHelper.DefaultViewLimit}
 ;
 ";
 
         private const string SqlCount = @"
-select count(1)
-from tasks
-where instance_id = @instance_id 
-    and ({0})
+select warehouses_count
+from entries_statistics
+where instance_id = @instance_id
 ;
 ";
-        #endregion
         
+        #endregion
         
         #region fields
         
-        protected readonly int Order;
-        protected readonly ITaskService TaskService;
+        private readonly int order;
 
-        private readonly Lazy<string> sqlGetLazy;
-        private readonly Lazy<string> sqlCountLazy;
+        private readonly IReferenceService<Warehouse> warehouseReferenceService;
         
         #endregion
         
         #region constuctor
         
-        protected TaskViewBase(
+        public WarehousesView(
             int order,
-            ITaskService taskService)
+            IReferenceService<Warehouse> warehouseReferenceService)
         {
-            this.Order = order;
-            this.TaskService = taskService;
-            this.sqlGetLazy = new Lazy<string>(() => this.ExtendSqlGet(SqlGet), LazyThreadSafetyMode.PublicationOnly);
-            this.sqlCountLazy = new Lazy<string>(() => this.ExtendSqlCount(SqlCount), LazyThreadSafetyMode.PublicationOnly);
+            this.order = order;
+            this.warehouseReferenceService = warehouseReferenceService;
         }
         
         #endregion
         
         #region implementation
-
-        protected abstract ViewDigest ViewDigestFactory(long count);
-
-        protected abstract string ExtendSqlGet(string sqlGet);
-        
-        protected abstract string ExtendSqlCount(string sqlCount);
         
         /// <inheritdoc />
-        public abstract string Name { get; }
-        
+        public string Name { get; } = nameof(WarehousesView);
+
         /// <inheritdoc />
-        public abstract IReadOnlyList<Guid> PermittedRoles { get; }
+        public IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
+        {
+            DefaultRoles.CreatorRole,
+            DefaultRoles.ManagerRole
+        };
         
         /// <inheritdoc />
         public async Task<ServiceResult<ViewDigest>> GetViewDigestAsync(
@@ -88,39 +80,43 @@ where instance_id = @instance_id
             {
                 return new ServiceResult<ViewDigest>(result.Errors);
             }
-            return new ServiceResult<ViewDigest>(this.ViewDigestFactory(result.Result));
+            return new ServiceResult<ViewDigest>(new ViewDigest
+            {
+                Caption = LocalizationAlias.Views.WarehousesView,
+                Count = result.Result,
+                EntityType = nameof(Warehouse),
+                Order = this.order,
+            });
         }
-        
+
         /// <inheritdoc />
         public async Task<ServiceResult<IList<IDictionaryObject>>> GetViewResultAsync(
             NpgsqlConnectionWrapper oc,
             UserCredentials userCredentials,
             IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
-            var list = new List<TaskInfo>();
+            var list = new List<Warehouse>();
             using (var command = oc.CreateCommand())
             {
-                command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
-                command.Parameters.Add(new NpgsqlParameter("user_id", userCredentials.Id));
-                
                 var sb = new StringBuilder(256);
-                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search", "task_number");
-                ViewHelper.TryAddAfterParameter(parameters, command, sb, "created", "tasks", true);
-                command.CommandText = string.Format(this.sqlGetLazy.Value, sb.ToString());
+                command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
+                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search");
+                ViewHelper.TryAddAfterParameter(parameters, command, sb, "warehouses", "name");
                 
-                
+                command.CommandText = string.Format(SqlGet, sb);
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
                     {
-                        list.Add(reader.GetTaskInfo());
+                        list.Add(reader.GetWarehouse());
                     }
                 }
             }
-
-            var package = await this.TaskService.PackTasksAsync(list, oc);
             
-            return new ServiceResult<IList<IDictionaryObject>>(new List<IDictionaryObject> { package.Result });
+            
+            var package = await this.warehouseReferenceService.PackAsync(list, oc);
+            
+            return new ServiceResult<IList<IDictionaryObject>>(package.Result.Cast<IDictionaryObject>().ToList());
         }
 
         /// <inheritdoc />
@@ -131,15 +127,12 @@ where instance_id = @instance_id
         {
             using (var command = oc.CreateCommand())
             {
-                command.CommandText = this.sqlCountLazy.Value;
+                command.CommandText = SqlCount;
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
-                command.Parameters.Add(new NpgsqlParameter("user_id", userCredentials.Id));
-
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }
         
         #endregion
-        
     }
 }

@@ -34,3 +34,4 @@ CREATE TABLE public.tasks
 
 CREATE INDEX tasks_author_id_index ON public.tasks (author_id);
 CREATE INDEX tasks_performer_id_index ON public.tasks (performer_id);
+CREATE INDEX tasks_state_changed_last_time_index ON public.tasks (state_changed_last_time);

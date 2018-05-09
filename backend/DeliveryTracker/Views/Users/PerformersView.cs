@@ -1,58 +1,54 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Localization;
-using DeliveryTracker.References;
 using Npgsql;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.Users
 {
-    public class ProductsView : IView
+    public class PerformersView : IView
     {
         #region sql
         
         private static readonly string SqlGet = $@"
 select
-    {ReferenceHelper.GetProductColumns()}
-from products 
-where instance_id = @instance_id
+    {IdentificationHelper.GetUserColumns()}
+from users
+where instance_id = @instance_id 
+    and role = @role
     and deleted = false
-{{0}}
+    {{0}}
 
-order by name
+order by surname
 limit {ViewHelper.DefaultViewLimit}
 ;
 ";
 
         private const string SqlCount = @"
-select products_count
+select performers_count
 from entries_statistics
 where instance_id = @instance_id
 ;
 ";
+        
         #endregion
         
         #region fields
         
         private readonly int order;
-
-        private readonly IReferenceService<Product> productsReferenceService;
         
         #endregion
         
         #region constuctor
         
-        public ProductsView(
-            int order,
-            IReferenceService<Product> productsReferenceService)
+        public PerformersView(
+            int order)
         {
             this.order = order;
-            this.productsReferenceService = productsReferenceService;
         }
         
         #endregion
@@ -60,13 +56,14 @@ where instance_id = @instance_id
         #region implementation
         
         /// <inheritdoc />
-        public string Name { get; } = nameof(ProductsView);
+        public string Name { get; } = nameof(PerformersView);
         
         /// <inheritdoc />
         public IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
         {
             DefaultRoles.CreatorRole,
-            DefaultRoles.ManagerRole
+            DefaultRoles.ManagerRole,
+            DefaultRoles.PerformerRole
         }.AsReadOnly();
         
         /// <inheritdoc />
@@ -82,11 +79,10 @@ where instance_id = @instance_id
             }
             return new ServiceResult<ViewDigest>(new ViewDigest
             {
-                Caption = LocalizationAlias.Views.ProductsView,
+                Caption = LocalizationAlias.Views.PerformersView,
                 Count = result.Result,
-                EntityType = nameof(Product),
+                EntityType = nameof(User),
                 Order = this.order,
-                IconName = "1"
             });
         }
         
@@ -96,28 +92,26 @@ where instance_id = @instance_id
             UserCredentials userCredentials,
             IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
-            var list = new List<Product>();
+            var list = new List<IDictionaryObject>();
             using (var command = oc.CreateCommand())
             {
                 var sb = new StringBuilder(256);
-                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search", "name");
-                ViewHelper.TryAddAfterParameter(parameters, command, sb, "products", "name");
-                
-                command.CommandText = string.Format(SqlGet, sb);
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
+                command.Parameters.Add(new NpgsqlParameter("role", DefaultRoles.PerformerRole));
+                ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search");
+                ViewHelper.TryAddAfterParameter(parameters, command, sb, "users", "surname");
+                command.CommandText = string.Format(SqlGet, sb);
 
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
                     {
-                        list.Add(reader.GetProduct());
+                        list.Add(reader.GetUser());
                     }
                 }
             }
-
-            var package = await this.productsReferenceService.PackAsync(list, oc);
             
-            return new ServiceResult<IList<IDictionaryObject>>(package.Result.Cast<IDictionaryObject>().ToList());
+            return new ServiceResult<IList<IDictionaryObject>>(list);
         }
 
         /// <inheritdoc />

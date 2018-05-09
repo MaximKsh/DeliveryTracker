@@ -5,36 +5,43 @@ using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
+using DeliveryTracker.Instances;
 using DeliveryTracker.Localization;
 using Npgsql;
 
-namespace DeliveryTracker.Views
+namespace DeliveryTracker.Views.Users
 {
-    public class PerformersView : IView
+    public class InvitationsView : IView
     {
         #region sql
         
         private static readonly string SqlGet = $@"
 select
-    {IdentificationHelper.GetUserColumns()}
-from users
-where instance_id = @instance_id 
-    and role = @role
+    {InstanceHelper.GetInvitationColumns()}
+from invitations
+where instance_id = @instance_id
     and deleted = false
     {{0}}
-
-order by surname
+order by expires desc
 limit {ViewHelper.DefaultViewLimit}
 ;
 ";
 
         private const string SqlCount = @"
-select performers_count
+select managers_invitations_count + performers_invitations_count
+from entries_statistics
+where instance_id = @instance_id
+;
+";
+
+        private const string SqlCountPerformers = @"
+select performers_invitations_count
 from entries_statistics
 where instance_id = @instance_id
 ;
 ";
         
+
         #endregion
         
         #region fields
@@ -45,7 +52,7 @@ where instance_id = @instance_id
         
         #region constuctor
         
-        public PerformersView(
+        public InvitationsView(
             int order)
         {
             this.order = order;
@@ -56,14 +63,13 @@ where instance_id = @instance_id
         #region implementation
         
         /// <inheritdoc />
-        public string Name { get; } = nameof(PerformersView);
+        public string Name { get; } = nameof(InvitationsView);
         
         /// <inheritdoc />
         public IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
         {
             DefaultRoles.CreatorRole,
-            DefaultRoles.ManagerRole,
-            DefaultRoles.PerformerRole
+            DefaultRoles.ManagerRole
         }.AsReadOnly();
         
         /// <inheritdoc />
@@ -79,11 +85,10 @@ where instance_id = @instance_id
             }
             return new ServiceResult<ViewDigest>(new ViewDigest
             {
-                Caption = LocalizationAlias.Views.PerformersView,
+                Caption = LocalizationAlias.Views.InvitationsView,
                 Count = result.Result,
-                EntityType = nameof(User),
+                EntityType = nameof(Invitation),
                 Order = this.order,
-                IconName = "Я хз"
             });
         }
         
@@ -98,16 +103,20 @@ where instance_id = @instance_id
             {
                 var sb = new StringBuilder(256);
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
-                command.Parameters.Add(new NpgsqlParameter("role", DefaultRoles.PerformerRole));
+                if (userCredentials.Role == DefaultRoles.ManagerRole)
+                {
+                    ViewHelper.AddEqualsParameter(command, sb, "role", "role", DefaultRoles.PerformerRole);
+                }
                 ViewHelper.TryAddCaseInsensetiveContainsParameter(parameters, command, sb, "search");
-                ViewHelper.TryAddAfterParameter(parameters, command, sb, "users", "surname");
+                ViewHelper.TryAddAfterParameter(parameters, command, sb, "invitations", "expires", true);
+
                 command.CommandText = string.Format(SqlGet, sb);
 
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
                     {
-                        list.Add(reader.GetUser());
+                        list.Add(reader.GetInvitation());
                     }
                 }
             }
@@ -121,10 +130,14 @@ where instance_id = @instance_id
             UserCredentials userCredentials,
             IReadOnlyDictionary<string, IReadOnlyList<string>> parameters)
         {
+            
             using (var command = oc.CreateCommand())
             {
-                command.CommandText = SqlCount;
+                command.CommandText = userCredentials.Role == DefaultRoles.CreatorRole
+                    ? SqlCount
+                    : SqlCountPerformers;
                 command.Parameters.Add(new NpgsqlParameter("instance_id", userCredentials.InstanceId));
+
                 return new ServiceResult<long>((long)await command.ExecuteScalarAsync());
             }
         }

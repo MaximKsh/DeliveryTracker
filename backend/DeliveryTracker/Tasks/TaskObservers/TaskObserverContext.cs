@@ -3,7 +3,7 @@ using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Validation;
 
-namespace DeliveryTracker.Tasks.TransitionObservers
+namespace DeliveryTracker.Tasks.TaskObservers
 {
     public class TaskObserverContext : ITaskObserverContext
     {
