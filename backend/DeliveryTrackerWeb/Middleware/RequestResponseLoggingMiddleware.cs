@@ -6,6 +6,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NLog;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace DeliveryTrackerWeb.Middleware
 {
@@ -29,7 +33,8 @@ namespace DeliveryTrackerWeb.Middleware
             #else
             var uri = context.Request.GetDisplayUrl();
 
-            this.logger.LogInformation($"Request {uri}:{Environment.NewLine} {await FormatRequest(context.Request)}");
+            var nlogger = LogManager.GetLogger("tt");
+            nlogger.Log(NLog.LogLevel.Info, $"Request {uri}:{Environment.NewLine} {await FormatRequest(context.Request)}");
 
             var originalBodyStream = context.Response.Body;
 
@@ -39,7 +44,7 @@ namespace DeliveryTrackerWeb.Middleware
 
                 await this.next(context);
 
-                this.logger.LogInformation($"Response {uri}:{Environment.NewLine} {await FormatResponse(context.Response)}");
+                nlogger.Log(NLog.LogLevel.Info, $"Response {uri}:{Environment.NewLine} {await FormatResponse(context.Response)}");
                 await responseBody.CopyToAsync(originalBodyStream);
             }
             #endif
@@ -53,6 +58,10 @@ namespace DeliveryTrackerWeb.Middleware
             var buffer = new byte[Convert.ToInt32(request.ContentLength)];
             await request.Body.ReadAsync(buffer, 0, buffer.Length);
             var bodyAsText = Encoding.UTF8.GetString(buffer);
+            if (!string.IsNullOrWhiteSpace(bodyAsText))
+            {
+                bodyAsText = JObject.Parse(bodyAsText).ToString(Formatting.Indented);
+            }
             body.Seek(0, SeekOrigin.Begin);
             request.Body = body;
 
@@ -65,7 +74,13 @@ namespace DeliveryTrackerWeb.Middleware
             var text = await new StreamReader(response.Body).ReadToEndAsync(); 
             response.Body.Seek(0, SeekOrigin.Begin);
 
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                return JObject.Parse(text).ToString(Formatting.Indented);
+            }
+
             return text;
+
         }
     }
 }

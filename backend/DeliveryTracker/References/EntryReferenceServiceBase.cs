@@ -63,54 +63,49 @@ namespace DeliveryTracker.References
             }
 
             T newEntity = null;
-            using (var conn = oc ?? this.Cp.Create())
+            using (var conn = oc?.Connect() ?? this.Cp.Create().Connect())
+            using (var transact = conn.BeginTransaction())
+            using (var command = conn.CreateCommand())
             {
-                conn.Connect();
-                using (var transact = conn.BeginTransaction())
+                var id = newData.Id != default
+                    ? newData.Id
+                    : Guid.NewGuid();
+                var instanceId = check
+                    ? credentials.InstanceId
+                    : newData.InstanceId;
+                command.Parameters.Add(new NpgsqlParameter("id", id));
+                command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
+                command.Parameters.Add(new NpgsqlParameter("deleted", false));
+
+                var parameters = this.SetCommandCreate(command, newData, id, credentials);
+                var ctx = new ReferenceServiceExecutionContext
                 {
-                    using (var command = conn.CreateCommand())
+                    Action = ReferenceAction.Create,
+                    Parameters = parameters,
+                };
+                try
+                {
+                    using (var reader = await command.ExecuteReaderAsync())
                     {
-                        var id = newData.Id != default
-                            ? newData.Id
-                            : Guid.NewGuid();
-                        var instanceId = check
-                            ? credentials.InstanceId
-                            : newData.InstanceId;
-                        command.Parameters.Add(new NpgsqlParameter("id", id));
-                        command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
-                        command.Parameters.Add(new NpgsqlParameter("deleted", false));
-
-                        var parameters = this.SetCommandCreate(command, newData, id, credentials);
-                        var ctx = new ReferenceServiceExecutionContext
+                        if (await reader.ReadAsync())
                         {
-                            Action = ReferenceAction.Create,
-                            Parameters = parameters,
-                        };
-                        try
-                        {
-                            using (var reader = await command.ExecuteReaderAsync())
-                            {
-                                if (await reader.ReadAsync())
-                                {
-                                    newEntity = this.Read(reader, ctx);
-                                }
-                            }
-                        }
-                        catch (NpgsqlException)
-                        {
-                            transact.Rollback();
-                            return new ServiceResult<T>(ErrorFactory.ReferenceCreationError(this.Name));
+                            newEntity = this.Read(reader, ctx);
                         }
                     }
+                }
+                catch (NpgsqlException)
+                {
+                    transact.Rollback();
+                    return new ServiceResult<T>(ErrorFactory.ReferenceCreationError(this.Name));
+                }
 
-                    if (newEntity != null)
-                    {
-                        transact.Commit();
-                    }
-                    else
-                    {
-                        transact.Rollback();
-                    }
+                if (newEntity != null)
+                {
+                    transact.Commit();
+                }
+                else
+                {
+                    transact.Rollback();
                 }
             }
             return new ServiceResult<T>(newEntity);

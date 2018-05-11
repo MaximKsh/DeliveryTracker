@@ -9,7 +9,7 @@ namespace DeliveryTrackerWeb.Tests.Integration
 {
     public class ReferenceTest : FunctionalTestBase
     {
-        
+        /*
         [Fact]
         public async void TestClient()
         {
@@ -116,7 +116,7 @@ namespace DeliveryTrackerWeb.Tests.Integration
                 client,
                 ReferenceUrl($"{nameof(Client)}/get?id={resultClient.Id}"));
             Assert.Equal(HttpStatusCode.BadRequest, getResultNotFound.StatusCode);
-        }
+        }*/
         
         [Fact]
         public async void TestPaymentType()

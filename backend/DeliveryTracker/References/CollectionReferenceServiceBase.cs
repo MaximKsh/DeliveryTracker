@@ -60,7 +60,6 @@ namespace DeliveryTracker.References
         {
             var validationResult = new ParametersValidator()
                 .AddNotNullRule(this.Name, newData)
-                .AddNotEmptyGuidRule(nameof(newData.InstanceId), newData.InstanceId)
                 .AddNotEmptyGuidRule(nameof(newData.ParentId), newData.ParentId)
                 .AddRule($"{nameof(newData.Action)} != {(int)ReferenceAction.Create} ({ReferenceAction.Create.ToString()})", 
                     newData,

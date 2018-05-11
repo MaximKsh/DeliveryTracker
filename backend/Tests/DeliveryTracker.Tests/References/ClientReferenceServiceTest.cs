@@ -69,7 +69,8 @@ namespace DeliveryTracker.Tests.References
                 null
             };
         }
-        
+        /*
+
         [Theory]
         [MemberData(nameof(GetClientParameters))]
         public async void CreateClient(string surname, string name, string patronymic, List<ClientAddress> addresses)
@@ -293,7 +294,7 @@ namespace DeliveryTracker.Tests.References
             
             // Assert
             Assert.True(deleteResult.Success, deleteResult.Errors.ErrorsToString());
-        }
+        }*/
         
         [Fact]
         public async void DeleteClientNotFound()

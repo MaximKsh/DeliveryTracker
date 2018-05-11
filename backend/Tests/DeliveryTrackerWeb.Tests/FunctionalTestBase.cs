@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -11,7 +12,9 @@ using DeliveryTrackerWeb.ViewModels;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NLog.Web;
 
 namespace DeliveryTrackerWeb.Tests
 {
@@ -39,7 +42,13 @@ namespace DeliveryTrackerWeb.Tests
                 .Build();
             this.Server = new TestServer(new WebHostBuilder()
                 .UseConfiguration(config)
-                .UseStartup<TestStartup>());
+                .UseStartup<TestStartup>()
+                .ConfigureLogging(logging =>
+                {
+                    logging.ClearProviders();
+                    logging.SetMinimumLevel(LogLevel.Trace);
+                })
+                .UseNLog());
 
             
         }
@@ -69,7 +78,7 @@ namespace DeliveryTrackerWeb.Tests
             $"/api/invitation/{command}";
         
         protected static string TaskUrl(string command) =>
-            $"/api/task/{command}";
+            $"/api/tasks/{command}";
         
         protected static string ReferenceUrl(string command) =>
             $"/api/reference/{command}";
@@ -133,10 +142,15 @@ namespace DeliveryTrackerWeb.Tests
                     break;
             }
             var payloadString = JsonConvert.SerializeObject(payload, Settings);
-            
+
+            var payloadBytes = Encoding.UTF8.GetBytes(payloadString);
+            var content = new ByteArrayContent(payloadBytes);
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            content.Headers.ContentEncoding.Add("UTF-8");
+            content.Headers.ContentLength = payloadBytes.Length;
             var response = await client.PostAsync(
                 url, 
-                new StringContent(payloadString, Encoding.UTF8, ContentType));
+                content);
             T result = null;
             if (response.Content.Headers.ContentLength != 0)
             {
@@ -171,9 +185,14 @@ namespace DeliveryTrackerWeb.Tests
             }
             var payloadString = JsonConvert.SerializeObject(payload, Settings);
             
+            var payloadBytes = Encoding.UTF8.GetBytes(payloadString);
+            var content = new ByteArrayContent(payloadBytes);
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            content.Headers.ContentEncoding.Add("UTF-8");
+            content.Headers.ContentLength = payloadBytes.Length;
             var response = await client.PostAsync(
                 url, 
-                new StringContent(payloadString, Encoding.UTF8, ContentType));
+                content);
             
             return new WebServiceResponse
             {
@@ -202,7 +221,17 @@ namespace DeliveryTrackerWeb.Tests
                     Instance = new Instance
                     {
                         Name = CorrectInstanceName,
+                    },
+                    CreatorDevice = new Device()
+                    {
+                        ApplicationType = "Unknown",
+                        ApplicationVersion = "Unknown",
+                        FirebaseId = null,
+                        Language = "ru",
+                        Type = "Unknown",
+                        Version = "Unknown",
                     }
+                        
                 });
             SetToken(client, createResult.Result.Token);   
             return (client, createResult.Result.Instance, createResult.Result.Creator, createResult.Result.Token);

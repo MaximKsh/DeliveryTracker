@@ -56,29 +56,18 @@ namespace DeliveryTrackerWeb.Controllers
         }
 
         [HttpGet("get")]
-        public async Task<IActionResult> GetInvitation(Guid id)
-        {
-            var result = await this.invitationService.GetAsync(id);
-            if (result.Success)
-            {
-                return this.Ok(new InvitationResponse
-                {
-                    Invitation = result.Result
-                });
-            }
-
-            if (result.Errors.Any(p => p.Code == ErrorCode.AccessDenied))
-            {
-                return this.Forbid();
-            }
-
-            return this.BadRequest(new InvitationResponse(result.Errors));
-        }
-        
-        [HttpGet("get")]
         public async Task<IActionResult> GetInvitation(string code)
         {
-            var result = await this.invitationService.GetAsync(code);
+            ServiceResult<Invitation> result;
+            if (Guid.TryParse(code, out var id))
+            {
+                result = await this.invitationService.GetAsync(id);
+            }
+            else
+            {
+                result = await this.invitationService.GetAsync(code);   
+            }
+            
             if (result.Success)
             {
                 return this.Ok(new InvitationResponse

@@ -39,14 +39,5 @@ namespace DeliveryTracker.References
             get => this.Get<string>(nameof(this.PhoneNumber));
             set => this.Set(nameof(this.PhoneNumber), value);
         }
-        
-        /// <summary>
-        /// Список адресов.
-        /// </summary>
-        public IList<ClientAddress> Addresses 
-        {
-            get => this.GetList<ClientAddress>(nameof(this.Addresses));
-            set => this.Set(nameof(this.Addresses), value);
-        }
     }
 }

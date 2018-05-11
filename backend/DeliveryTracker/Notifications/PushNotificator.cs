@@ -4,6 +4,9 @@ using System.Net.Http;
 using System.Text;
 using DeliveryTracker.Common;
 using DeliveryTracker.Identification;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NLog;
 
 namespace DeliveryTracker.Notifications
 {
@@ -33,20 +36,25 @@ namespace DeliveryTracker.Notifications
         public override ServiceResult Notify(
             IPushNotificationComponent notification)
         {
+            var requestBody = new Dictionary<string, object>
+            {
+                ["data"] = notification.Body,
+                ["to"] = notification.Device.FirebaseId,
+            };
+
+            LogManager.GetLogger("tt")
+                .Log(LogLevel.Info, $"https://fcm.googleapis.com/fcm/send {Environment.NewLine}" +
+                                    JObject.FromObject(requestBody).ToString(Formatting.Indented));
+            
             if (string.IsNullOrWhiteSpace(this.settings.FirebaseServerKey)
                 || string.IsNullOrWhiteSpace(notification.Device.FirebaseId))
             {
                 return new ServiceResult();
             }
 
-            var requestBody = new Dictionary<string, object>
-            {
-                ["data"] = notification.Body,
-                ["to"] = notification.Device.FirebaseId,
-            };
-                
+            var body = this.serializer.SerializeJson(requestBody);
             var content = new StringContent(
-                this.serializer.SerializeJson(requestBody), 
+                body, 
                 Encoding.UTF8, 
                 "application/json");
             var request = new HttpRequestMessage {Content = content};

@@ -1,5 +1,4 @@
-﻿using System.Net;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Geopositioning;
@@ -7,7 +6,7 @@ using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
 using DeliveryTracker.Notifications;
 using DeliveryTracker.References;
-using DeliveryTracker.Validation;
+using DeliveryTracker.Tasks;
 using DeliveryTracker.Views;
 using DeliveryTrackerWeb.Middleware;
 using Microsoft.AspNetCore.Builder;
@@ -16,10 +15,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace DeliveryTrackerWeb.Tests
 {
-    public class TestStartup
+    // ReSharper disable once ClassNeverInstantiated.Global
+    public sealed class TestStartup
     {
         private readonly IConfiguration configuration;
         
@@ -45,6 +46,8 @@ namespace DeliveryTrackerWeb.Tests
                 .AddDeliveryTrackerInstances()
                 .AddDeliveryTrackerReferences()
                 .AddDeliveryTrackerViews()
+                .AddDeliveryTrackerTasks()
+                .AddDeliveryTrackerNotifications()
                 ;
         }
 
@@ -57,20 +60,10 @@ namespace DeliveryTrackerWeb.Tests
                 .AddDeliveryTrackerInstancesSettings(this.configuration)
                 .AddDeliveryTrackerNotificationSettings(this.configuration);
             
-            app.UseExceptionHandler(conf =>
-            {
-                conf.Run(async context =>
-                {
-                    // Логирование исключения уже производится в ExceptionHandler-е
-                    context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
-                    context.Response.ContentType = "application/json";
-                    var responseString = JsonConvert
-                        .SerializeObject(ErrorFactory.ServerError());
-                    await context.Response.WriteAsync(responseString).ConfigureAwait(false);
-                });
-            });
+            app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseAuthentication();
             app.UseMiddleware<CheckSessionMiddleware>();
+            app.UseMiddleware<RequestResponseLoggingMiddleware>();
             app.UseMvc();
         }
 
@@ -97,6 +90,13 @@ namespace DeliveryTrackerWeb.Tests
             services.AddMvc().AddJsonOptions(
                 p =>
                 {
+                    p.SerializerSettings.ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new DefaultNamingStrategy()
+                        {
+                            ProcessDictionaryKeys = true,
+                        }
+                    };
                     p.SerializerSettings.Converters.Add(new DictionaryObjectJsonConverter());
                     p.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
                     p.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Include;
@@ -105,5 +105,6 @@ namespace DeliveryTrackerWeb.Tests
                     p.SerializerSettings.Formatting = Formatting.None;
                 });
         }
+
     }
 }

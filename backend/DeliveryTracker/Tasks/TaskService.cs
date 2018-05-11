@@ -209,7 +209,7 @@ namespace DeliveryTracker.Tasks
             var credentials = this.accessor.GetUserCredentials();
             
             using (var connWrapper = oc?.Connect() ?? this.cp.Create().Connect())
-            using(var transact = connWrapper.BeginTransaction())
+            using (var transact = connWrapper.BeginTransaction())
             {
                 var canTransit = await this.stateTransitionManager.CanTransit(taskId, credentials.Id, transitionId, connWrapper);
                 if (!canTransit.Success)
@@ -242,7 +242,17 @@ namespace DeliveryTracker.Tasks
                     return new ServiceResult<TaskInfo>(ctx.Errors);
                 }
 
-                return editResult;
+                var task = editResult.Result;
+                
+                var transitionsResult = await this.stateTransitionManager.GetTransitions(
+                    credentials.Role, task.TaskStateId, connWrapper);
+                if (!transitionsResult.Success)
+                {
+                    return new ServiceResult<TaskInfo>(transitionsResult.Errors);
+                }
+
+                task.TaskStateTransitions = transitionsResult.Result;
+                return new ServiceResult<TaskInfo>(task);    
             }
         }
 

@@ -1,5 +1,8 @@
-﻿using DeliveryTracker.Identification;
+﻿using DeliveryTracker.Database;
+using DeliveryTracker.Identification;
 using DeliveryTracker.Instances;
+using DeliveryTracker.Notifications;
+using DeliveryTracker.References;
 using DeliveryTracker.Validation;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -21,6 +24,7 @@ namespace DeliveryTracker.Tests.Instances
             
             var services = new ServiceCollection();
             var serviceProvider = services
+                .AddDeliveryTrackerDatabase()
                 .AddSingleton(this.Cp)
                 .AddSingleton(this.SettingsStorage)
                 .AddSingleton(accessor.Object)
@@ -32,6 +36,8 @@ namespace DeliveryTracker.Tests.Instances
                 .AddSingleton<ISecurityManager, SecurityManager>()
                 .AddSingleton<IAccountService, AccountService>()
                 .AddSingleton<IInstanceService, InstanceService>()
+                .AddSingleton<INotificationService, NotificationService>()
+                .AddSingleton<IReferenceService<PaymentType>, PaymentTypeReferenceService>()
                 .BuildServiceProvider();
 
             var instanceService = serviceProvider.GetService<IInstanceService>();
