@@ -30,6 +30,16 @@
         #region user errors
         
         /// <summary>
+        /// Код ошибки: нельзя удалить создателя.
+        /// </summary>
+        public const string CantDeleteCreator = "CantDeleteCreator";
+        
+        /// <summary>
+        /// Код ошибки: нельзя удалить пользователя.
+        /// </summary>
+        public const string CantDeleteUser = "CantDeleteUser";
+        
+        /// <summary>
         /// Код ошибки: роль не найдена.
         /// </summary>
         public const string RoleNotFound = "RoleNotFound";

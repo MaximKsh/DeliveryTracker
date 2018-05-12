@@ -6,6 +6,7 @@ using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Notifications;
 using DeliveryTracker.Validation;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -78,6 +79,8 @@ where expires < (now() AT TIME ZONE 'UTC');
         private readonly IUserCredentialsAccessor userCredentialsAccessor;
 
         private readonly INotificationService notificationService;
+
+        private readonly ILogger<InvitationService> logger;
         
         #endregion
         
@@ -87,12 +90,14 @@ where expires < (now() AT TIME ZONE 'UTC');
             IPostgresConnectionProvider cp,
             ISettingsStorage settingsStorage,
             IUserCredentialsAccessor userCredentialsAccessor,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            ILogger<InvitationService> logger)
         {
             this.cp = cp;
             this.invitationSettings = settingsStorage.GetSettings<InvitationSettings>(SettingsName.Invitation);
             this.userCredentialsAccessor = userCredentialsAccessor;
             this.notificationService = notificationService;
+            this.logger = logger;
         }
         
         #endregion
@@ -151,8 +156,7 @@ where expires < (now() AT TIME ZONE 'UTC');
                             }
                             else
                             {
-                                // TODO: add loggin here
-                                // this.logger.LogWarning($"Invitation code {code} repeated.");
+                                this.logger?.LogWarning($"Invitation code {code} repeated.");
                             }
                         }
 

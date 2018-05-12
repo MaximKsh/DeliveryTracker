@@ -96,6 +96,24 @@ namespace DeliveryTracker.Validation
         #region user errors
         
         /// <summary>
+        /// Невозможно удалить создателя.
+        /// </summary>
+        /// <returns></returns>
+        public static IError CantDeleteCreator() =>
+            new Error(
+                ErrorCode.CantDeleteCreator,
+                LocalizationAlias.Error.CantDeleteCreator);
+        
+        /// <summary>
+        /// Невозможно удалить пользователя.
+        /// </summary>
+        /// <returns></returns>
+        public static IError CantDeleteUser() =>
+            new Error(
+                ErrorCode.CantDeleteUser,
+                LocalizationAlias.Error.CantDeleteUser);
+        
+        /// <summary>
         /// Роль не найдена.
         /// </summary>
         /// <returns></returns>

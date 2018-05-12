@@ -33,12 +33,12 @@ namespace DeliveryTrackerScheduler.Common
 
         public IDisposable OpenNestedContext(string message)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public IDisposable OpenMappedContext(string key, string value)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         private static NLog.LogLevel ConvertLogLevel(

@@ -45,7 +45,6 @@ namespace DeliveryTrackerWeb.Controllers
 
         #endregion 
 
-        
         #region actions
         
         // user/get
@@ -139,11 +138,6 @@ namespace DeliveryTrackerWeb.Controllers
             if (result.Success)
             {
                 return this.Ok();
-            }
-
-            if (result.Errors.Any(p => p.Code == ErrorCode.AccessDenied))
-            {
-                return this.Forbid();
             }
 
             return this.BadRequest(new UserResponse(result.Errors));

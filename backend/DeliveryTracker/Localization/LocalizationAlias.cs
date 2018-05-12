@@ -30,6 +30,8 @@
             
             
             public const string AccessDenied = Pref + "AccessDenied";
+            public const string CantDeleteCreator = Pref + "CantDeleteCreator";
+            public const string CantDeleteUser = Pref + "CantDeleteUser";
             public const string IncorrectPassword = Pref + "IncorrectPassword";
             public const string IncorrectTaskState = Pref + "IncorrectTaskState";
             public const string IncorrectTaskStateTransition = Pref + "IncorrectTaskStateTransition";

@@ -36,6 +36,8 @@ namespace DeliveryTracker.Notifications
         public override ServiceResult Notify(
             IPushNotificationComponent notification)
         {
+            #if DEBUG
+            
             var requestBody = new Dictionary<string, object>
             {
                 ["data"] = notification.Body,
@@ -46,11 +48,23 @@ namespace DeliveryTracker.Notifications
                 .Log(LogLevel.Info, $"https://fcm.googleapis.com/fcm/send {Environment.NewLine}" +
                                     JObject.FromObject(requestBody).ToString(Formatting.Indented));
             
+            #endif
+            
             if (string.IsNullOrWhiteSpace(this.settings.FirebaseServerKey)
                 || string.IsNullOrWhiteSpace(notification.Device.FirebaseId))
             {
                 return new ServiceResult();
             }
+            
+            #if RELEASE
+
+            var requestBody = new Dictionary<string, object>
+            {
+                ["data"] = notification.Body,
+                ["to"] = notification.Device.FirebaseId,
+            };
+
+            #endif
 
             var body = this.serializer.SerializeJson(requestBody);
             var content = new StringContent(
