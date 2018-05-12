@@ -9,12 +9,12 @@ namespace DeliveryTracker.Instances
     {
         public InvitationSettings(
             string name,
-            int expiresInDays,
+            int expires,
             int codeLength,
             string alphabet)
         {
             this.Name = name;
-            this.ExpiresInDays = expiresInDays;
+            this.Expires = expires;
             this.CodeLength = codeLength;
             this.Alphabet = alphabet;
         }
@@ -23,9 +23,9 @@ namespace DeliveryTracker.Instances
         public string Name { get; }
         
         /// <summary>
-        /// Срок истечения приглашения в днях
+        /// Срок истечения приглашения в минутах
         /// </summary>
-        public int ExpiresInDays { get; }
+        public int Expires { get; }
 
         /// <summary>
         /// Длина кода приглашения.

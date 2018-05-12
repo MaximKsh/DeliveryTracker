@@ -39,7 +39,7 @@ namespace DeliveryTracker.Instances
         {
             return new InvitationSettings(
                     SettingsName.Invitation,
-                    configuration.GetValue("InvitationSettings:ExpiresInDays", 3),
+                    configuration.GetValue("InvitationSettings:Expires", 1440),
                     configuration.GetValue("InvitationSettings:CodeLength", 6),
                     configuration.GetValue("InvitationSettings:Alphabet", "23456789qwertyupasdfghkzxbnmQWERTYUPASDFGHKZXVBNM"))
                 ;

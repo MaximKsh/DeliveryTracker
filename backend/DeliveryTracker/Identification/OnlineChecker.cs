@@ -7,9 +7,9 @@ namespace DeliveryTracker.Identification
     {
         private static readonly object LockObj = new object();
 
-        private const int DefaultTimeoutMillis = 60_000;
+        private const int DefaultTimeoutMinutes = 1;
 
-        private static int customTimeoutMillis = -1;
+        private static int customTimeoutMinutes = -1;
 
         private static readonly Lazy<int> TimeoutLazy;
 
@@ -18,29 +18,29 @@ namespace DeliveryTracker.Identification
             TimeoutLazy = new Lazy<int>(
                 () =>
                 {
-                    var timeout = customTimeoutMillis;
+                    var timeout = customTimeoutMinutes;
                     return timeout == -1
-                        ? DefaultTimeoutMillis
+                        ? DefaultTimeoutMinutes
                         : timeout;
                 },
                 LazyThreadSafetyMode.PublicationOnly);
         }
 
         internal static bool Set(
-            int timeoutInSeconds)
+            int timeoutInMinutes)
         {
-            if (timeoutInSeconds <= 0)
+            if (timeoutInMinutes <= 0)
             {
-                throw new ArgumentOutOfRangeException($"{nameof(timeoutInSeconds)} must be greater than 0.");
+                throw new ArgumentOutOfRangeException($"{nameof(timeoutInMinutes)} must be greater than 0.");
             }
             
-            if (customTimeoutMillis == -1)
+            if (customTimeoutMinutes == -1)
             {
                 lock (LockObj)
                 {
-                    if (customTimeoutMillis == -1)
+                    if (customTimeoutMinutes == -1)
                     {
-                        Interlocked.Exchange(ref customTimeoutMillis, timeoutInSeconds);
+                        Interlocked.Exchange(ref customTimeoutMinutes, timeoutInMinutes);
                         return true;
                     }
                 }
@@ -54,7 +54,7 @@ namespace DeliveryTracker.Identification
             User user)
         {
             var now = DateTime.UtcNow;
-            return user.LastActivity.AddMilliseconds(TimeoutLazy.Value) >= now;
+            return user.LastActivity.AddMinutes(TimeoutLazy.Value) >= now;
         }
 
     }

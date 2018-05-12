@@ -62,7 +62,8 @@ namespace DeliveryTracker.Database
             StringBuilder builder, 
             string name, 
             T value,
-            string columnName = null)
+            string columnName = null,
+            NpgsqlDbType? type = null)
         {
             if (EqualityComparer<T>.Default.Equals(value, default))
             {
@@ -75,7 +76,12 @@ namespace DeliveryTracker.Database
             builder.Append(columnName ?? name);
             builder.Append(" = @");
             builder.Append(name);
-            command.Parameters.Add(new NpgsqlParameter(name, value));
+            var param = new NpgsqlParameter(name, value);
+            if (type.HasValue)
+            {
+                param.NpgsqlDbType = type.Value;
+            }
+            command.Parameters.Add(param);
             return 1;
         }
     }

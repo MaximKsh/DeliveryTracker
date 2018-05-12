@@ -10,7 +10,7 @@ namespace DeliveryTracker.Views
     {
         #region constants
         
-        public const string DefaultViewLimit = "10";
+        public const string DefaultViewLimit = "100";
         
         public const string AfterParameterName = "after";
 

@@ -102,7 +102,8 @@ namespace DeliveryTrackerScheduler
                 .AddDeliveryTrackerViews()
                 .AddDeliveryTrackerTasks()
                 .AddDeliveryTrackerNotifications()
-            
+                
+                
                 // Замена для дефолтных зависимостей
                 .AddSingleton<IDeliveryTrackerSerializer, DeliveryTrackerDefaultSerializer>()
                 .AddSingleton<IUserCredentialsAccessor, SchedulerUserCredentialsAccessor>()

@@ -6,9 +6,10 @@ using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
 using DeliveryTracker.Notifications;
 using DeliveryTracker.Validation;
-using Microsoft.Extensions.Logging;
+using NLog;
 using Npgsql;
 using NpgsqlTypes;
+using LogLevel = NLog.LogLevel;
 
 namespace DeliveryTracker.Instances
 {
@@ -62,7 +63,7 @@ where invitation_code = @code and deleted = false
         private static readonly string SqlDeleteExpired = $@"
 update invitations
 set deleted = true
-where expires < (now() AT TIME ZONE 'UTC');
+where deleted = false and expires < (now() AT TIME ZONE 'UTC');
 ";
         
         #endregion
@@ -80,7 +81,7 @@ where expires < (now() AT TIME ZONE 'UTC');
 
         private readonly INotificationService notificationService;
 
-        private readonly ILogger<InvitationService> logger;
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
         
         #endregion
         
@@ -90,14 +91,12 @@ where expires < (now() AT TIME ZONE 'UTC');
             IPostgresConnectionProvider cp,
             ISettingsStorage settingsStorage,
             IUserCredentialsAccessor userCredentialsAccessor,
-            INotificationService notificationService,
-            ILogger<InvitationService> logger)
+            INotificationService notificationService)
         {
             this.cp = cp;
             this.invitationSettings = settingsStorage.GetSettings<InvitationSettings>(SettingsName.Invitation);
             this.userCredentialsAccessor = userCredentialsAccessor;
             this.notificationService = notificationService;
-            this.logger = logger;
         }
         
         #endregion
@@ -156,7 +155,7 @@ where expires < (now() AT TIME ZONE 'UTC');
                             }
                             else
                             {
-                                this.logger?.LogWarning($"Invitation code {code} repeated.");
+                                this.logger.Log(LogLevel.Warn, $"Invitation code {code} repeated.");
                             }
                         }
 
@@ -353,9 +352,9 @@ where expires < (now() AT TIME ZONE 'UTC');
                     command.Parameters.Add(new NpgsqlParameter("id", Guid.NewGuid()));
                     command.Parameters.Add(new NpgsqlParameter("invitation_code", invitationCode));
                     command.Parameters.Add(new NpgsqlParameter("creator_id", creatorId));
-                    command.Parameters.Add(new NpgsqlParameter("created", DateTime.UtcNow));
+                    command.Parameters.Add(new NpgsqlParameter("created", DateTime.UtcNow).WithType(NpgsqlDbType.Timestamp));
                     command.Parameters.Add(new NpgsqlParameter(
-                        "expires", DateTime.UtcNow.Date.AddDays(this.invitationSettings.ExpiresInDays)));
+                        "expires", DateTime.UtcNow.AddMinutes(this.invitationSettings.Expires)).WithType(NpgsqlDbType.Timestamp));
                     command.Parameters.Add(new NpgsqlParameter("role", preliminaryUserData.Role));
                     command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                     command.Parameters.Add(new NpgsqlParameter("surname", preliminaryUserData.Surname).CanBeNull());

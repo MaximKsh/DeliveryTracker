@@ -76,9 +76,9 @@ namespace DeliveryTracker.Identification
             var passwordSettings = IdentificationHelper.ReadPasswordSettingsFromConf(configuration);
             var sessionSettings = IdentificationHelper.ReadSessionSettingsFromConf(configuration);
 
-            if (sessionSettings.UserOnlineTimeoutMs != -1)
+            if (sessionSettings.UserOnlineTimeout != -1)
             {
-                OnlineChecker.Set(sessionSettings.UserOnlineTimeoutMs);
+                OnlineChecker.Set(sessionSettings.UserOnlineTimeout);
             }
             
             return storage

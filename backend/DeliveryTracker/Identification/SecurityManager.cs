@@ -77,11 +77,11 @@ where ""user_id"" = @user_id
 returning ""refresh_token_id""; 
 ";
 
-        private static readonly string SqlDeleteExpired = @"
+        private const string SqlDeleteExpired = @"
 delete from sessions
 where last_activity < @expire;
 ";
-        
+
         #endregion
         
         #region fields
@@ -281,12 +281,12 @@ where last_activity < @expire;
         /// <inheritdoc />
         public async Task<ServiceResult> DeleteAllExpiredAsync(NpgsqlConnectionWrapper oc = null)
         {
-            if (this.sessionSettings.SessionInactiveTimeoutMs < 1)
+            if (this.sessionSettings.SessionInactiveTimeout < 1)
             {
                 return ServiceResult.Successful;
             }
 
-            var expire = DateTime.UtcNow.AddMilliseconds(this.sessionSettings.SessionInactiveTimeoutMs);
+            var expire = DateTime.UtcNow.AddMinutes(this.sessionSettings.SessionInactiveTimeout);
             
             using (var conn = oc?.Connect() ?? this.cp.Create().Connect())
             using (var command = conn.CreateCommand())

@@ -58,8 +58,8 @@ namespace DeliveryTracker.Tests.Instances
                 this.Cp, 
                 this.SettingsStorage, 
                 this.creatorCredentialsMock.Object,
-                new Mock<INotificationService>().Object,
-                null);
+                new Mock<INotificationService>().Object
+                );
         }
 
         [Fact]
@@ -91,7 +91,7 @@ namespace DeliveryTracker.Tests.Instances
             var settingsStorage = new SettingsStorage()
                 .RegisterSettings(invitationSettings);
             var invitationService = new InvitationService(this.Cp, settingsStorage, null,
-                new Mock<INotificationService>().Object, null);
+                new Mock<INotificationService>().Object);
 
             // Act
             var code = invitationService.GenerateCode();
@@ -128,7 +128,7 @@ namespace DeliveryTracker.Tests.Instances
             // Arrange
             var accesor = this.accessors[accesorIndex];
             var invitationService = new InvitationService(this.Cp, this.SettingsStorage, accesor,
-                new Mock<INotificationService>().Object, null);
+                new Mock<INotificationService>().Object);
             var userData = new User
             {
                 Role = role,
@@ -177,7 +177,7 @@ namespace DeliveryTracker.Tests.Instances
             // Arrange
             var accesor = this.accessors[accesorIndex];
             var invitationService = new InvitationService(this.Cp, this.SettingsStorage, accesor,
-                new Mock<INotificationService>().Object, null);
+                new Mock<INotificationService>().Object);
             var userData = new User
             {
                 Role = role,

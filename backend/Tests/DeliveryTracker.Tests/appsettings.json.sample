@@ -11,10 +11,10 @@
   },
 
   "SessionSettings": {
-    "UserOnlineTimeout": 30000,
-    "SessionInactiveTimeout": 6000000
+    "UserOnlineTimeout": 1,
+    "SessionInactiveTimeout": 20
   },
-  
+
   "SessionTokenSettings": {
     "Key": "mysupersecret_secretkey!123",
     "Issuer": "DeliveryTracker",
@@ -25,14 +25,14 @@
   },
 
   "RefreshTokenSettings": {
-    "Key": "mysupersecret_secretkey!321",
+    "Key": "mysupersecret_secretkey!123",
     "Issuer": "DeliveryTracker",
     "Audience": "http://localhost:5000",
     "Lifetime": 100,
     "ClockCkew": 1,
     "RequireHttps": true
   },
-  
+
   "PasswordSettings": {
     "MinLength": 4,
     "MaxLength": 20,
@@ -42,10 +42,15 @@
     "Alphabet": "qwertyuioplkjhgfdsazxcvbbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890!@#$%^&*()-=!~",
     "SameCharactersInARow": 20
   },
-  
+
   "InvitationSettings": {
-    "ExpiresInDays": 3,
+    "Expires": 1440,
     "CodeLength" : 6,
     "Alphabet": "23456789qwertyupasdfghkzxbnmQWERTYUPASDFGHKZXVBNM"
+  },
+
+  "NotificationSettings": {
+    "FirebaseKey": null,
+    "SmsRuKey": null
   }
 }

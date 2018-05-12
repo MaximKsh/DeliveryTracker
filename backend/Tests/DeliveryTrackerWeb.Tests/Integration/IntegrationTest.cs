@@ -114,12 +114,12 @@ namespace DeliveryTrackerWeb.Tests.Integration
             Assert.Equal(HttpStatusCode.OK, getInviteManagerResult.StatusCode);
             var viewResult = invitationListResponse.Result.ViewResult.ToList();
             Assert.Equal(2, viewResult.Count);
-            var managerInvitationFromView = new Invitation();
-            managerInvitationFromView.SetDictionary(viewResult[0]);
-            Assert.Equal(mInvCode, managerInvitationFromView.InvitationCode);
             var performerInvitationFromView = new Invitation();
-            performerInvitationFromView.SetDictionary(viewResult[1]);
+            performerInvitationFromView.SetDictionary(viewResult[0]);
             Assert.Equal(pInvCode, performerInvitationFromView.InvitationCode);
+            var managerInvitationFromView = new Invitation();
+            managerInvitationFromView.SetDictionary(viewResult[1]);
+            Assert.Equal(mInvCode, managerInvitationFromView.InvitationCode);
             
             var deleteManagerInvitationResult = await RequestPost(
                 client,

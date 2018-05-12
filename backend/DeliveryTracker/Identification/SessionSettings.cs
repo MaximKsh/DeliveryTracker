@@ -10,21 +10,21 @@ namespace DeliveryTracker.Identification
             int sessionInactiveTimeout)
         {
             this.Name = name;
-            this.UserOnlineTimeoutMs = userOnlineTimeout;
-            this.SessionInactiveTimeoutMs = sessionInactiveTimeout;
+            this.UserOnlineTimeout = userOnlineTimeout;
+            this.SessionInactiveTimeout = sessionInactiveTimeout;
         }
 
         /// <inheritdoc />
         public string Name { get; }
         
         /// <summary>
-        /// Время в миллисекундах от последней активности, пока пользователь еще считается онлайн.
+        /// Время в минутах от последней активности, пока пользователь еще считается онлайн.
         /// </summary>
-        public int UserOnlineTimeoutMs { get; }
+        public int UserOnlineTimeout { get; }
         
         /// <summary>
-        /// Время в миллисекундах от последней активности, пока сессия считается не устаревшей.
+        /// Время в минутах от последней активности, пока сессия считается не устаревшей.
         /// </summary>
-        public int SessionInactiveTimeoutMs { get; }
+        public int SessionInactiveTimeout { get; }
     }
 }

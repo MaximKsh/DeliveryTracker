@@ -382,8 +382,8 @@ where ""id"" = @id and instance_id = @instance_id
                     command.Parameters.Add(new NpgsqlParameter("author_id", taskInfo.AuthorId));
                     command.Parameters.Add(new NpgsqlParameter("performer_id", taskInfo.PerformerId).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("task_number", taskInfo.TaskNumber));
-                    command.Parameters.Add(new NpgsqlParameter("created", DateTime.UtcNow));
-                    command.Parameters.Add(new NpgsqlParameter("state_changed_last_time", DateTime.UtcNow));
+                    command.Parameters.Add(new NpgsqlParameter("created", DateTime.UtcNow).WithType(NpgsqlDbType.Timestamp));
+                    command.Parameters.Add(new NpgsqlParameter("state_changed_last_time", DateTime.UtcNow).WithType(NpgsqlDbType.Timestamp));
                     command.Parameters.Add(new NpgsqlParameter("receipt", taskInfo.Receipt).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("receipt_actual", taskInfo.ReceiptActual).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("delivery_from", taskInfo.DeliveryFrom).CanBeNull());
@@ -432,7 +432,7 @@ where ""id"" = @id and instance_id = @instance_id
                     if (taskInfo.TaskStateId != default)
                     {
                         parametersCounter += command.AppendIfNotDefault(builder, "state_id", taskInfo.TaskStateId);
-                        parametersCounter += command.AppendIfNotDefault(builder, "state_changed_last_time", DateTime.UtcNow);
+                        parametersCounter += command.AppendIfNotDefault(builder, "state_changed_last_time", DateTime.UtcNow, type: NpgsqlDbType.Timestamp);
                     }
                     parametersCounter += command.AppendIfNotDefault(builder, "performer_id", taskInfo.PerformerId);
                     parametersCounter += command.AppendIfNotDefault(builder, "task_number", taskInfo.TaskNumber);

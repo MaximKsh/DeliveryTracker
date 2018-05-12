@@ -11,8 +11,8 @@
   },
 
   "SessionSettings": {
-    "UserOnlineTimeout": 30000,
-    "SessionInactiveTimeout": 6000000
+    "UserOnlineTimeout": 1,
+    "SessionInactiveTimeout": 20
   },
   
   "SessionTokenSettings": {
@@ -44,7 +44,7 @@
   },
   
   "InvitationSettings": {
-    "ExpiresInDays": 3,
+    "Expires": 1440,
     "CodeLength" : 6,
     "Alphabet": "23456789qwertyupasdfghkzxbnmQWERTYUPASDFGHKZXVBNM"
   },
