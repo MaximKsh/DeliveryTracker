@@ -436,11 +436,11 @@ where ""id"" = @id and instance_id = @instance_id
                     }
                     parametersCounter += command.AppendIfNotDefault(builder, "performer_id", taskInfo.PerformerId);
                     parametersCounter += command.AppendIfNotDefault(builder, "task_number", taskInfo.TaskNumber);
-                    parametersCounter += command.AppendIfNotDefault(builder, "receipt", taskInfo.Receipt);
-                    parametersCounter += command.AppendIfNotDefault(builder, "receipt_actual", taskInfo.ReceiptActual);
-                    parametersCounter += command.AppendIfNotDefault(builder, "delivery_from", taskInfo.DeliveryFrom);
-                    parametersCounter += command.AppendIfNotDefault(builder, "delivery_to", taskInfo.DeliveryTo);
-                    parametersCounter += command.AppendIfNotDefault(builder, "delivery_actual", taskInfo.DeliveryActual);
+                    parametersCounter += command.AppendIfNotDefault(builder, "receipt", taskInfo.Receipt, type: NpgsqlDbType.Timestamp);
+                    parametersCounter += command.AppendIfNotDefault(builder, "receipt_actual", taskInfo.ReceiptActual, type: NpgsqlDbType.Timestamp);
+                    parametersCounter += command.AppendIfNotDefault(builder, "delivery_from", taskInfo.DeliveryFrom, type: NpgsqlDbType.Timestamp);
+                    parametersCounter += command.AppendIfNotDefault(builder, "delivery_to", taskInfo.DeliveryTo, type: NpgsqlDbType.Timestamp);
+                    parametersCounter += command.AppendIfNotDefault(builder, "delivery_actual", taskInfo.DeliveryActual, type: NpgsqlDbType.Timestamp);
                     parametersCounter += command.AppendIfNotDefault(builder, "comment", taskInfo.Comment);
                     parametersCounter += command.AppendIfNotDefault(builder, "warehouse_id", taskInfo.WarehouseId);
                     parametersCounter += command.AppendIfNotDefault(builder, "client_id", taskInfo.ClientId);
