@@ -373,6 +373,336 @@ namespace DeliveryTrackerWeb.Tests.Integration
                 ViewUrl($"{nameof(StatisticsViewGroup)}/{nameof(ActualTasksStateDistributionView)}?performer_id={perf.Id}"));
         }
 
+        
+        [Fact]
+        public async void TestClient()
+        {
+            var (client, inst, _, _) = await this.CreateNewHttpClientAndInstance();
+            var clientId = Guid.NewGuid();
+            var firstId = Guid.NewGuid();
+            var secondId = Guid.NewGuid();
+            var thirdId = Guid.NewGuid();
+            
+            var postResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Client)}/create"),
+                new ReferenceRequest
+                {
+                    Entity = new ReferencePackage
+                    {
+                        Entry = new Client
+                        {
+                            Id = clientId,
+                            Surname = "Petrov",
+                            Name = "Ivan",
+                            Patronymic = "Alexeevich",
+                            PhoneNumber = "12313",
+                        },
+                        Collections = new List<ReferenceCollectionBase>
+                        {
+                            new ClientAddress
+                            {
+                                Id = firstId,
+                                ParentId = clientId,
+                                Action = ReferenceAction.Create,
+                                RawAddress = "First"
+                            },
+                            new ClientAddress
+                            {
+                                Id = secondId,
+                                ParentId = clientId,
+                                Action = ReferenceAction.Create,
+                                RawAddress = "Second"
+                            }
+                        }
+                    }.GetDictionary(),
+                });
+            
+            Assert.Equal(HttpStatusCode.OK, postResult.StatusCode);
+            var resultPackage = new ReferencePackage();
+            resultPackage.SetDictionary(postResult.Result.Entity);
+            var resultClient = resultPackage.Entry.Cast<Client>();
+            Assert.Equal("Petrov", resultClient.Surname);
+            Assert.Equal("Ivan", resultClient.Name);
+            Assert.Equal("Alexeevich", resultClient.Patronymic);
+            Assert.Equal("12313", resultClient.PhoneNumber);
+            Assert.Equal(2, resultPackage.Collections.Count);
+            Assert.Contains(resultPackage.Collections.Select(p => p.Cast<ClientAddress>()), address => address.RawAddress == "First");
+            Assert.Contains(resultPackage.Collections.Select(p => p.Cast<ClientAddress>()), address => address.RawAddress == "Second");
+            
+            var editResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Client)}/edit"),
+                new ReferenceRequest
+                {
+                    Entity = new ReferencePackage()
+                    {
+                        Entry =new Client
+                        {
+                            Id = resultClient.Id,
+                            InstanceId = inst.Id,
+                            Surname = "Ivanov",
+                        },
+                        Collections = new List<ReferenceCollectionBase>
+                        {
+                            new ClientAddress
+                            {
+                                Id = firstId,
+                                ParentId = clientId,
+                                InstanceId = inst.Id,
+                                Action = ReferenceAction.Delete,
+                                RawAddress = "First"
+                            },
+                            new ClientAddress
+                            {
+                                Id = secondId,
+                                ParentId = clientId,
+                                InstanceId = inst.Id,
+                                Action = ReferenceAction.Edit,
+                                RawAddress = "Second Edit"
+                            },
+                            new ClientAddress
+                            {
+                                Id = thirdId,
+                                ParentId = clientId,
+                                InstanceId = inst.Id,
+                                Action = ReferenceAction.Create,
+                                RawAddress = "Third"
+                            },
+                        }
+                    }.GetDictionary(),
+                });
+            
+            Assert.Equal(HttpStatusCode.OK, editResult.StatusCode);
+            resultPackage.SetDictionary(editResult.Result.Entity);
+            resultClient = resultPackage.Entry.Cast<Client>();
+            Assert.Equal("Ivanov", resultClient.Surname);
+            Assert.Equal(2, resultPackage.Collections.Count);
+            Assert.Contains(resultPackage.Collections.Select(p => p.Cast<ClientAddress>()), address => address.RawAddress == "Second Edit");
+            Assert.Contains(resultPackage.Collections.Select(p => p.Cast<ClientAddress>()), address => address.RawAddress == "Third");
+
+            var getResult = await RequestGet<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Client)}/get?id={resultClient.Id}"));
+            Assert.Equal(HttpStatusCode.OK, getResult.StatusCode);
+            resultPackage.SetDictionary(getResult.Result.Entity);
+            resultClient = resultPackage.Entry.Cast<Client>();
+            Assert.Equal("Ivanov", resultClient.Surname);
+            Assert.Equal("Ivan", resultClient.Name);
+            Assert.Equal("Alexeevich", resultClient.Patronymic);
+            Assert.Equal("12313", resultClient.PhoneNumber);
+            Assert.Equal(2, resultPackage.Collections.Count);
+            Assert.Contains(resultPackage.Collections.Select(p => p.Cast<ClientAddress>()), address => address.RawAddress == "Second Edit");
+            Assert.Contains(resultPackage.Collections.Select(p => p.Cast<ClientAddress>()), address => address.RawAddress == "Third");
+
+            var deleteResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Client)}/delete"),
+                new ReferenceRequest
+                {
+                    Id = resultClient.Id
+                });
+            Assert.Equal(HttpStatusCode.OK, deleteResult.StatusCode);
+            
+            var getResultNotFound = await RequestGet<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Client)}/get?id={resultClient.Id}"));
+            Assert.Equal(HttpStatusCode.BadRequest, getResultNotFound.StatusCode);
+        }
+        
+        [Fact]
+        public async void TestPaymentType()
+        {
+            var (client, inst, _, _) = await this.CreateNewHttpClientAndInstance();
+            
+            var postResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(PaymentType)}/create"),
+                new ReferenceRequest
+                {
+                    Entity = new PaymentType()
+                    {
+                        Name = "Visa",
+                    }.Pack().GetDictionary(),
+                });
+            
+            Assert.Equal(HttpStatusCode.OK, postResult.StatusCode);
+            var result = new ReferencePackage();
+            result.SetDictionary(postResult.Result.Entity);
+            var paymentType = result.Entry.Cast<PaymentType>();
+            Assert.Equal("Visa", paymentType.Name);
+            
+            var editResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(PaymentType)}/edit"),
+                new ReferenceRequest
+                {
+                    Entity = new PaymentType()
+                    {
+                        Id = paymentType.Id,
+                        InstanceId = inst.Id,
+                        Name = "MasterCard",
+                    }.Pack().GetDictionary(),
+                });
+            
+            Assert.Equal(HttpStatusCode.OK, editResult.StatusCode);
+            result.SetDictionary(editResult.Result.Entity);
+            paymentType = result.Entry.Cast<PaymentType>();
+            Assert.Equal("MasterCard", paymentType.Name);
+
+            var getResult = await RequestGet<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(PaymentType)}/get?id={paymentType.Id}"));
+            Assert.Equal(HttpStatusCode.OK, getResult.StatusCode);
+            result.SetDictionary(getResult.Result.Entity);
+            Assert.Equal("MasterCard", paymentType.Name);
+
+            var deleteResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(PaymentType)}/delete"),
+                new ReferenceRequest
+                {
+                    Id = paymentType.Id
+                });
+            Assert.Equal(HttpStatusCode.OK, deleteResult.StatusCode);
+            
+            var getResultNotFound = await RequestGet<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(PaymentType)}/get?id={paymentType.Id}"));
+            Assert.Equal(HttpStatusCode.BadRequest, getResultNotFound.StatusCode);
+        }   
+        
+        
+        [Fact]
+        public async void TestProduct()
+        {
+            var (client, inst, _, _) = await this.CreateNewHttpClientAndInstance();
+            
+            var postResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Product)}/create"),
+                new ReferenceRequest
+                {
+                    Entity = new Product()
+                    {
+                        Name = "Sushi",
+                        Cost = 100,
+                    }.Pack().GetDictionary(),
+                });
+            
+            Assert.Equal(HttpStatusCode.OK, postResult.StatusCode);
+            var result = new ReferencePackage();
+            result.SetDictionary(postResult.Result.Entity);
+            var product = result.Entry.Cast<Product>();
+            Assert.Equal("Sushi", product.Name);
+            
+            var editResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Product)}/edit"),
+                new ReferenceRequest
+                {
+                    Entity = new Product()
+                    {
+                        InstanceId = inst.Id,
+                        Id = product.Id,
+                        Name = "Pizza",
+                    }.Pack().GetDictionary(),
+                });
+            
+            Assert.Equal(HttpStatusCode.OK, editResult.StatusCode);
+            result.SetDictionary(editResult.Result.Entity);
+            product = result.Entry.Cast<Product>();
+            Assert.Equal("Pizza", product.Name);
+
+            var getResult = await RequestGet<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Product)}/get?id={product.Id}"));
+            Assert.Equal(HttpStatusCode.OK, getResult.StatusCode);
+            result.SetDictionary(getResult.Result.Entity);
+            product = result.Entry.Cast<Product>();
+            Assert.Equal("Pizza", product.Name);
+
+            var deleteResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Product)}/delete"),
+                new ReferenceRequest
+                {
+                    Id = product.Id
+                });
+            Assert.Equal(HttpStatusCode.OK, deleteResult.StatusCode);
+            
+            var getResultNotFound = await RequestGet<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Product)}/get?id={product.Id}"));
+            Assert.Equal(HttpStatusCode.BadRequest, getResultNotFound.StatusCode);
+        }
+        
+        [Fact]
+        public async void TestWarehouse()
+        {
+            var (client, inst, _, _) = await this.CreateNewHttpClientAndInstance();
+            
+            var postResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Warehouse)}/create"),
+                new ReferenceRequest
+                {
+                    Entity = new Warehouse()
+                    {
+                        Name = "Dom1",
+                        RawAddress = "Ulitsa pushkina dom kolotushkina"
+                    }.Pack().GetDictionary(),
+                });
+            
+            Assert.Equal(HttpStatusCode.OK, postResult.StatusCode);
+            var result = new ReferencePackage();
+            result.SetDictionary(postResult.Result.Entity);
+            var warehouse = result.Entry.Cast<Warehouse>();
+            Assert.Equal("Dom1", warehouse.Name);
+            Assert.Equal("Ulitsa pushkina dom kolotushkina", warehouse.RawAddress);
+            
+            var editResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Warehouse)}/edit"),
+                new ReferenceRequest
+                {
+                    Entity = new Warehouse()
+                    {
+                        Id = warehouse.Id,
+                        InstanceId = inst.Id,
+                        Name = "Dom2",
+                    }.Pack().GetDictionary(),
+                });
+            
+            Assert.Equal(HttpStatusCode.OK, editResult.StatusCode);
+            result.SetDictionary(editResult.Result.Entity);
+            warehouse = result.Entry.Cast<Warehouse>();
+            Assert.Equal("Dom2", warehouse.Name);
+
+            var getResult = await RequestGet<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Warehouse)}/get?id={warehouse.Id}"));
+            Assert.Equal(HttpStatusCode.OK, getResult.StatusCode);
+
+            result.SetDictionary(getResult.Result.Entity);
+            warehouse = result.Entry.Cast<Warehouse>();
+            Assert.Equal("Dom2", warehouse.Name);
+
+            var deleteResult = await RequestPost<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Warehouse)}/delete"),
+                new ReferenceRequest
+                {
+                    Id = warehouse.Id
+                });
+            Assert.Equal(HttpStatusCode.OK, deleteResult.StatusCode);
+            
+            var getResultNotFound = await RequestGet<ReferenceResponse>(
+                client,
+                ReferenceUrl($"{nameof(Warehouse)}/get?id={warehouse.Id}"));
+            Assert.Equal(HttpStatusCode.BadRequest, getResultNotFound.StatusCode);
+        }
+        
         #region non tt tests
         
         //[Fact]
@@ -619,6 +949,8 @@ namespace DeliveryTrackerWeb.Tests.Integration
                 TaskUrl("change_state"),
                 new TaskRequest {Id = GetId(package), TransitionId = GetTransition(package, DefaultTaskStates.Complete)});
         }
+        
+        
         
         #endregion
         

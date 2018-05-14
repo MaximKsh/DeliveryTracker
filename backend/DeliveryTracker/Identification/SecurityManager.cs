@@ -10,6 +10,7 @@ using DeliveryTracker.Validation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace DeliveryTracker.Identification
 {
@@ -286,14 +287,14 @@ where last_activity < @expire;
                 return ServiceResult.Successful;
             }
 
-            var expire = DateTime.UtcNow.AddMinutes(this.sessionSettings.SessionInactiveTimeout);
+            var expire = DateTime.UtcNow.AddMinutes(-this.sessionSettings.SessionInactiveTimeout);
             
             using (var conn = oc?.Connect() ?? this.cp.Create().Connect())
             using (var command = conn.CreateCommand())
 
             {
                 command.CommandText = SqlDeleteExpired;
-                command.Parameters.Add(new NpgsqlParameter("expire", expire));
+                command.Parameters.Add(new NpgsqlParameter("expire", expire).WithType(NpgsqlDbType.Timestamp));
                 await command.ExecuteNonQueryAsync();
                 return new ServiceResult();
             }

@@ -19,7 +19,7 @@
     "Key": "mysupersecret_secretkey!123",
     "Issuer": "DeliveryTracker",
     "Audience": "http://localhost:5000",
-    "Lifetime": 1,
+    "Lifetime": 1440,
     "ClockCkew": 1,
     "RequireHttps": false
   },
@@ -28,11 +28,11 @@
     "Key": "mysupersecret_secretkey!123",
     "Issuer": "DeliveryTracker",
     "Audience": "http://localhost:5000",
-    "Lifetime": 100,
+    "Lifetime": 2880,
     "ClockCkew": 1,
     "RequireHttps": true
   },
-
+  
   "PasswordSettings": {
     "MinLength": 4,
     "MaxLength": 20,

@@ -134,9 +134,11 @@ namespace DeliveryTracker.Common
                 case T value:
                     return value;
                 case JObject jobj:
-                    var result = jobj.ToObject<T>();
-                    this.Dictionary[key] = result;
-                    return result;
+                    var result = jobj.ToObject<Dictionary<string, object>>();
+                    var newObj = new T();
+                    newObj.SetDictionary(result);
+                    this.Dictionary[key] = newObj;
+                    return newObj;
                 case IDictionary<string, object> dict:
                     var deserialized = new T();
                     deserialized.SetDictionary(dict);
@@ -247,7 +249,10 @@ namespace DeliveryTracker.Common
                     var result = new List<T>(jsonObjectList.Count);
                     foreach (var item in jsonObjectList)
                     {
-                        result.Add(item.ToObject<T>());
+                        var dictionary = item.ToObject<IDictionary<string, object>>();
+                        var dictObj = new T();
+                        dictObj.SetDictionary(dictionary);
+                        result.Add(dictObj);
                     }
                     
                     this.Dictionary[key] = result;
