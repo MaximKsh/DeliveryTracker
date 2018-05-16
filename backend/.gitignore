@@ -9,3 +9,4 @@ Migrations/*
 .vs/*
 *.user
 */Properties/*
+build/

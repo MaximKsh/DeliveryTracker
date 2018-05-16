@@ -2,13 +2,14 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <LangVersion>7.2</LangVersion>
+    <RuntimeFrameworkVersion>2.0.7</RuntimeFrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\DeliveryTracker\DeliveryTracker.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.5" />
-    <PackageReference Include="NLog.Web.AspNetCore" Version="4.5.3" />
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.8" />
+    <PackageReference Include="NLog.Web.AspNetCore" Version="4.5.4" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="hosting.json" CopyToOutputDirectory="Always" />
