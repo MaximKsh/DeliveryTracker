@@ -15,6 +15,7 @@ using DeliveryTracker.Tasks;
 using DeliveryTracker.Views;
 using DeliveryTrackerScheduler.Common;
 using DeliveryTrackerScheduler.Identification;
+using DeliveryTrackerScheduler.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
@@ -110,6 +111,7 @@ namespace DeliveryTrackerScheduler
                 
                 // Регистрация джобов
                 .AddIdentificationJobs()
+                .AddTasksJobs()
                 ;
 
             var provider = services.BuildServiceProvider();
@@ -124,7 +126,8 @@ namespace DeliveryTrackerScheduler
 
         private static async Task SetJobs(IScheduler scheduler)
         {
-            await scheduler.ScheduleIdentificationJobs();
+            //await scheduler.ScheduleIdentificationJobs();
+            await scheduler.ScheduleTasksJobs();
         }
         
     }

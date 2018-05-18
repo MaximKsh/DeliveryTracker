@@ -2,6 +2,7 @@
 using System.Data;
 using DeliveryTracker.Database;
 using DeliveryTracker.References;
+using DeliveryTracker.Tasks.Routing;
 using DeliveryTracker.Tasks.TaskObservers;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,6 +17,7 @@ namespace DeliveryTracker.Tasks
                 .AddSingleton<ITaskManager, TaskManager>()
                 .AddSingleton<ITaskService, TaskService>()
                 .AddSingleton<ITaskObserverExecutor, TaskObserverExecutor>()
+                .AddSingleton<IRoutingService, RoutingService>()
                 ;
 
             // Observers

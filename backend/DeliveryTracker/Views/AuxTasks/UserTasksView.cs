@@ -62,7 +62,6 @@ where instance_id = @instance_id
         {
             DefaultRoles.CreatorRole,
             DefaultRoles.ManagerRole,
-            DefaultRoles.PerformerRole,
         }.AsReadOnly();
 
         protected virtual ViewDigest ViewDigestFactory(

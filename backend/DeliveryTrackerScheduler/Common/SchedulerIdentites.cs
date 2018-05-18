@@ -11,12 +11,14 @@
         {
             public const string ExpiredInvitations = nameof(ExpiredInvitations);
             public const string ExpiredSessions = nameof(ExpiredSessions);
+            public const string RouteBuilder = nameof(RouteBuilder);
         }
 
         public static class Triggers
         {
             public const string ExpiredInvitations = nameof(ExpiredInvitations);
             public const string ExpiredSessions = nameof(ExpiredSessions);
+            public const string RouteBuilder = nameof(RouteBuilder);
         }
     }
 }

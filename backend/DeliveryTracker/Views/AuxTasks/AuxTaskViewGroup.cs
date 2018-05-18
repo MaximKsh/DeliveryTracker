@@ -16,6 +16,7 @@ namespace DeliveryTracker.Views.AuxTasks
             var dict = new Dictionary<string, IView>();
 
             this.AddView(new UserTasksView(0, taskService), dict);
+            this.AddView(new RouteView(0, taskService), dict);
             
             this.Views = new ReadOnlyDictionary<string, IView>(dict);
         }

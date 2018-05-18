@@ -8,9 +8,13 @@ namespace DeliveryTrackerScheduler.Identification
     /// </summary>
     public sealed class SchedulerUserCredentialsAccessor : IUserCredentialsAccessor
     {
+        private static readonly Guid RoleId = Guid.Parse("cc3c251c-dfa1-4ff3-8116-8f24aa8176a5");
+
+        private const string RoleName = "SchedulerRole";
+        
         private readonly UserCredentials creds = new UserCredentials(
-            Guid.Empty,
-            string.Empty,
+            RoleId,
+            RoleName,
             Guid.Empty,
             Guid.Empty);
 

@@ -32,6 +32,8 @@ CREATE TABLE public.tasks
     CONSTRAINT tasks_payment_types_id_fk FOREIGN KEY (payment_type_id) REFERENCES payment_types (id)
 );
 
+CREATE INDEX tasks_instance_id_index ON public.tasks (instance_id);
 CREATE INDEX tasks_author_id_index ON public.tasks (author_id);
 CREATE INDEX tasks_performer_id_index ON public.tasks (performer_id);
 CREATE INDEX tasks_state_changed_last_time_index ON public.tasks (state_changed_last_time);
+CREATE INDEX tasks_delivery_from_state_id_index ON public.tasks (cast(delivery_from as date), state_id);

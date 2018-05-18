@@ -90,6 +90,7 @@
             public const string CreatorRole = Pref + "CreatorRole";
             public const string ManagerRole = Pref + "ManagerRole";
             public const string PerformerRole = Pref + "PerformerRole";
+            public const string SchedulerRole = Pref + "SchedulerRole";
         }
         
         #endregion
@@ -132,6 +133,7 @@
             public const string PreparingTasksManagerView = Pref + "PreparingTasksManagerView";
             public const string QueueTasksManagerView = Pref + "QueueTasksManagerView"; 
             public const string RevokedTasksManagerView = Pref + "RevokedTasksManagerView";
+            public const string RouteView = Pref + "RouteView";
             public const string QueueTasksPerformerView = Pref + "QueueTasksPerformerView";
             public const string DeliveredTasksPerformerView = Pref + "DeliveredTasksPerformerView";
             public const string CompletedTasksPerformerView = Pref + "CompletedTasksPerformerView";
