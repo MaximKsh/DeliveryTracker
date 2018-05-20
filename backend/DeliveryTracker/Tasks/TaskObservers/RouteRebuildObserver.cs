@@ -17,6 +17,7 @@ namespace DeliveryTracker.Tasks.TaskObservers
             ITaskObserverContext ctx)
         {
             if (ctx.TaskChanges.ClientAddressId != null
+                || ctx.TaskChanges.PerformerId != null
                 || ctx.TaskChanges.DeliveryFrom != null
                 || ctx.TaskChanges.DeliveryTo != null)
             {
