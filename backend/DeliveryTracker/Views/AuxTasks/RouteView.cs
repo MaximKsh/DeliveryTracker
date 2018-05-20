@@ -16,7 +16,7 @@ namespace DeliveryTracker.Views.AuxTasks
         #region sql
 
         private static readonly string SqlGet = $@"
-select {TaskHelper.GetTasksColumns("t")}
+select {TaskHelper.GetTasksColumns("t.")}
 from tasks t
 join task_routes tr on t.id = tr.task_id
 where tr.instance_id = @instance_id
@@ -58,7 +58,7 @@ where instance_id = @instance_id
             
         #region implementation
 
-        public string Name { get; } = nameof(UserTasksView);
+        public string Name { get; } = nameof(RouteView);
         
         public IReadOnlyList<Guid> PermittedRoles { get; } = new List<Guid>
         {

@@ -11,7 +11,4 @@
     <PackageReference Include="NLog" Version="4.5.4" />
     <PackageReference Include="Npgsql" Version="3.2.7" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="MOEA" />
-  </ItemGroup>
 </Project>

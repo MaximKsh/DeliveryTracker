@@ -30,6 +30,7 @@
             
             
             public const string AccessDenied = Pref + "AccessDenied";
+            public const string BuildRouteError = Pref + "BuildRouteError";
             public const string CantDeleteCreator = Pref + "CantDeleteCreator";
             public const string CantDeleteUser = Pref + "CantDeleteUser";
             public const string IncorrectPassword = Pref + "IncorrectPassword";

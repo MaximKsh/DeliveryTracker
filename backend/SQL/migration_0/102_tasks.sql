@@ -14,6 +14,7 @@ CREATE TABLE public.tasks
     receipt_actual TIMESTAMP WITHOUT TIME ZONE,
     delivery_from TIMESTAMP WITHOUT TIME ZONE,
     delivery_to TIMESTAMP WITHOUT TIME ZONE,
+    delivery_eta TIMESTAMP WITHOUT TIME ZONE,
     delivery_actual TIMESTAMP WITHOUT TIME ZONE,
     comment CITEXT,
     warehouse_id UUID,

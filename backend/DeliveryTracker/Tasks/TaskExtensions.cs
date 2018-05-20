@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Data;
+using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.References;
 using DeliveryTracker.Tasks.Routing;
 using DeliveryTracker.Tasks.TaskObservers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DeliveryTracker.Tasks
@@ -24,8 +26,19 @@ namespace DeliveryTracker.Tasks
             services
                 .AddSingleton<ITaskObserver, NotificationObserver>()
                 .AddSingleton<ITaskObserver, TaskStatisticsObserver>()
+                .AddSingleton<ITaskObserver, RouteRebuildObserver>()
                 ;
             return services;
+        }
+        
+        public static ISettingsStorage AddDeliveryTrackerTaskSettings(
+            this ISettingsStorage storage, 
+            IConfiguration configuration)
+        {
+            var routingSettings = TaskHelper.ReadRoutingSettingsFromConf(configuration);
+            return storage
+                    .RegisterSettings(routingSettings)
+                ;
         }
 
         public static TaskState GetState(
@@ -87,6 +100,7 @@ namespace DeliveryTracker.Tasks
                 ReceiptActual = reader.GetValueOrDefault<DateTime?>(idx++),
                 DeliveryFrom = reader.GetValueOrDefault<DateTime?>(idx++),
                 DeliveryTo = reader.GetValueOrDefault<DateTime?>(idx++),
+                DeliveryEta = reader.GetValueOrDefault<DateTime?>(idx++),
                 DeliveryActual = reader.GetValueOrDefault<DateTime>(idx++),
                 Comment = reader.GetValueOrDefault<string>(idx++),
                 WarehouseId = reader.GetValueOrDefault<Guid?>(idx++),

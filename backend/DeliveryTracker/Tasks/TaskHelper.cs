@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using DeliveryTracker.Common;
 using DeliveryTracker.Database;
+using DeliveryTracker.Tasks.Routing;
+using Microsoft.Extensions.Configuration;
 
 namespace DeliveryTracker.Tasks
 {
@@ -28,6 +31,7 @@ namespace DeliveryTracker.Tasks
             "receipt_actual",
             "delivery_from",
             "delivery_to",
+            "delivery_eta",
             "delivery_actual",
             "comment",
             "warehouse_id",
@@ -58,5 +62,13 @@ namespace DeliveryTracker.Tasks
         public static string GetTaskProductsColumns(
             string prefix = null) => DatabaseHelper.GetDatabaseColumnsList(TaskProductColumns, prefix);
 
+        public static RoutingSettings ReadRoutingSettingsFromConf(IConfiguration configuration)
+        {
+            return new RoutingSettings(
+                SettingsName.Routing,
+                configuration.GetValue("RoutingSettings:RoutingServiceURL", string.Empty),
+                configuration.GetValue("RoutingSettings:DistanceMatrixAPIKey", string.Empty));
+        }
+        
     }
 }

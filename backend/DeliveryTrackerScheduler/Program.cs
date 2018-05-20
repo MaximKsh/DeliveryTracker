@@ -119,14 +119,16 @@ namespace DeliveryTrackerScheduler
                 .AddDeliveryTrackerDatabaseSettings(configuration)
                 .AddDeliveryTrackerIdentificationSettings(configuration)
                 .AddDeliveryTrackerInstancesSettings(configuration)
-                .AddDeliveryTrackerNotificationSettings(configuration);
+                .AddDeliveryTrackerNotificationSettings(configuration)
+                .AddDeliveryTrackerTaskSettings(configuration)
+                ;
 
             return provider;
         }
 
         private static async Task SetJobs(IScheduler scheduler)
         {
-            //await scheduler.ScheduleIdentificationJobs();
+            await scheduler.ScheduleIdentificationJobs();
             await scheduler.ScheduleTasksJobs();
         }
         

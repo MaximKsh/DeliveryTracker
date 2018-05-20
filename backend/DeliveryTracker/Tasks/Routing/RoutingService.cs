@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 using DeliveryTracker.Common;
 using DeliveryTracker.Database;
 using DeliveryTracker.Identification;
-using DeliveryTracker.MOEA.Core;
-using DeliveryTracker.MOEA.Encoding.Variable;
-using DeliveryTracker.MOEA.Metaheuristics.MOEAD;
-using DeliveryTracker.MOEA.Operators.Crossover;
-using DeliveryTracker.MOEA.Operators.Mutation;
+using DeliveryTracker.Tasks.Routing.GoogleApiModels;
+using DeliveryTracker.Validation;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -19,19 +20,21 @@ namespace DeliveryTracker.Tasks.Routing
     {
         #region sql
 
-        private const string GetDailyTasks = @"
+        private static readonly string GetDailyTasks = $@"
 select
     t.id,
     performer_id,
     delivery_from,
     delivery_to,
-    ST_X(geoposition::geometry) as xpos,
-    ST_Y(geoposition::geometry) as ypos
+    ST_X(geoposition::geometry),
+    ST_Y(geoposition::geometry)
 from tasks t
 join client_addresses ca on t.client_address_id = ca.id
 where t.instance_id = @instance_id
     and delivery_from::date = @date
-    and state_id = @state_id
+    and (state_id = '{DefaultTaskStates.Queue.Id}'
+        or state_id = '{DefaultTaskStates.Waiting.Id}'
+        or state_id = '{DefaultTaskStates.IntoWork.Id}')
     and geoposition is not null
 ;
 ";
@@ -53,24 +56,57 @@ where date = @date
 
         private const string SqlInsertDailyRouteItem = @"
 insert into task_routes (id, instance_id, task_id, performer_id, eta_offset, date)
-values (uuid_generate_v4(), @instance_id, @task_id, @performer_id, @eta_offset, @date)
+select
+    uuid_generate_v4(),
+    @instance_id,
+    t.tid,
+    t.pid,
+    t.eta,
+    @date
+from unnest(
+    @task_id,
+    @performer_id,
+    @eta) as t (tid, pid, eta)
+;
+";
+
+        private const string SqlUpdateTask = @"
+update tasks
+set 
+    performer_id = @perf_id,
+    delivery_eta = @eta
+where id = @task_id
 ;
 ";
         
         #endregion
         
         #region fields
+
+        private const int SameTimeInterval = 1800; // +-30 минут
+
+        private const string BaseDistanceApiUrl = "https://maps.googleapis.com/maps/api/distancematrix/json";
         
         private readonly IPostgresConnectionProvider cp;
 
+        private readonly IDeliveryTrackerSerializer serializer;
+
+        private readonly RoutingSettings routingSettings;
+        
+        private readonly HttpClient client = new HttpClient();
+        
         #endregion
 
         #region constructor
         
         public RoutingService(
-            IPostgresConnectionProvider cp)
+            IPostgresConnectionProvider cp,
+            IDeliveryTrackerSerializer serializer,
+            ISettingsStorage settingsStorage)
         {
             this.cp = cp;
+            this.serializer = serializer;
+            this.routingSettings = settingsStorage.GetSettings<RoutingSettings>(SettingsName.Routing);
         }
 
         #endregion
@@ -82,132 +118,147 @@ values (uuid_generate_v4(), @instance_id, @task_id, @performer_id, @eta_offset, 
             DateTime? date = null,
             NpgsqlConnectionWrapper oc = null)
         {
+            if (string.IsNullOrWhiteSpace(this.routingSettings.DistanceMatrixApiKey)
+                || string.IsNullOrWhiteSpace(this.routingSettings.RoutingServiceUrl))
+            {
+                return ServiceResult.Successful;
+            }
+            
             var currentDate = date ?? DateTime.Now;
 
             using (var conn = oc?.Connect() ?? this.cp.Create().Connect())
             {
-                var tasks = await GetTasks(instanceId, currentDate, DefaultTaskStates.Preparing.Id, conn);
-                var matrix = BuildWeightMatrix(tasks);
+                var tasks = await GetTasks(instanceId, currentDate, conn);
                 var performers = await GetPerformers(instanceId, conn);
-                if (tasks.Length == 0
-                    || performers.Length == 0)
+                if (tasks.Count == 0
+                    || performers.Count == 0)
                 {
                     return ServiceResult.Successful;
                 }
-                
-                var route = RunGA(performers, matrix, tasks);
-                if (route is null)
+
+                var result = await this.BuildRoutesAsync(tasks, performers);
+                if (!result.Success)
                 {
-                    return ServiceResult.Successful;
+                    return result;
                 }
-                await DeleteOldRoutes(instanceId, currentDate, conn);
-                await InsertRoute(instanceId, currentDate, tasks, performers, route, conn);
+
+                using (var transaction = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        await DeleteOldRoutes(instanceId, currentDate, conn);
+                        await InsertRoute(instanceId, currentDate, tasks, result.Result, conn);
+                        foreach (var route in result.Result)
+                        {
+                            for (var i = 0; i < route.TaskRoute.Count; i++)
+                            {
+                                var task = tasks[route.TaskRoute[i]];
+                                var eta = currentDate.Date.AddSeconds(route.Eta[i]);
+                                await UpdateTask(task.TaskId, route.PerformerId, eta, conn);
+                            }
+                        }
+                        transaction.Commit();
+                    }
+                    catch (Exception)
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
             }
             
             return ServiceResult.Successful;
+        }
+
+        public async Task<ServiceResult<List<Route>>> BuildRoutesAsync(
+            List<TaskRouteItem> tasks,
+            List<Guid> performers)
+        {
+            var matrix = await this.BuildWeightMatrix(tasks);
+            if (matrix is null)
+            {
+                return new ServiceResult<List<Route>>(ErrorFactory.BuildRouteError());
+            }
+            
+            var request = new OptimizationRequest
+            {
+                Tasks = tasks,
+                Performers = performers,
+                Weights = matrix,
+            };
+
+            var payloadString = this.serializer.SerializeJson(request);
+            var payloadBytes = Encoding.UTF8.GetBytes(payloadString);
+            var content = new ByteArrayContent(payloadBytes);
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            content.Headers.ContentEncoding.Add("UTF-8");
+            content.Headers.ContentLength = payloadBytes.Length;
+            var response = await this.client.PostAsync(
+                this.routingSettings.RoutingServiceUrl, 
+                content);
+            if (!response.IsSuccessStatusCode)
+            {
+                return new ServiceResult<List<Route>>(ErrorFactory.BuildRouteError());
+            }
+            
+            var responseString = await response.Content.ReadAsStringAsync();
+            var result = this.serializer.DeserializeJson<OptimizationResponse>(responseString);
+            if (result.Routes is null)
+            {
+                return new ServiceResult<List<Route>>(ErrorFactory.BuildRouteError());
+            }
+            
+            return new ServiceResult<List<Route>>(result.Routes);
         }
 
         #endregion
 
         #region private
 
-        private static List<VRPProblem.Route> RunGA(
-            Guid[] performers,
-            int[,] matrix,
-            TaskGene[] tasks)
-        {
-            var problem = new VRPProblem(performers, matrix, tasks);
-	        
-            Algorithm algorithm = new MOEAD(problem);
-            algorithm.SetInputParameter("populationSize", 300);
-            algorithm.SetInputParameter("maxEvaluations", 100000);
-            algorithm.SetInputParameter("T", 20);
-            algorithm.SetInputParameter("delta", 0.9);
-            algorithm.SetInputParameter("nr", 2);
-
-            // Crossover operator 
-            var parameters = new Dictionary<string, object> {{"CR", 1.0}, {"F", 0.5}};
-            Operator crossover = CrossoverFactory.GetCrossoverOperator("DifferentialEvolutionCrossover", parameters);
-
-            // Mutation operator
-            parameters = new Dictionary<string, object>
-            {
-                {"probability", 1.0 / problem.NumberOfVariables},
-                {"distributionIndex", 20.0}
-            };
-            Operator mutation = MutationFactory.GetMutationOperator("PolynomialMutation", parameters);
-
-            algorithm.AddOperator("crossover", crossover);
-            algorithm.AddOperator("mutation", mutation);
-
-            Solution bestBalancedSolution = null;
-            var count = 0;
-            while (count < 3)
-            {
-                var population = algorithm.Execute();
-
-                bestBalancedSolution = population.SolutionsList
-                    .OrderBy(p => p.Objective[2])
-                    .First();
-
-                if (bestBalancedSolution.Objective.Any(p => p >= int.MaxValue - 1))
-                {
-                    count++;
-                }
-                else
-                {
-                    count = 3;
-                }
-            }
-
-            if (bestBalancedSolution?.Objective.Any(p => p >= int.MaxValue - 1) == true)
-            {
-                return null;
-            }
-            
-            // ReSharper disable once PossibleNullReferenceException
-            var chromosome = bestBalancedSolution    
-                .Variable
-                .Select(p => (int)(((Real)p).Value))
-                .ToList();
-            return problem.DivideIntoRoutes(chromosome);
-        }
         
-        private static async Task<TaskGene[]> GetTasks(
+        private static async Task<List<TaskRouteItem>> GetTasks(
             Guid instanceId,
             DateTime date,
-            Guid stateId,
             NpgsqlConnectionWrapper oc)
         {
-            var taskGenes = new List<TaskGene>();
+            var taskGenes = new List<TaskRouteItem>();
             using (var command = oc.CreateCommand())
             {
                 command.CommandText = GetDailyTasks;
                 command.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
                 command.Parameters.Add(new NpgsqlParameter("date", date.Date).WithType(NpgsqlDbType.Date));
-                command.Parameters.Add(new NpgsqlParameter("state_id", stateId));
 
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
                     {
-                        taskGenes.Add(new TaskGene
+                        var task = new TaskRouteItem
                         {
                             TaskId = reader.GetGuid(0),
                             PerformerId = reader.GetValueOrDefault<Guid?>(1),
-                            TimeWindowStart = Convert.ToInt32(reader.GetDateTime(2).TimeOfDay.TotalSeconds),
-                            TimeWindowEnd = Convert.ToInt32(reader.GetDateTime(3).TimeOfDay.TotalSeconds),
-                            XPosition = reader.GetDouble(4),
-                            YPosition = reader.GetDouble(5),
-                        });
+                            StartTimeOffset = Convert.ToInt32(reader.GetDateTime(2).TimeOfDay.TotalSeconds),
+                            EndTimeOffset = Convert.ToInt32(reader.GetDateTime(3).TimeOfDay.TotalSeconds),
+                            Longitude = reader.GetDouble(4),
+                            Latitude = reader.GetDouble(5),
+                        };
+                        if (task.EndTimeOffset - task.StartTimeOffset < SameTimeInterval)
+                        {
+                            var avg = task.StartTimeOffset + (task.EndTimeOffset - task.StartTimeOffset) / 2;
+                            
+                            task.StartTimeOffset = avg - SameTimeInterval;
+                            task.EndTimeOffset = avg + SameTimeInterval;
+                        }
+                        
+                        
+                        taskGenes.Add(task);
                     }
                 }
             }
 
-            return taskGenes.ToArray();
+            return taskGenes;
         }
         
-        private static async Task<Guid[]> GetPerformers(
+        private static async Task<List<Guid>> GetPerformers(
             Guid instanceId,
             NpgsqlConnectionWrapper oc)
         {
@@ -227,52 +278,61 @@ values (uuid_generate_v4(), @instance_id, @task_id, @performer_id, @eta_offset, 
                 }
             }
 
-            return performers.ToArray();
+            return performers;
         }
 
-        private static int[,] BuildWeightMatrix(
-            TaskGene[] tasks)
+        private async Task<List<List<int>>> BuildWeightMatrix(
+            List<TaskRouteItem> tasks)
         {
-            var matrix = new int[tasks.Length, tasks.Length];
-
-            for (var i = 0; i < tasks.Length; i++)
+            var allCoordinates = string.Join("|", tasks.Select(FormatCoordinates));
+            var arrivalTime = new DateTimeOffset(DateTime.Now.Date.AddHours(13)).ToUnixTimeSeconds();
+            var url =
+                $"{BaseDistanceApiUrl}?origins={allCoordinates}&destinations={allCoordinates}&arrival_time={arrivalTime}&key={this.routingSettings.DistanceMatrixApiKey}";
+            
+            var response = await this.client.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
             {
-                for (var j = 0; j < tasks.Length; j++)
-                {
-                    if (i == j)
-                    {
-                        matrix[i, j] = int.MaxValue;
-                        continue;
-                    }
-
-                    matrix[i, j] = matrix[j, i] = (int) GetDistance(tasks[i], tasks[j]);
-                }
+                return null;
             }
+            var responseString = await response.Content.ReadAsStringAsync();
+            var result = this.serializer.DeserializeJson<GoogleDistanceMatrixResponse>(responseString);
+            if (result.Status != "OK")
+            {
+                return null;
+            }
+            
+            var matrix = new List<List<int>>(tasks.Count);
 
+            var rowIdx = 0;
+            foreach (var row in result.Rows)
+            {
+                var columnIdx = 0;
+                var matrixRow = new List<int>(tasks.Count);
+                foreach (var element in row.Elements)
+                {
+                    if (rowIdx == columnIdx
+                        || element.Status != "OK")
+                    {
+                        matrixRow.Add(int.MaxValue);
+                    }
+                    else
+                    {
+                        matrixRow.Add(element.Duration.Value);
+                    }
+                    
+                    columnIdx++;
+                }
+                matrix.Add(matrixRow);
+                rowIdx++;
+            }
+            
             return matrix;
         }
 
-        private static double GetDistance(TaskGene first, TaskGene second)
-        {
-            var lat1 = first.XPosition;
-            var lat2 = second.XPosition;
-            var lon1 = first.YPosition;
-            var lon2 = second.YPosition;
-            
-            var rlat1 = Math.PI*lat1/180;
-            var rlat2 = Math.PI*lat2/180;
-            var theta = lon1 - lon2;
-            var rtheta = Math.PI*theta/180;
-            var dist =
-                Math.Sin(rlat1)*Math.Sin(rlat2) + Math.Cos(rlat1)*
-                Math.Cos(rlat2)*Math.Cos(rtheta);
-            dist = Math.Acos(dist);
-            dist = dist*180/Math.PI;
-            dist = dist*60*1.1515;
+        private static string FormatCoordinates(
+            TaskRouteItem p) =>
+            $"{p.Latitude.ToString(NumberFormatInfo.InvariantInfo)},{p.Longitude.ToString(NumberFormatInfo.InvariantInfo)}";
 
-
-            return dist*1.609344;
-        }
 
         private static async Task DeleteOldRoutes(Guid instanceId, DateTime date, NpgsqlConnectionWrapper oc)
         {
@@ -285,37 +345,55 @@ values (uuid_generate_v4(), @instance_id, @task_id, @performer_id, @eta_offset, 
             }
         }
 
+        
         private static async Task InsertRoute(
             Guid instanceId,
             DateTime date,
-            TaskGene[] tasks,
-            Guid[] performers,
-            List<VRPProblem.Route> routes,
+            List<TaskRouteItem> tasks,
+            List<Route> routes,
             NpgsqlConnectionWrapper oc)
         {
-            var routeNumber = 0;
+            var taskIds = new List<Guid>(routes.Count * 10);
+            var performerIds = new List<Guid>(routes.Count * 10);
+            var eta = new List<int>(routes.Count * 10);
+
             foreach (var route in routes)
             {
-                foreach (var vertex in route.RouteSequence)
+                var vertexIndex = 0;
+                foreach (var vertex in route.TaskRoute)
                 {
-                    using (var comm = oc.CreateCommand())
-                    {
-                        comm.CommandText = SqlInsertDailyRouteItem;
-                        comm.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
-                        comm.Parameters.Add(new NpgsqlParameter("date", date.Date).WithType(NpgsqlDbType.Date));
-
-                        var taskId = new NpgsqlParameter("task_id", NpgsqlDbType.Uuid);
-                        var performerId = new NpgsqlParameter("performer_id", NpgsqlDbType.Uuid);
-                        var etaOffset = new NpgsqlParameter("eta_offset", NpgsqlDbType.Integer);
-                        comm.Parameters.AddRange(new[] {taskId, performerId, etaOffset});
-                        taskId.Value = tasks[vertex].TaskId;
-                        performerId.Value = performers[routeNumber];
-                        etaOffset.Value = route.ETA[vertex];
-                        await comm.ExecuteNonQueryAsync();
-                    }
-
+                    taskIds.Add(tasks[vertex].TaskId);
+                    performerIds.Add(route.PerformerId);
+                    eta.Add(route.Eta[vertexIndex]);
+                    vertexIndex++;
                 }
-                routeNumber++;
+            }
+            
+            using (var comm = oc.CreateCommand())
+            {
+                comm.CommandText = SqlInsertDailyRouteItem;
+                comm.Parameters.Add(new NpgsqlParameter("instance_id", instanceId));
+                comm.Parameters.Add(new NpgsqlParameter("date", date.Date).WithType(NpgsqlDbType.Date));
+                comm.Parameters.Add(new NpgsqlParameter("task_id", taskIds).WithArrayType(NpgsqlDbType.Uuid));
+                comm.Parameters.Add(new NpgsqlParameter("performer_id", performerIds).WithArrayType(NpgsqlDbType.Uuid));
+                comm.Parameters.Add(new NpgsqlParameter("eta", eta).WithArrayType(NpgsqlDbType.Integer));
+                await comm.ExecuteNonQueryAsync();
+            }
+        }
+
+        private static async Task UpdateTask(
+            Guid taskId,
+            Guid perfId,
+            DateTime eta,
+            NpgsqlConnectionWrapper oc)
+        {
+            using (var comm = oc.CreateCommand())
+            {
+                comm.CommandText = SqlUpdateTask;
+                comm.Parameters.Add(new NpgsqlParameter("task_id", taskId));
+                comm.Parameters.Add(new NpgsqlParameter("perf_id", perfId));
+                comm.Parameters.Add(new NpgsqlParameter("eta", eta).WithType(NpgsqlDbType.Timestamp));
+                await comm.ExecuteNonQueryAsync();
             }
         }
         

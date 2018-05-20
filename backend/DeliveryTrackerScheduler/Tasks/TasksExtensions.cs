@@ -26,13 +26,11 @@ namespace DeliveryTrackerScheduler.Tasks
             var invitationTrigger = TriggerBuilder.Create()
                 .WithIdentity(SchedulerIdentites.Triggers.RouteBuilder, SchedulerIdentites.Groups.Default)
                 .StartNow()
-                .WithSimpleSchedule(x => x.WithIntervalInSeconds(6000).RepeatForever())
-                //.WithCronSchedule("0 0 12 * * ?")
+                //.WithSimpleSchedule(x => x.WithIntervalInSeconds(6000).RepeatForever())
+                .WithCronSchedule("0 0 3 * * ?")
                 .Build();
             await scheduler.ScheduleJob(invitationJob, invitationTrigger);
             
-           
-
             return scheduler;
         }
     }

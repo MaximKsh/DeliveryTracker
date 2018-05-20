@@ -133,6 +133,15 @@ namespace DeliveryTracker.Tasks
         }
         
         /// <summary>
+        /// Прогнозируемая дата доставки
+        /// </summary>
+        public DateTime? DeliveryEta
+        {
+            get => this.Get<DateTime?>(nameof(this.DeliveryEta));
+            set => this.Set(nameof(this.DeliveryEta), value);
+        }
+        
+        /// <summary>
         /// Фактическая дата доставки.
         /// </summary>
         public DateTime? DeliveryActual

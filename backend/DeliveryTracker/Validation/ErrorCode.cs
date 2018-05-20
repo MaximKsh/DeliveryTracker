@@ -124,6 +124,11 @@
         #region task errors
 
         /// <summary>
+        /// Код ошибки: ошибка построения маршрута.
+        /// </summary>
+        public const string BuildRouteError = "BuildRouteError";
+        
+        /// <summary>
         /// Код ошибки: неправильное состояние задания.
         /// </summary>
         public const string IncorrectTaskState = "IncorrectTaskState";

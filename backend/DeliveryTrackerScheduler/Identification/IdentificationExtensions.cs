@@ -27,8 +27,8 @@ namespace DeliveryTrackerScheduler.Identification
             var invitationTrigger = TriggerBuilder.Create()
                 .WithIdentity(SchedulerIdentites.Triggers.ExpiredInvitations, SchedulerIdentites.Groups.Default)
                 .StartNow()
-                .WithSimpleSchedule(x => x.WithIntervalInSeconds(60).RepeatForever())
-                //.WithCronSchedule("0 0 12 * * ?")
+                //.WithSimpleSchedule(x => x.WithIntervalInSeconds(60).RepeatForever())
+                .WithCronSchedule("0 0 1 * * ?")
                 .Build();
             await scheduler.ScheduleJob(invitationJob, invitationTrigger);
             
@@ -38,8 +38,8 @@ namespace DeliveryTrackerScheduler.Identification
             var sessionTrigger = TriggerBuilder.Create()
                 .WithIdentity(SchedulerIdentites.Triggers.ExpiredSessions, SchedulerIdentites.Groups.Default)
                 .StartNow()
-                .WithSimpleSchedule(x => x.WithIntervalInSeconds(60).RepeatForever())
-                //.WithCronSchedule("0 0 12 * * ?")
+                //.WithSimpleSchedule(x => x.WithIntervalInSeconds(60).RepeatForever())
+                .WithCronSchedule("0 0 1 * * ?")
                 .Build();
             await scheduler.ScheduleJob(sessionJob, sessionTrigger);
 

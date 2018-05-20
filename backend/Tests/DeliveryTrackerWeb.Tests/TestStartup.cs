@@ -58,7 +58,8 @@ namespace DeliveryTrackerWeb.Tests
                 .AddDeliveryTrackerDatabaseSettings(this.configuration)
                 .AddDeliveryTrackerIdentificationSettings(this.configuration)
                 .AddDeliveryTrackerInstancesSettings(this.configuration)
-                .AddDeliveryTrackerNotificationSettings(this.configuration);
+                .AddDeliveryTrackerNotificationSettings(this.configuration)
+                .AddDeliveryTrackerTaskSettings(this.configuration);
             
             app.UseMiddleware<ExceptionHandlingMiddleware>();
             app.UseAuthentication();

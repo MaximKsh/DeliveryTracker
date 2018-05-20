@@ -16,5 +16,7 @@
 
         public const string Notifiation = "Notification";
 
+        public const string Routing = "Routing";
+
     }
 }

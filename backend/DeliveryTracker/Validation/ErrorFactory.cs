@@ -370,6 +370,15 @@ namespace DeliveryTracker.Validation
         #region tasks
         
         /// <summary>
+        /// Ошибка построения маршрута.
+        /// </summary>
+        /// <returns></returns>
+        public static IError BuildRouteError() =>
+            new Error(
+                ErrorCode.BuildRouteError,
+                LocalizationAlias.Error.BuildRouteError);
+        
+        /// <summary>
         /// Некорректное состояние задания.
         /// </summary>
         /// <returns></returns>

@@ -388,6 +388,7 @@ where ""id"" = @id and instance_id = @instance_id
                     command.Parameters.Add(new NpgsqlParameter("receipt_actual", taskInfo.ReceiptActual).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("delivery_from", taskInfo.DeliveryFrom).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("delivery_to", taskInfo.DeliveryTo).CanBeNull());
+                    command.Parameters.Add(new NpgsqlParameter("delivery_eta", null).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("delivery_actual", taskInfo.DeliveryActual).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("comment", taskInfo.Comment).CanBeNull());
                     command.Parameters.Add(new NpgsqlParameter("warehouse_id", taskInfo.WarehouseId).CanBeNull());

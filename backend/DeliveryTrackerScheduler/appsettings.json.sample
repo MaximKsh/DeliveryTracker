@@ -52,5 +52,10 @@
   "NotificationSettings": {
     "FirebaseKey": null,
     "SmsRuKey": null
+  },
+  
+  "RoutingSettings": {
+    "RoutingServiceURL": "http://localhost:8080",
+    "DistanceMatrixAPIKey": null
   }
 }
