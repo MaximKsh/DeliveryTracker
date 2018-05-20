@@ -12,5 +12,7 @@ namespace DeliveryTracker.Tasks.Routing
         public List<Guid> Performers { get; set; }
         [JsonProperty("weights")]
         public List<List<int>> Weights { get; set; }
+        [JsonProperty("tryKeepPerformers")]
+        public bool TryKeepPerformers { get; set; }
     }
 }

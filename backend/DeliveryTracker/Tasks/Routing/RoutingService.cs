@@ -116,6 +116,7 @@ where id = @task_id
         public async Task<ServiceResult> BuildDailyRoutesAsync(
             Guid instanceId,
             DateTime? date = null,
+            bool tryKeepPerformers = false,
             NpgsqlConnectionWrapper oc = null)
         {
             if (string.IsNullOrWhiteSpace(this.routingSettings.DistanceMatrixApiKey)
@@ -136,7 +137,7 @@ where id = @task_id
                     return ServiceResult.Successful;
                 }
 
-                var result = await this.BuildRoutesAsync(tasks, performers);
+                var result = await this.BuildRoutesAsync(tasks, performers, tryKeepPerformers);
                 if (!result.Success)
                 {
                     return result;
@@ -172,7 +173,8 @@ where id = @task_id
 
         public async Task<ServiceResult<List<Route>>> BuildRoutesAsync(
             List<TaskRouteItem> tasks,
-            List<Guid> performers)
+            List<Guid> performers,
+            bool tryKeepPerformers = false)
         {
             var matrix = await this.BuildWeightMatrix(tasks);
             if (matrix is null)
@@ -182,6 +184,7 @@ where id = @task_id
             
             var request = new OptimizationRequest
             {
+                TryKeepPerformers = tryKeepPerformers,
                 Tasks = tasks,
                 Performers = performers,
                 Weights = matrix,

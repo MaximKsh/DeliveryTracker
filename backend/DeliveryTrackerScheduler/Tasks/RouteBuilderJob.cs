@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using DeliveryTracker.Database;
 using DeliveryTracker.Tasks.Routing;
 using DeliveryTrackerScheduler.Common;
-using Microsoft.AspNetCore.Routing;
 using NLog;
 using Quartz;
 
@@ -45,7 +44,7 @@ namespace DeliveryTrackerScheduler.Tasks
 
                 foreach (var instance in instances)
                 {
-                    await this.routingService.BuildDailyRoutesAsync(instance);
+                    await this.routingService.BuildDailyRoutesAsync(instance, null, false, conn);
                 }
             }
         }

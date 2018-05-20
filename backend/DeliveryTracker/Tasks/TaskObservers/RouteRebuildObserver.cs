@@ -21,7 +21,7 @@ namespace DeliveryTracker.Tasks.TaskObservers
                 || ctx.TaskChanges.DeliveryFrom != null
                 || ctx.TaskChanges.DeliveryTo != null)
             {
-                await this.routingService.BuildDailyRoutesAsync(ctx.Credentials.InstanceId, null, ctx.ConnectionWrapper);
+                await this.routingService.BuildDailyRoutesAsync(ctx.Credentials.InstanceId, null, true, ctx.ConnectionWrapper);
             }
 
             await Task.CompletedTask;
@@ -32,7 +32,7 @@ namespace DeliveryTracker.Tasks.TaskObservers
         {
             if (ctx.Transition.FinalState == DefaultTaskStates.Queue.Id)
             {
-                await this.routingService.BuildDailyRoutesAsync(ctx.Credentials.InstanceId, null, ctx.ConnectionWrapper);
+                await this.routingService.BuildDailyRoutesAsync(ctx.Credentials.InstanceId, null, true, ctx.ConnectionWrapper);
             }
         }
         

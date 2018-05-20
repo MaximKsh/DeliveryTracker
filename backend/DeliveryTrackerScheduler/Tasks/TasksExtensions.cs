@@ -27,7 +27,7 @@ namespace DeliveryTrackerScheduler.Tasks
                 .WithIdentity(SchedulerIdentites.Triggers.RouteBuilder, SchedulerIdentites.Groups.Default)
                 .StartNow()
                 //.WithSimpleSchedule(x => x.WithIntervalInSeconds(6000).RepeatForever())
-                .WithCronSchedule("0 0 3 * * ?")
+                .WithCronSchedule("0 0 5 * * ?")
                 .Build();
             await scheduler.ScheduleJob(invitationJob, invitationTrigger);
             

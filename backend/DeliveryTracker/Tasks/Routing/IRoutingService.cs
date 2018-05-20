@@ -11,11 +11,13 @@ namespace DeliveryTracker.Tasks.Routing
         Task<ServiceResult> BuildDailyRoutesAsync(
             Guid instanceId,
             DateTime? date = null,
+            bool tryKeepPerformers = false,
             NpgsqlConnectionWrapper oc = null);
 
         Task<ServiceResult<List<Route>>> BuildRoutesAsync(
             List<TaskRouteItem> tasks,
-            List<Guid> performers);
+            List<Guid> performers,
+            bool tryKeepPerformers = false);
         
     }
 }
