@@ -49,7 +49,8 @@ offset @offset
             IJobExecutionContext context,
             Logger logger)
         {
-            using (var conn = this.cp.Create().Connect())
+            await Task.CompletedTask;
+            /*using (var conn = this.cp.Create().Connect())
             {
                 var recordsAffected = -1;
                 var date = DateTime.Now.Date;
@@ -65,7 +66,7 @@ offset @offset
                 {
                     
                 }
-            }
+            }*/
         }
     }
 }
