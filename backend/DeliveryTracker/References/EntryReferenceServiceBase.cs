@@ -307,7 +307,8 @@ namespace DeliveryTracker.References
 
         /// <inheritdoc />
         public virtual async Task<ServiceResult<ReferencePackage>> PackAsync(
-            T entry,
+            T entry,           
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null)
         {
             var package = new ReferencePackage
@@ -320,7 +321,8 @@ namespace DeliveryTracker.References
 
         /// <inheritdoc />
         public virtual async Task<ServiceResult<IList<ReferencePackage>>> PackAsync(
-            ICollection<T> entries,
+            ICollection<T> entries,              
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null)
         {
             var packages = entries
@@ -398,6 +400,7 @@ namespace DeliveryTracker.References
         /// <inheritdoc />
         public virtual async Task<ServiceResult<ReferencePackage>> PackAsync(
             ReferenceEntryBase entry,
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null)
         {
             var package = new ReferencePackage
@@ -411,6 +414,7 @@ namespace DeliveryTracker.References
         /// <inheritdoc />
         public virtual async Task<ServiceResult<IList<ReferencePackage>>> PackAsync(
             ICollection<ReferenceEntryBase> entries,
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null)
         {
             var packages = entries

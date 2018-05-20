@@ -106,7 +106,7 @@ namespace DeliveryTracker.References
                 }
                 
                 var entry = result.Result;
-                var packResult = await service.PackAsync(entry, conn);
+                var packResult = await service.PackAsync(entry, false, conn);
                 if (packResult.Success)
                 {
                     transact.Commit();
@@ -140,7 +140,7 @@ namespace DeliveryTracker.References
                 }
 
                 var entry = result.Result;
-                return await service.PackAsync(entry, conn);
+                return await service.PackAsync(entry, withDeleted, conn);
             }
         }
         
@@ -165,7 +165,7 @@ namespace DeliveryTracker.References
                 }
 
                 var entries = result.Result;
-                return await service.PackAsync(entries, conn);
+                return await service.PackAsync(entries, withDeleted, conn);
             }
         }
 
@@ -241,15 +241,7 @@ namespace DeliveryTracker.References
                     
                 }
                 
-                /*
-                foreach (var collection in package.Collections)
-                {
-                    
-
-                    
-                }*/
-                
-                var packageResult = await service.PackAsync(editResult.Result, conn);
+                var packageResult = await service.PackAsync(editResult.Result, false, conn);
                 if (!packageResult.Success)
                 {
                     transact.Rollback();

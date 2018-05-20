@@ -114,7 +114,7 @@ where instance_id = @instance_id
                 }
             }
 
-            var packed = await this.clientReferenceService.PackAsync(list, oc);
+            var packed = await this.clientReferenceService.PackAsync(list, withDeleted:false,  oc:oc);
             
             return new ServiceResult<IList<IDictionaryObject>>(packed.Result.Cast<IDictionaryObject>().ToList());
         }

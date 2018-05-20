@@ -179,23 +179,26 @@ where id = @id and instance_id = @instance_id and deleted = false
         
         /// <inheritdoc />
         public override async Task<ServiceResult<ReferencePackage>> PackAsync(
-            Client entry,
+            Client entry,           
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null)
         {
-            return await this.PackAsync((ReferenceEntryBase) entry, oc);
+            return await this.PackAsync((ReferenceEntryBase) entry, withDeleted, oc);
         }
 
         /// <inheritdoc />
         public override async Task<ServiceResult<IList<ReferencePackage>>> PackAsync(
-            ICollection<Client> entries,
+            ICollection<Client> entries,           
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null)
         {
-            return await this.PackAsyncInternal(entries, entries.Count, oc);
+            return await this.PackAsyncInternal(entries, withDeleted, entries.Count, oc);
         }
         
         /// <inheritdoc />
         public override async Task<ServiceResult<ReferencePackage>> PackAsync(
-            ReferenceEntryBase entry,
+            ReferenceEntryBase entry,           
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null)
         {
             var package = new ReferencePackage
@@ -204,7 +207,7 @@ where id = @id and instance_id = @instance_id and deleted = false
                 Collections = new List<ReferenceCollectionBase>(),
             };
 
-            var addressesResult = await this.clientAddressService.GetAsync(entry.Id, oc: oc);
+            var addressesResult = await this.clientAddressService.GetAsync(entry.Id, withDeleted, oc: oc);
             if (!addressesResult.Success)
             {
                 return new ServiceResult<ReferencePackage>(addressesResult.Errors);
@@ -220,10 +223,11 @@ where id = @id and instance_id = @instance_id and deleted = false
 
         /// <inheritdoc />
         public override async Task<ServiceResult<IList<ReferencePackage>>> PackAsync(
-            ICollection<ReferenceEntryBase> entries,
+            ICollection<ReferenceEntryBase> entries,           
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null)
         {
-            return await this.PackAsyncInternal(entries, entries.Count, oc);
+            return await this.PackAsyncInternal(entries, withDeleted, entries.Count, oc);
         }
 
         #endregion
@@ -231,7 +235,8 @@ where id = @id and instance_id = @instance_id and deleted = false
         #region private
 
         private async Task<ServiceResult<IList<ReferencePackage>>> PackAsyncInternal(
-            IEnumerable<ReferenceEntryBase> entries,
+            IEnumerable<ReferenceEntryBase> entries,           
+            bool withDeleted,
             int count,
             NpgsqlConnectionWrapper oc = null)
         {
@@ -251,7 +256,7 @@ where id = @id and instance_id = @instance_id and deleted = false
 
                     // TODO: оптимизировать загрузку для нескольких клиентов сразу.
                     // TODO: добавить в CollectionService загрузку по нескольким парентам.
-                    var addressesResult = await this.clientAddressService.GetAsync(entry.Id, oc: conn);
+                    var addressesResult = await this.clientAddressService.GetAsync(entry.Id, withDeleted, oc: conn);
                     if (!addressesResult.Success)
                     {
                         return new ServiceResult<IList<ReferencePackage>>(addressesResult.Errors);

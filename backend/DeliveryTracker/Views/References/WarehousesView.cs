@@ -114,7 +114,7 @@ where instance_id = @instance_id
             }
             
             
-            var package = await this.warehouseReferenceService.PackAsync(list, oc);
+            var package = await this.warehouseReferenceService.PackAsync(list, withDeleted:false,  oc:oc);
             
             return new ServiceResult<IList<IDictionaryObject>>(package.Result.Cast<IDictionaryObject>().ToList());
         }

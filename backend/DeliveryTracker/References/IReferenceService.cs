@@ -86,20 +86,24 @@ namespace DeliveryTracker.References
         /// Запаковать запись из справочника.
         /// </summary>
         /// <param name="entry"></param>
+        /// <param name="withDeleted"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
         Task<ServiceResult<ReferencePackage>> PackAsync(
             ReferenceEntryBase entry,
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null);
-        
+
         /// <summary>
         /// Запаковать несколько записей из справочника.
         /// </summary>
         /// <param name="entries"></param>
+        /// <param name="withDeleted"></param>
         /// <param name="oc"></param>
         /// <returns></returns>
         Task<ServiceResult<IList<ReferencePackage>>> PackAsync(
             ICollection<ReferenceEntryBase> entries,
+            bool withDeleted = false,
             NpgsqlConnectionWrapper oc = null);
     }
 }
